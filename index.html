@@ -2,329 +2,422 @@
 <!--
   ПОРТФОЛИО — Vanya (@r1tak4)
 
-  Как редактировать:
-  1. Кейсы лежат ниже в блоках <article class="case">. Чтобы добавить новый —
-     скопируй любой готовый блок и поменяй текст внутри.
-  2. Заглушки помечены классом "case--empty". Когда сделаешь кейс —
-     убери из тега слово case--empty и впиши реальный текст.
-  3. Видео: внутри блока .case__media замени <div class="media__placeholder">
-     на <video src="video/имя-файла.mp4" autoplay loop muted playsinline></video>
-     Файлы видео клади в папку portfolio/video/
-  4. Цвета и размеры собраны в одном месте — в блоке :root ниже.
+  Как устроена страница:
+  • Сверху донизу идёт «нить» — тонкая линия слева. К ней крепятся разделы (.node).
+    У каждого раздела своя подпись на рейке (.node__rail), она держится при прокрутке.
+  • Цвета — в блоке :root ниже. Меняешь там — меняется везде.
+  • Диалоги в шапке — массив SCENARIOS в самом низу, в теге <script>.
+    Три сценария крутятся по кругу. Добавить свой — скопируй блок и поменяй текст.
+  • Видео: внутри .shot замени <div class="shot__empty"> на
+    <video src="video/имя.mp4" autoplay loop muted playsinline></video>
+    Файлы клади в папку portfolio/video/
 -->
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vanya — Telegram-боты и автоматизация для бизнеса</title>
-<meta name="description" content="Делаю Telegram-ботов, мини-приложения и автоматизирую рутину малого бизнеса. От идеи до работающего решения — 1–2 недели.">
-
-<!-- Красивая карточка при отправке ссылки в Telegram / мессенджеры -->
-<meta property="og:title" content="Vanya — Telegram-боты и автоматизация">
-<meta property="og:description" content="Боты, мини-приложения и автоматизация рутины. От идеи до результата — 1–2 недели.">
+<title>Vanya — боты и автоматизация для бизнеса</title>
+<meta name="description" content="Делаю Telegram-ботов, мини-приложения и автоматизацию для малого бизнеса: запись клиентов, заказы, заявки, напоминания. Запуск за 1–2 недели.">
+<meta property="og:title" content="Vanya — рутину делает бот">
+<meta property="og:description" content="Запись клиентов, заказы, заявки и напоминания без ручной работы. Запуск за 1–2 недели.">
 <meta property="og:type" content="website">
 
 <style>
-/* ─────────────────────────────────────────────
-   ПЕРЕМЕННЫЕ — меняй цвета и отступы только здесь
-   ───────────────────────────────────────────── */
+/* ═══════════════ ТОКЕНЫ ═══════════════
+   Тёплая земляная гамма. Акцент — приглушённый мох,
+   намеренно не синий: в этой нише синим забито всё.        */
 :root {
-  --bg:        #0e1014;
-  --surface:   #171a21;
-  --surface-2: #1d212a;
-  --border:    #262b36;
-  --text:      #e9ecf1;
-  --muted:     #98a2b3;
-  --accent:    #3ea6ff;   /* акцент — кнопки и ссылки */
-  --accent-ink:#06121f;   /* текст на акцентной кнопке */
-  --radius:    16px;
-  --maxw:      880px;
+  --paper:      #f2ede2;   /* тёплый овсяный фон */
+  --surface:    #fbf8f1;   /* поверхности — теплее белого */
+  --surface-2:  #e7dfcf;
+  --ink:        #1d1913;   /* тёплый почти-чёрный */
+  --ink-2:      #6a6152;
+  --ink-3:      #9a9081;
+  --line:       #ded4c0;
+  --signal:     #4c6636;   /* мох */
+  --signal-2:   #3b5029;
+  --on-signal:  #fbf8f1;
+  --bubble-in:  #fffdf8;
+  --ember:      #c1743a;   /* тёплая искра, только для подсветки и мелочей */
+  --ok:         #4c6636;
+
+  --font-ui:    "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:  ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+
+  --maxw:       1080px;
+  --rail:       186px;     /* отступ нити на десктопе */
 }
 
-/* Светлая тема — включается автоматически по настройкам устройства */
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg:        #fbfbfd;
-    --surface:   #ffffff;
-    --surface-2: #f4f5f8;
-    --border:    #e3e6ec;
-    --text:      #14161a;
-    --muted:     #5f6875;
-    --accent:    #0a72d4;
-    --accent-ink:#ffffff;
+    --paper:     #15120d;  /* тёплый уголь, не сине-чёрный */
+    --surface:   #1e1a14;
+    --surface-2: #272119;
+    --ink:       #f1e9db;
+    --ink-2:     #ab9f8b;
+    --ink-3:     #7d7263;
+    --line:      #322a20;
+    --signal:    #a3bd7e;
+    --signal-2:  #87a262;
+    --on-signal: #1a1d12;
+    --bubble-in: #282118;
+    --ember:     #d68b4c;
+    --ok:        #a3bd7e;
   }
+}
+:root[data-theme="light"] {
+  --paper:#f2ede2; --surface:#fbf8f1; --surface-2:#e7dfcf; --ink:#1d1913;
+  --ink-2:#6a6152; --ink-3:#9a9081; --line:#ded4c0; --signal:#4c6636;
+  --signal-2:#3b5029; --on-signal:#fbf8f1; --bubble-in:#fffdf8; --ember:#c1743a; --ok:#4c6636;
+}
+:root[data-theme="dark"] {
+  --paper:#15120d; --surface:#1e1a14; --surface-2:#272119; --ink:#f1e9db;
+  --ink-2:#ab9f8b; --ink-3:#7d7263; --line:#322a20; --signal:#a3bd7e;
+  --signal-2:#87a262; --on-signal:#1a1d12; --bubble-in:#282118; --ember:#d68b4c; --ok:#a3bd7e;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
   font-size: 17px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-.wrap {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 0 20px;
+/* Тёплое свечение по краям, чтобы фон не был плоским */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(880px 620px at 6% -8%,  color-mix(in srgb, var(--ember)  16%, transparent), transparent 60%),
+    radial-gradient(760px 560px at 100% 6%, color-mix(in srgb, var(--signal) 14%, transparent), transparent 58%),
+    radial-gradient(680px 520px at 55% 106%, color-mix(in srgb, var(--ember) 10%, transparent), transparent 60%);
 }
 
-/* ─────────────────────────────────────────────
-   ШАПКА
-   ───────────────────────────────────────────── */
-.hero {
-  padding: 72px 0 56px;
-  border-bottom: 1px solid var(--border);
-}
+.wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: 20px; }
 
-.hero__name {
-  font-size: 15px;
-  letter-spacing: 0.08em;
+a { color: var(--signal); }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 4px; }
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 18px;
+  color: var(--ink-3);
 }
 
-.hero__title {
-  font-size: clamp(28px, 6vw, 44px);
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0 0 20px;
-}
-
-.hero__title span { color: var(--accent); }
-
-.hero__sub {
-  font-size: clamp(17px, 2.4vw, 19px);
-  color: var(--muted);
-  max-width: 620px;
-  margin: 0 0 32px;
-}
-
-/* Кнопки */
-.btns { display: flex; flex-wrap: wrap; gap: 12px; }
-
+/* ═══════════════ КНОПКИ ═══════════════ */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 13px 22px;
-  border-radius: 999px;
-  font-weight: 600;
+  gap: 9px;
+  padding: 15px 26px;
+  border-radius: 4px;              /* острее — уходим от «всё скруглено» */
   font-size: 16px;
+  font-weight: 600;
   text-decoration: none;
   border: 1px solid transparent;
-  transition: transform .12s ease, opacity .12s ease;
+  transition: transform .15s ease, background .15s ease;
 }
-.btn:active { transform: scale(0.97); }
+.btn--go { background: var(--signal); color: var(--on-signal); }
+.btn--go:hover { background: var(--signal-2); transform: translateY(-2px); }
+.btn--quiet { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn--quiet:hover { border-color: var(--signal); color: var(--signal); }
+.btn:active { transform: translateY(0); }
 
-.btn--primary { background: var(--accent); color: var(--accent-ink); }
-.btn--primary:hover { opacity: .9; }
+/* ═══════════════ ШАПКА ═══════════════ */
+.hero { padding: 46px 0 58px; }
+.hero__grid { display: grid; gap: 40px; align-items: center; }
 
-.btn--ghost {
-  background: transparent;
-  color: var(--text);
-  border-color: var(--border);
+.hero__title {
+  font-size: clamp(34px, 7.4vw, 58px);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.034em;
+  margin: 16px 0 20px;
+  text-wrap: balance;
 }
-.btn--ghost:hover { background: var(--surface); }
+.hero__title em {
+  font-style: normal;
+  color: var(--signal);
+  box-shadow: inset 0 -0.15em 0 color-mix(in srgb, var(--signal) 22%, transparent);
+}
 
-/* ─────────────────────────────────────────────
-   СЕКЦИИ
-   ───────────────────────────────────────────── */
-section { padding: 56px 0; }
-
-.section__title {
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
+.hero__lead {
+  font-size: clamp(17px, 2.1vw, 19.5px);
+  color: var(--ink-2);
+  max-width: 42ch;
   margin: 0 0 28px;
-  font-weight: 600;
 }
 
-/* ─────────────────────────────────────────────
-   КЕЙСЫ
-   ───────────────────────────────────────────── */
-.cases { display: grid; gap: 20px; }
+.hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
 
-.case {
+/* ═══════════════ ЧАТ ═══════════════ */
+.demo { display: grid; gap: 13px; justify-items: center; width: 100%; }
+
+.chat {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 26px;
-}
-
-.case__badge {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  padding: 5px 11px;
-  border-radius: 999px;
-  margin-bottom: 16px;
-}
-
-.case__title {
-  font-size: clamp(20px, 3.4vw, 25px);
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  margin: 0 0 18px;
-  line-height: 1.3;
-}
-
-/* Пара «Проблема / Решение» */
-.case__row { margin-bottom: 14px; }
-
-.case__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 3px;
-}
-
-.case__text { margin: 0; }
-
-/* Слот под видео или скриншот */
-.case__media {
-  margin: 22px 0 18px;
-  border-radius: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   overflow: hidden;
-  background: var(--surface-2);
+  max-width: 410px;
+  width: 100%;
 }
 
-.case__media video,
-.case__media img { display: block; width: 100%; height: auto; }
+.chat__bar { display: flex; align-items: center; gap: 11px; padding: 12px 15px; border-bottom: 1px solid var(--line); }
 
-.media__placeholder {
-  aspect-ratio: 16 / 9;
+.chat__ava {
+  width: 37px; height: 37px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--signal), var(--signal-2));
+  display: grid; place-items: center;
+  font-size: 17px;
+  flex: none;
+}
+
+.chat__who { font-weight: 650; font-size: 15px; line-height: 1.25; }
+.chat__state { font-size: 12px; color: var(--ok); font-family: var(--font-mono); }
+
+.chat__body {
+  padding: 17px 14px 14px;
+  min-height: 424px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 9px;
+  background:
+    radial-gradient(circle at 16% 10%, color-mix(in srgb, var(--signal) 9%, transparent), transparent 45%),
+    radial-gradient(circle at 86% 82%, color-mix(in srgb, var(--ember) 10%, transparent), transparent 44%),
+    var(--surface-2);
+  transition: opacity .4s ease;
+}
+.chat__body.fade { opacity: 0; }
+
+.row { display: flex; }
+.row--in  { justify-content: flex-start; }
+.row--out { justify-content: flex-end; }
+
+.msg { max-width: 85%; padding: 10px 13px; font-size: 14.5px; line-height: 1.45; border-radius: 14px; }
+.row--in  .msg { background: var(--bubble-in); border-bottom-left-radius: 4px; color: var(--ink); }
+.row--out .msg { background: var(--signal); border-bottom-right-radius: 4px; color: var(--on-signal); }
+.msg b { font-weight: 650; }
+
+.msg__time { display: block; font-family: var(--font-mono); font-size: 10px; opacity: .5; margin-top: 4px; text-align: right; }
+
+.keys { display: grid; gap: 6px; margin-top: 9px; }
+.keys--2 { grid-template-columns: 1fr 1fr; }
+
+.key {
+  font-size: 13.2px;
+  font-weight: 600;
+  text-align: center;
+  padding: 9px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--signal) 12%, transparent);
+  color: var(--signal);
+  border: 1px solid color-mix(in srgb, var(--signal) 24%, transparent);
+}
+.key--hit { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+
+.dots { display: flex; gap: 4px; padding: 13px 15px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); animation: bounce 1.25s infinite; }
+.dots i:nth-child(2) { animation-delay: .16s; }
+.dots i:nth-child(3) { animation-delay: .32s; }
+@keyframes bounce {
+  0%, 62%, 100% { transform: translateY(0); opacity: .45; }
+  32%           { transform: translateY(-5px); opacity: 1; }
+}
+
+.pop { animation: pop .32s cubic-bezier(.22,.9,.34,1) both; }
+@keyframes pop {
+  from { opacity: 0; transform: translateY(9px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.demo__foot { display: flex; align-items: center; gap: 11px; }
+.demo__pips { display: flex; gap: 6px; }
+.pip { width: 6px; height: 6px; border-radius: 50%; background: var(--line); transition: background .3s ease, transform .3s ease; }
+.pip.on { background: var(--signal); transform: scale(1.4); }
+
+/* ═══════════════ НИТЬ ═══════════════
+   Линия идёт через всю страницу, разделы крепятся к ней узлами. */
+.thread { position: relative; padding-bottom: 20px; }
+
+.thread::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 9px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--line) 40px, var(--line) calc(100% - 90px), transparent);
+}
+
+.node { position: relative; display: grid; gap: 20px; padding: 46px 0 46px 34px; }
+
+/* узел на линии */
+.node__rail { position: relative; }
+.node__rail::before {
+  content: "";
+  position: absolute;
+  left: -32px;
+  top: 7px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--signal);
+}
+
+.node__label { display: block; margin-bottom: 4px; }
+.node__num { color: var(--signal); }
+
+.node h2 {
+  font-size: clamp(24px, 4vw, 33px);
+  font-weight: 800;
+  letter-spacing: -0.026em;
+  line-height: 1.16;
+  margin: 0;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+/* ═══════════════ ЗАПИСИ О РАБОТАХ ═══════════════
+   Без коробок — открытые записи, разделённые волоском. */
+.rec { padding: 30px 0; border-top: 1px solid var(--line); }
+.rec:first-child { border-top: none; padding-top: 4px; }
+
+.rec__kind { color: var(--signal); margin-bottom: 10px; }
+
+.rec__name {
+  font-size: clamp(20px, 3vw, 25px);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+  margin: 0 0 8px;
+  text-wrap: balance;
+}
+
+.rec__where { font-size: 15px; color: var(--ink-3); margin: 0 0 22px; max-width: 62ch; }
+
+/* Было → Стало */
+.ba { display: grid; gap: 0; margin-bottom: 22px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.ba__col { padding: 16px 17px; }
+.ba__col--before { background: var(--surface-2); }
+.ba__col--after  { background: color-mix(in srgb, var(--signal) 10%, transparent); }
+.ba__tag { margin-bottom: 6px; }
+.ba__col--after .ba__tag { color: var(--signal); }
+.ba__col p { margin: 0; font-size: 15.4px; color: var(--ink-2); }
+.ba__col--after p { color: var(--ink); }
+
+.can { list-style: none; padding: 0; margin: 0 0 22px; display: grid; gap: 9px; max-width: 64ch; }
+.can li { display: flex; gap: 10px; align-items: flex-start; font-size: 15.4px; color: var(--ink-2); }
+.can svg { flex: none; margin-top: 5px; color: var(--signal); }
+
+.shot { border-radius: 6px; overflow: hidden; margin-bottom: 18px; }
+.shot video, .shot img { display: block; width: 100%; height: auto; }
+.shot__empty {
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
   text-align: center;
   padding: 20px;
-  color: var(--muted);
-  font-size: 14px;
-  border: 1px dashed var(--border);
-  border-radius: 12px;
-}
-
-/* Нижняя строка карточки: срок, ссылка, технологии */
-.case__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.case__meta { font-size: 14px; color: var(--muted); }
-.case__meta b { color: var(--text); font-weight: 600; }
-
-.case__link {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
-}
-.case__link:hover { text-decoration: underline; }
-
-.case__tech {
-  width: 100%;
-  font-size: 13px;
-  color: var(--muted);
-  opacity: .75;
-}
-
-/* Незаполненные кейсы — выглядят как заготовки */
-.case--empty {
-  background: transparent;
-  border-style: dashed;
-}
-.case--empty .case__title { color: var(--muted); }
-
-/* ─────────────────────────────────────────────
-   КАК Я РАБОТАЮ
-   ───────────────────────────────────────────── */
-.steps { display: grid; gap: 16px; counter-reset: step; }
-
-.step {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.step::before {
-  counter-increment: step;
-  content: counter(step);
-  flex: 0 0 32px;
-  height: 32px;
-  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-3);
   background: var(--surface-2);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
 }
 
-.step__title { font-weight: 600; margin: 3px 0 2px; }
-.step__text { margin: 0; color: var(--muted); font-size: 16px; }
+.rec__foot { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.rec__foot b { color: var(--ink-2); font-weight: 600; }
 
-/* ─────────────────────────────────────────────
-   КОНТАКТ
-   ───────────────────────────────────────────── */
-.contact {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 36px 28px;
-  text-align: center;
+/* ═══════════════ СПИСОК УСЛУГ ═══════════════ */
+.svc { display: grid; gap: 0; }
+.svc__item { padding: 20px 0; border-top: 1px solid var(--line); display: grid; gap: 5px; }
+.svc__item:first-child { border-top: none; padding-top: 4px; }
+.svc__t { font-weight: 650; font-size: 17.5px; letter-spacing: -0.01em; }
+.svc__d { color: var(--ink-2); font-size: 15.4px; max-width: 62ch; }
+
+/* ═══════════════ ШАГИ ═══════════════ */
+.steps { display: grid; gap: 22px; }
+.step { display: grid; gap: 6px; padding-left: 16px; border-left: 2px solid var(--line); }
+.step:hover { border-left-color: var(--signal); }
+.step__t { font-weight: 700; font-size: 18px; letter-spacing: -0.012em; }
+.step__d { color: var(--ink-2); margin: 0; font-size: 15.6px; max-width: 56ch; }
+
+/* ═══════════════ ФИНАЛ ═══════════════ */
+.end__t {
+  font-size: clamp(25px, 4.6vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.1;
+  margin: 0 0 14px;
+  max-width: 17ch;
+  text-wrap: balance;
 }
-
-.contact__title {
-  font-size: clamp(22px, 4vw, 28px);
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  margin: 0 0 10px;
-}
-
-.contact__text {
-  color: var(--muted);
-  margin: 0 0 26px;
-  max-width: 460px;
-  margin-inline: auto;
-}
-
-.contact .btns { justify-content: center; }
+.end__d { color: var(--ink-2); margin: 0 0 26px; max-width: 46ch; }
 
 footer {
-  padding: 40px 0 56px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 14px;
+  margin-top: 10px;
+  padding: 26px 0 50px 34px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  justify-content: space-between;
+}
+footer a { text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* появление при прокрутке */
+.rise { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s cubic-bezier(.22,.9,.34,1); }
+.rise.seen { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { opacity: 1; transform: none; transition: none; }
+  .pop, .dots i { animation: none !important; }
+  .btn, .chat__body, .pip { transition: none; }
 }
 
-/* ─────────────────────────────────────────────
-   ПЛАНШЕТ И ДЕСКТОП
-   ───────────────────────────────────────────── */
-@media (min-width: 720px) {
-  .hero { padding: 96px 0 64px; }
-  .case { padding: 32px; }
-  .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
-  .step { flex-direction: column; gap: 12px; }
+/* ═══════════════ ПЛАНШЕТ ═══════════════ */
+@media (min-width: 640px) {
+  .ba { grid-template-columns: 1fr 1fr; }
+  .ba__col--after { border-left: 1px solid var(--line); }
+}
+
+/* ═══════════════ ДЕСКТОП ═══════════════ */
+@media (min-width: 940px) {
+  .hero { padding: 64px 0 76px; }
+  .hero__grid { grid-template-columns: 1.02fr .98fr; gap: 56px; }
+  .demo { justify-self: end; }
+
+  .thread::before { left: var(--rail); }
+
+  /* рейка с подписью слева, содержимое справа */
+  .node {
+    grid-template-columns: var(--rail) 1fr;
+    gap: 0;
+    padding: 60px 0;
+    align-items: start;
+  }
+  .node__rail {
+    position: sticky;
+    top: 30px;
+    padding-right: 34px;
+  }
+  .node__rail::before { left: auto; right: -5px; top: 6px; }
+  .node__body { padding-left: 34px; }
+  .node h2 { font-size: clamp(26px, 2.6vw, 34px); }
+
+  footer { padding-left: calc(var(--rail) + 34px); }
 }
 </style>
 </head>
@@ -332,207 +425,384 @@ footer {
 
 <!-- ═══════════════ ШАПКА ═══════════════ -->
 <header class="hero">
-  <div class="wrap">
-    <p class="hero__name">Vanya</p>
-    <h1 class="hero__title">
-      Делаю Telegram-ботов и <span>автоматизирую рутину</span> малого бизнеса
-    </h1>
-    <p class="hero__sub">
-      Беру задачу, которую сейчас делают руками, и превращаю её в то, что работает само.
-      От идеи до работающего решения — 1–2 недели.
-    </p>
-    <div class="btns">
-      <a class="btn btn--primary" href="https://t.me/r1tak4">Написать в Telegram</a>
-      <a class="btn btn--ghost" href="#cases">Посмотреть работы</a>
+  <div class="wrap hero__grid">
+
+    <div>
+      <p class="mono">Telegram-боты · мини-приложения · автоматизация</p>
+      <h1 class="hero__title">Рутину делает бот. <em>Вы занимаетесь делом.</em></h1>
+      <p class="hero__lead">
+        Запись клиентов, заказы, заявки, напоминания, отчёты — беру то,
+        что у вас сейчас делают вручную, и превращаю в то, что работает само.
+      </p>
+      <div class="hero__cta">
+        <a class="btn btn--go" href="https://t.me/r1tak4">Обсудить задачу</a>
+        <a class="btn btn--quiet" href="#works">Смотреть работы</a>
+      </div>
+      <p class="mono">Запуск за 1–2 недели · первый разбор задачи бесплатно</p>
     </div>
+
+    <!-- Живой чат: три бизнеса сменяют друг друга -->
+    <div class="demo" id="demo">
+      <div class="chat">
+        <div class="chat__bar">
+          <div class="chat__ava" id="chatAva" aria-hidden="true">🔧</div>
+          <div>
+            <div class="chat__who" id="chatWho">Гараж 14</div>
+            <div class="chat__state">бот · отвечает сразу</div>
+          </div>
+        </div>
+        <div class="chat__body" id="chatBody" role="img"
+             aria-label="Примеры работы бота: запись в автосервис, оформление заказа в магазине и запись в студию красоты."></div>
+      </div>
+      <div class="demo__foot">
+        <span class="mono" id="demoLabel">пример: автосервис</span>
+        <span class="demo__pips" id="demoPips" aria-hidden="true"></span>
+      </div>
+    </div>
+
   </div>
 </header>
 
-<!-- ═══════════════ КЕЙСЫ ═══════════════ -->
-<section id="cases">
-  <div class="wrap">
-    <h2 class="section__title">Работы</h2>
-    <div class="cases">
+<!-- ═══════════════ НИТЬ ═══════════════ -->
+<main class="wrap thread">
 
-      <!-- ── КЕЙС 1: барбершоп ── -->
-      <article class="case">
-        <span class="case__badge">Бот-сервис</span>
-        <h3 class="case__title">Запись в барбершоп без администратора</h3>
+  <!-- ── 01 · РАБОТЫ ── -->
+  <section class="node" id="works">
+    <div class="node__rail rise">
+      <span class="mono node__label"><span class="node__num">01</span> · работы</span>
+      <h2>Что уже сделано и как это меняет работу</h2>
+    </div>
 
-        <div class="case__row">
-          <div class="case__label">Проблема</div>
-          <p class="case__text">
-            Записи ведутся через переписку и звонки: администратор вручную сверяет свободные
-            окна, отвечает каждому клиенту и держит расписание в блокноте. Заявки теряются,
-            а часть клиентов просто забывает прийти.
-          </p>
+    <div class="node__body">
+
+      <article class="rec rise">
+        <div class="mono rec__kind">Бот записи и оплаты</div>
+        <h3 class="rec__name">Клиенты записываются сами, без администратора</h3>
+        <p class="rec__where">Сделано для барбершопа. Услуги, мастера и расписание задаются настройками — тот же бот подходит салону, автосервису, студии, клинике: любому бизнесу, где записывают на время.</p>
+
+        <div class="ba">
+          <div class="ba__col ba__col--before">
+            <div class="mono ba__tag">Было</div>
+            <p>Запись через переписку и звонки. Администратор вручную сверяет свободные окна и отвечает каждому. Заявки теряются, часть клиентов не приходит.</p>
+          </div>
+          <div class="ba__col ba__col--after">
+            <div class="mono ba__tag">Стало</div>
+            <p>Клиент записывается сам за полминуты, в любое время суток. Расписание всегда актуальное, о визите бот напоминает дважды.</p>
+          </div>
         </div>
 
-        <div class="case__row">
-          <div class="case__label">Решение</div>
-          <p class="case__text">
-            Клиент выбирает услугу из каталога с ценами, мастера и свободное время
-            в календаре на две недели вперёд — бот показывает только реально свободные окна.
-            Оплатить можно картой прямо в Telegram или на месте. Напоминания приходят
-            за сутки и за два часа до визита, отменить запись — одна кнопка.
-          </p>
+        <ul class="can">
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Каталог услуг с ценами и длительностью, выбор специалиста</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Календарь на две недели — только реально свободные окна</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Оплата картой прямо в Telegram или на месте</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Напоминания за сутки и за два часа, отмена в одну кнопку</span></li>
+        </ul>
+
+        <div class="shot">
+          <!-- ЗАМЕНИ на: <video src="video/zapis.mp4" autoplay loop muted playsinline></video> -->
+          <div class="shot__empty">видео: выбор услуги → календарь → оплата → напоминание</div>
         </div>
 
-        <div class="case__media">
-          <!-- ЗАМЕНИ на: <video src="video/barber.mp4" autoplay loop muted playsinline></video> -->
-          <div class="media__placeholder">Сюда — видео 20–30 сек: выбор услуги и мастера → календарь → подтверждение → напоминание</div>
-        </div>
-
-        <div class="case__foot">
-          <!-- ВПИШИ реальный срок, за который сделал -->
-          <span class="case__meta">Срок: <b>укажите</b></span>
-          <span class="case__tech">Python · aiogram 3 · SQLite · Telegram Payments · автонапоминания по расписанию</span>
+        <div class="mono rec__foot">
+          <!-- ВПИШИ реальный срок -->
+          <span>срок: <b>укажите</b></span>
+          <span>Python · aiogram 3 · SQLite · Telegram Payments</span>
         </div>
       </article>
 
-      <!-- ── КЕЙС 2: трекер привычек ── -->
-      <article class="case">
-        <span class="case__badge">Mini App</span>
-        <h3 class="case__title">Приложение внутри Telegram — без установки</h3>
+      <article class="rec rise">
+        <div class="mono rec__kind">Мини-приложение</div>
+        <h3 class="rec__name">Полноценное приложение внутри Telegram — устанавливать нечего</h3>
+        <p class="rec__where">Показано на трекере привычек. Тот же каркас — под личный кабинет клиента, каталог, заказы или запись.</p>
 
-        <div class="case__row">
-          <div class="case__label">Задача</div>
-          <p class="case__text">
-            Показать, что полноценное приложение — вкладки, календарь, статистика, настройки —
-            может жить прямо внутри Telegram. Пользователю не нужно ничего устанавливать,
-            регистрироваться и запоминать пароль.
-          </p>
-        </div>
-
-        <div class="case__row">
-          <div class="case__label">Что сделано</div>
-          <p class="case__text">
-            Трекер привычек с отметкой в один тап, расписанием по дням недели и статистикой.
-            Уведомления приходят точно ко времени события, а утреннее напоминание и вечернюю
-            сводку пользователь настраивает сам. Тот же подход работает для записи, заказов,
-            каталога или личного кабинета клиента.
-          </p>
+        <div class="ba">
+          <div class="ba__col ba__col--before">
+            <div class="mono ba__tag">Обычно</div>
+            <p>Чтобы дать клиенту личный кабинет, нужно приложение в сторах: разработка, модерация, установка, регистрация, забытый пароль.</p>
+          </div>
+          <div class="ba__col ba__col--after">
+            <div class="mono ba__tag">Здесь</div>
+            <p>Тот же интерфейс открывается кнопкой в чате. Ничего не ставят, не регистрируются и не помнят паролей — вход уже есть.</p>
+          </div>
         </div>
 
-        <div class="case__media">
-          <!-- ЗАМЕНИ на: <video src="video/tracker.mp4" autoplay loop muted playsinline></video> -->
-          <div class="media__placeholder">Сюда — видео 20–30 сек: открытие мини-приложения → отметка привычки → вкладка статистики</div>
+        <ul class="can">
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Вкладки, календарь, статистика и настройки — как в обычном приложении</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Уведомления приходят точно ко времени события</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Время напоминаний пользователь настраивает сам</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Работает на телефоне и компьютере одинаково</span></li>
+        </ul>
+
+        <div class="shot">
+          <!-- ЗАМЕНИ на: <video src="video/miniapp.mp4" autoplay loop muted playsinline></video> -->
+          <div class="shot__empty">видео: открытие приложения → отметка → статистика</div>
         </div>
 
-        <div class="case__foot">
-          <!-- ВПИШИ реальный срок, за который сделал -->
-          <span class="case__meta">Срок: <b>укажите</b></span>
-          <span class="case__tech">Node.js · Express · SQLite · Telegram Mini Apps · уведомления по часовому поясу</span>
-        </div>
-      </article>
-
-      <!-- ── КЕЙС 3: заглушка ── -->
-      <article class="case case--empty">
-        <span class="case__badge">Автоматизация рутины</span>
-        <h3 class="case__title">Заявки с сайта попадают куда нужно сами</h3>
-        <div class="case__row">
-          <div class="case__label">Идея кейса</div>
-          <p class="case__text">
-            Заявка с сайта или из формы автоматически уходит в таблицу и в уведомление ответственному.
-            Никто не переносит данные руками, ни одна заявка не теряется.
-          </p>
-        </div>
-        <div class="case__media">
-          <div class="media__placeholder">Кейс в работе</div>
-        </div>
-        <div class="case__foot">
-          <span class="case__meta">Скоро</span>
-        </div>
-      </article>
-
-      <!-- ── КЕЙС 4: заглушка ── -->
-      <article class="case case--empty">
-        <span class="case__badge">Сбор данных</span>
-        <h3 class="case__title">Ежедневная сводка по ценам конкурентов</h3>
-        <div class="case__row">
-          <div class="case__label">Идея кейса</div>
-          <p class="case__text">
-            Программа сама обходит сайты конкурентов, собирает цены и каждое утро присылает
-            сводку с тем, что изменилось за сутки.
-          </p>
-        </div>
-        <div class="case__media">
-          <div class="media__placeholder">Кейс в работе</div>
-        </div>
-        <div class="case__foot">
-          <span class="case__meta">Скоро</span>
-        </div>
-      </article>
-
-      <!-- ── КЕЙС 5: заглушка ── -->
-      <article class="case case--empty">
-        <span class="case__badge">AI-обработка</span>
-        <h3 class="case__title">Входящие сообщения разбираются автоматически</h3>
-        <div class="case__row">
-          <div class="case__label">Идея кейса</div>
-          <p class="case__text">
-            Письма, заявки и документы превращаются в аккуратную таблицу: тема, категория,
-            срочность. Сотруднику остаётся только принять решение.
-          </p>
-        </div>
-        <div class="case__media">
-          <div class="media__placeholder">Кейс в работе</div>
-        </div>
-        <div class="case__foot">
-          <span class="case__meta">Скоро</span>
+        <div class="mono rec__foot">
+          <!-- ВПИШИ реальный срок -->
+          <span>срок: <b>укажите</b></span>
+          <span>Node.js · Express · SQLite · Telegram Mini Apps</span>
         </div>
       </article>
 
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ═══════════════ КАК РАБОТАЮ ═══════════════ -->
-<section>
-  <div class="wrap">
-    <h2 class="section__title">Как я работаю</h2>
-    <div class="steps">
-      <div class="step">
-        <div>
-          <p class="step__title">Разбираемся в задаче</p>
-          <p class="step__text">Вы рассказываете, что сейчас делается руками. Я говорю, можно ли это автоматизировать, за какой срок и сколько будет стоить.</p>
+  <!-- ── 02 · ЕЩЁ БЕРУСЬ ── -->
+  <section class="node">
+    <div class="node__rail rise">
+      <span class="mono node__label"><span class="node__num">02</span> · ещё берусь</span>
+      <h2>Если что-то делается руками — скорее всего, можно не делать</h2>
+    </div>
+
+    <div class="node__body rise">
+      <div class="svc">
+        <div class="svc__item">
+          <div class="svc__t">Заявки доходят сами</div>
+          <div class="svc__d">Заявка с сайта или из формы сразу падает в таблицу и уведомлением ответственному. Никто ничего не переносит, ничего не теряется.</div>
         </div>
-      </div>
-      <div class="step">
-        <div>
-          <p class="step__title">Делаю и показываю</p>
-          <p class="step__text">Присылаю рабочую версию, вы её пробуете. Правим, пока не станет удобно.</p>
+        <div class="svc__item">
+          <div class="svc__t">Сводка по конкурентам каждое утро</div>
+          <div class="svc__d">Программа сама обходит нужные сайты, собирает цены и присылает список того, что изменилось за сутки.</div>
         </div>
-      </div>
-      <div class="step">
-        <div>
-          <p class="step__title">Запускаю и поддерживаю</p>
-          <p class="step__text">Всё разворачивается и работает круглосуточно. Если что-то сломалось — чиню.</p>
+        <div class="svc__item">
+          <div class="svc__t">Входящие разбираются без человека</div>
+          <div class="svc__d">Письма, заявки и документы превращаются в аккуратную таблицу: тема, категория, срочность. Сотруднику остаётся решение.</div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ═══════════════ КОНТАКТ ═══════════════ -->
-<section>
-  <div class="wrap">
-    <div class="contact">
-      <h2 class="contact__title">Есть задача, которую делают руками?</h2>
-      <p class="contact__text">
-        Опишите её в двух предложениях — отвечу, можно ли автоматизировать,
-        за какой срок и сколько это будет стоить. Консультация бесплатная.
+  <!-- ── 03 · КАК РАБОТАЮ ── -->
+  <section class="node">
+    <div class="node__rail rise">
+      <span class="mono node__label"><span class="node__num">03</span> · как проходит работа</span>
+      <h2>Три шага, без сюрпризов по деньгам и срокам</h2>
+    </div>
+
+    <div class="node__body rise">
+      <div class="steps">
+        <div class="step">
+          <div class="step__t">Смотрим задачу</div>
+          <p class="step__d">Рассказываете, что сейчас делается руками. Говорю, можно ли это автоматизировать, за какой срок и сколько будет стоить. Бесплатно.</p>
+        </div>
+        <div class="step">
+          <div class="step__t">Делаю и показываю</div>
+          <p class="step__d">Присылаю рабочую версию, вы пробуете её вживую. Правим, пока не станет удобно именно вам.</p>
+        </div>
+        <div class="step">
+          <div class="step__t">Запускаю и остаюсь рядом</div>
+          <p class="step__d">Всё разворачивается и работает круглосуточно. Сломается — чиню. Понадобится доработка — сделаю.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 04 · СВЯЗАТЬСЯ ── -->
+  <section class="node">
+    <div class="node__rail rise">
+      <span class="mono node__label"><span class="node__num">04</span> · связаться</span>
+    </div>
+
+    <div class="node__body rise">
+      <h2 class="end__t">Расскажите, что у вас делают руками</h2>
+      <p class="end__d">
+        Двух предложений хватит. Отвечу, можно ли это автоматизировать,
+        сколько займёт и сколько будет стоить — до начала работы и без обязательств.
       </p>
-      <div class="btns">
-        <a class="btn btn--primary" href="https://t.me/r1tak4">Написать @r1tak4</a>
-      </div>
+      <a class="btn btn--go" href="https://t.me/r1tak4">Написать в Telegram → @r1tak4</a>
     </div>
-  </div>
-</section>
+  </section>
 
-<footer>
-  <div class="wrap">Vanya · Telegram-боты и автоматизация · <a href="https://t.me/r1tak4" style="color:var(--accent);text-decoration:none">@r1tak4</a></div>
-</footer>
+  <footer class="mono">
+    <span>Vanya · боты и автоматизация для бизнеса</span>
+    <a href="https://t.me/r1tak4">@r1tak4</a>
+  </footer>
+
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ДИАЛОГИ В ШАПКЕ
+   Три сценария крутятся по кругу. Чтобы добавить свой —
+   скопируй блок целиком и поменяй тексты.
+     label — подпись под чатом
+     who / icon — шапка чата
+     steps: from 'bot' | 'user', text, keys (кнопки), cols (2 = в два столбца), wait (мс)
+   ═══════════════════════════════════════════════ */
+const SCENARIOS = [
+  {
+    label: 'пример: автосервис', who: 'Гараж 14', icon: '🔧',
+    clock: ['10:12','10:12','10:13','10:13','10:13','10:14','10:14'],
+    steps: [
+      { from:'bot',  wait:700, text:'Здравствуйте! Записываю на сервис. Что нужно сделать?',
+        keys:['Замена масла · 2500 ₽','Диагностика · 1500 ₽','Шиномонтаж · 3000 ₽'] },
+      { from:'user', wait:850, text:'Диагностика · 1500 ₽' },
+      { from:'bot',  wait:750, text:'На какой машине приедете?',
+        keys:['Toyota Camry · А123ВС','Другая машина'] },
+      { from:'user', wait:700, text:'Toyota Camry · А123ВС' },
+      { from:'bot',  wait:850, text:'Свободное время завтра:',
+        keys:['09:00','12:30','16:00'], cols:2 },
+      { from:'user', wait:650, text:'12:30' },
+      { from:'bot',  wait:950, text:'Записал ✓<br><b>Диагностика</b><br>Завтра в 12:30, Toyota Camry<br><br>Напомню за 2 часа до визита.' },
+    ]
+  },
+  {
+    label: 'пример: интернет-магазин', who: 'Кофе Роста', icon: '📦',
+    clock: ['14:31','14:31','14:32','14:32','14:33','14:33','14:34'],
+    steps: [
+      { from:'bot',  wait:700, text:'Заказ на 1 840 ₽ собран. Как удобнее получить?',
+        keys:['Курьером сегодня · 300 ₽','Самовывоз · бесплатно','Почтой'] },
+      { from:'user', wait:850, text:'Курьером сегодня · 300 ₽' },
+      { from:'bot',  wait:750, text:'Как оплатите?',
+        keys:['Картой здесь','При получении'], cols:2 },
+      { from:'user', wait:700, text:'Картой здесь' },
+      { from:'bot',  wait:900, text:'Оплачено ✓<br>Заказ <b>№1043</b> передан курьеру.' },
+      { from:'user', wait:800, text:'А когда привезут?' },
+      { from:'bot',  wait:850, text:'Сегодня с 18:00 до 21:00. Как курьер выедет — пришлю номер для связи.' },
+    ]
+  },
+  {
+    label: 'пример: студия красоты', who: 'Студия «Форма»', icon: '✨',
+    clock: ['19:04','19:04','19:05','19:05','19:06','19:06','19:07'],
+    steps: [
+      { from:'bot',  wait:700, text:'Добрый вечер! К кому записать?',
+        keys:['Аня · маникюр','Марина · брови','Лена · ресницы'] },
+      { from:'user', wait:850, text:'Аня · маникюр' },
+      { from:'bot',  wait:750, text:'Ближайшее свободное время у Ани:',
+        keys:['сегодня 20:00','завтра 11:00','завтра 17:30'] },
+      { from:'user', wait:700, text:'завтра 11:00' },
+      { from:'bot',  wait:900, text:'Записала ✓<br><b>Маникюр · Аня</b><br>Завтра в 11:00' },
+      { from:'user', wait:800, text:'Можно перенести на 12?' },
+      { from:'bot',  wait:850, text:'Готово ✓ Перенесла на 12:00. Напомню утром и за 2 часа.' },
+    ]
+  },
+];
+
+const body    = document.getElementById('chatBody');
+const who     = document.getElementById('chatWho');
+const ava     = document.getElementById('chatAva');
+const label   = document.getElementById('demoLabel');
+const pipsBox = document.getElementById('demoPips');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+SCENARIOS.forEach(() => {
+  const p = document.createElement('span');
+  p.className = 'pip';
+  pipsBox.appendChild(p);
+});
+const pips = [...pipsBox.children];
+
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+function bubble(step, time) {
+  const row = document.createElement('div');
+  row.className = 'row row--' + (step.from === 'bot' ? 'in' : 'out');
+
+  const msg = document.createElement('div');
+  msg.className = 'msg' + (reduced ? '' : ' pop');
+  msg.innerHTML = step.text;
+
+  if (step.keys) {
+    const keys = document.createElement('div');
+    keys.className = 'keys' + (step.cols === 2 ? ' keys--2' : '');
+    step.keys.forEach(t => {
+      const k = document.createElement('div');
+      k.className = 'key';
+      k.textContent = t;
+      keys.appendChild(k);
+    });
+    msg.appendChild(keys);
+  }
+
+  const t = document.createElement('span');
+  t.className = 'msg__time';
+  t.textContent = time || '';
+  msg.appendChild(t);
+
+  row.appendChild(msg);
+  body.appendChild(row);
+}
+
+/* подсвечивает кнопку, которую «нажал» клиент */
+function markChoice(text) {
+  const hit = [...body.querySelectorAll('.key')].reverse().find(k => k.textContent === text);
+  if (hit) hit.classList.add('key--hit');
+}
+
+function typing() {
+  const row = document.createElement('div');
+  row.className = 'row row--in';
+  const d = document.createElement('div');
+  d.className = 'msg dots';
+  d.innerHTML = '<i></i><i></i><i></i>';
+  row.appendChild(d);
+  body.appendChild(row);
+  return row;
+}
+
+function setScene(i) {
+  const s = SCENARIOS[i];
+  who.textContent = s.who;
+  ava.textContent = s.icon;
+  label.textContent = s.label;
+  pips.forEach((p, n) => p.classList.toggle('on', n === i));
+  body.textContent = '';
+}
+
+async function playScene(i) {
+  const s = SCENARIOS[i];
+  setScene(i);
+
+  if (reduced) {
+    s.steps.forEach((step, n) => {
+      bubble(step, s.clock[n]);
+      if (step.from === 'user') markChoice(step.text);
+    });
+    return;
+  }
+
+  for (let n = 0; n < s.steps.length; n++) {
+    const step = s.steps[n];
+    if (step.from === 'bot') {
+      const t = typing();
+      await wait(step.wait);
+      t.remove();
+    } else {
+      await wait(step.wait);
+      markChoice(step.text);
+      await wait(210);
+    }
+    bubble(step, s.clock[n]);
+  }
+}
+
+async function run() {
+  let i = 0;
+  if (reduced) { await playScene(0); return; }
+  while (true) {
+    await playScene(i);
+    await wait(4200);
+    body.classList.add('fade');
+    await wait(420);
+    i = (i + 1) % SCENARIOS.length;
+    body.classList.remove('fade');
+  }
+}
+
+new IntersectionObserver((entries, obs) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { run(); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.25 }).observe(document.getElementById('demo'));
+
+const rise = new IntersectionObserver((entries, obs) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('seen'); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.rise').forEach(el => rise.observe(el));
+</script>
 
 </body>
 </html>
