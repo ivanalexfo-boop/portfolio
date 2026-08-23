@@ -406,6 +406,22 @@ a { color: var(--neon); }
 .note { color: var(--text-2); font-size: 14.8px; margin: 0; max-width: 68ch; }
 .note b { color: var(--text); font-weight: 650; }
 
+/* ═══════════════ ЧТО ВХОДИТ В ЦЕНУ ═══════════════ */
+.incl { display: grid; gap: 22px; margin-bottom: 18px; }
+
+.incl__h {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 700; font-size: 16.5px;
+  margin-bottom: 12px;
+}
+.incl__h span { color: var(--text); }
+
+/* «не входит» — гасим, чтобы не спорило с главным списком */
+.cant { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.cant li { display: flex; gap: 9px; align-items: flex-start; font-size: 14.8px; color: var(--text-3); }
+.cant svg { flex: none; margin-top: 5px; color: var(--text-3); }
+.cant b { color: var(--text-2); font-weight: 600; }
+
 /* ═══════════════ ШАГИ ═══════════════ */
 .steps { display: grid; gap: 18px; }
 .step { display: grid; gap: 5px; }
@@ -457,6 +473,8 @@ footer a:hover { text-decoration: underline; }
   .w4 { grid-column: span 6; }
   .w6 { grid-column: span 6; }
   .ba { grid-template-columns: 1fr 1fr; }
+  .incl { grid-template-columns: 1fr 1fr; gap: 34px; }
+  .extras { grid-template-columns: 1fr 1fr; }
   .steps { grid-template-columns: repeat(3, 1fr); gap: 22px; }
 }
 
@@ -618,13 +636,13 @@ footer a:hover { text-decoration: underline; }
   <!-- ═════ ЗАГОЛОВОК: ЦЕНЫ ═════ -->
   <div class="tile tile--plain w6 rise">
     <span class="mono">03 · сколько стоит</span>
-    <h2 class="sec-h">Цены известны до начала работы</h2>
+    <h2 class="sec-h">Стартовые цены на первые проекты</h2>
   </div>
 
   <!-- ═════ ЦЕНА 1 ═════ -->
-  <div class="tile price w2 rise">
+  <div class="tile price w3 rise">
     <div class="mono price__kind">Бот заявок и уведомлений</div>
-    <div class="price__num">от 15 000 ₽</div>
+    <div class="price__num">от 8 000 ₽</div>
     <div class="mono price__term">3–5 дней</div>
     <ul class="can">
       <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Приём заявок и вопросов от клиентов</span></li>
@@ -635,10 +653,10 @@ footer a:hover { text-decoration: underline; }
   </div>
 
   <!-- ═════ ЦЕНА 2 ═════ -->
-  <div class="tile tile--hot price w2 rise">
+  <div class="tile tile--hot price w3 rise">
     <div class="price__badge">есть готовая основа</div>
     <div class="mono price__kind">Бот записи с оплатой</div>
-    <div class="price__num glow-text">от 35 000 ₽</div>
+    <div class="price__num glow-text">от 18 000 ₽</div>
     <div class="mono price__term">1–2 недели</div>
     <ul class="can">
       <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Каталог услуг с ценами, выбор специалиста</span></li>
@@ -648,10 +666,23 @@ footer a:hover { text-decoration: underline; }
     </ul>
   </div>
 
-  <!-- ═════ ЦЕНА 3 ═════ -->
-  <div class="tile price w2 rise">
+  <!-- ═════ ЦЕНА 3: AI-ПОМОЩНИК ═════ -->
+  <div class="tile tile--warm price w3 rise">
+    <div class="mono price__kind">AI-помощник для клиентов</div>
+    <div class="price__num">от 20 000 ₽</div>
+    <div class="mono price__term">1–2 недели</div>
+    <ul class="can">
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Отвечает своими словами, а не кнопками по сценарию</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Знает ваши услуги, цены, условия и режим работы</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Сложный вопрос передаёт живому человеку</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Работает ночью и в выходные, отвечает сразу</span></li>
+    </ul>
+  </div>
+
+  <!-- ═════ ЦЕНА 4 ═════ -->
+  <div class="tile price w3 rise">
     <div class="mono price__kind">Мини-приложение</div>
-    <div class="price__num">от 60 000 ₽</div>
+    <div class="price__num">от 30 000 ₽</div>
     <div class="mono price__term">2–3 недели</div>
     <ul class="can">
       <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Полный интерфейс внутри Telegram</span></li>
@@ -661,17 +692,53 @@ footer a:hover { text-decoration: underline; }
     </ul>
   </div>
 
+  <!-- ═════ ЧТО ВХОДИТ В ЦЕНУ ═════ -->
+  <div class="tile w6 rise">
+    <span class="mono">что входит в цену</span>
+    <h2 class="sec-h" style="margin-bottom:22px">Никаких «а это отдельно» в середине работы</h2>
+
+    <div class="incl">
+      <div>
+        <div class="incl__h"><span>Входит в любую работу</span></div>
+        <ul class="can">
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Разбор задачи и точная цена <b>до</b> начала работы</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Настройка под ваш бизнес: услуги, цены, тексты</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Запуск на хостинге — работает круглосуточно</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Инструкция и объяснение, как всем этим пользоваться</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Правки, если сделано не так, как договаривались</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Исходный код остаётся у вас</span></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="incl__h"><span>Оплачивается отдельно</span></div>
+        <ul class="cant">
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span><b>Хостинг</b> — 200–600 ₽ в месяц, на ваш аккаунт</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span><b>Приём платежей</b> — договор с провайдером оформляете вы</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span><b>Ответы AI-помощника</b> — по факту использования, обычно 300–1500 ₽ в месяц</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span><b>Новые функции</b> после сдачи — это новый заказ, не правка</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span><b>Ваши материалы</b> — тексты, фото, список услуг и цен</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="note">
+      Граница простая: <b>правка</b> — это когда сделано не так, как договорились, и она бесплатна.
+      <b>Доработка</b> — это когда захотелось нового, и она считается отдельно.
+    </p>
+  </div>
+
   <!-- ═════ ДОПОЛНИТЕЛЬНО ═════ -->
   <div class="tile w6 rise">
     <div class="extras">
       <div class="extra">
         <span class="extra__t">Автоматизация под задачу</span>
-        <span class="extra__p">от 10 000 ₽</span>
+        <span class="extra__p">от 5 000 ₽</span>
         <span class="extra__d">Парсер, сводка, разбор входящих, связка сайта с таблицей и мессенджером — цена зависит от объёма.</span>
       </div>
       <div class="extra">
         <span class="extra__t">Поддержка и доработки</span>
-        <span class="extra__p">от 3 000 ₽ / мес</span>
+        <span class="extra__p">от 1 500 ₽ / мес</span>
         <span class="extra__d">Слежу, чтобы всё работало, чиню поломки и вношу небольшие правки без отдельной оплаты.</span>
       </div>
     </div>
