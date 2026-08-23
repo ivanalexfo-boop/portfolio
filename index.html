@@ -355,6 +355,57 @@ a { color: var(--neon); }
 .mini__t { font-weight: 700; font-size: 17px; letter-spacing: -0.012em; }
 .mini__d { color: var(--text-2); font-size: 14.8px; }
 
+/* ═══════════════ ЦЕНЫ ═══════════════ */
+.price { display: grid; gap: 3px; align-content: start; }
+
+.price__kind { color: var(--neon-2); margin-bottom: 6px; }
+
+.price__num {
+  font-size: clamp(24px, 3.2vw, 29px);
+  font-weight: 800;
+  letter-spacing: -0.026em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.price__term { margin-bottom: 12px; }
+
+.price__badge {
+  display: inline-block;
+  justify-self: start;      /* иначе плашка растянется во всю ширину плитки */
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  color: var(--on-neon);
+  background: linear-gradient(96deg, var(--neon), var(--neon-2));
+  box-shadow: 0 0 16px -3px color-mix(in srgb, var(--neon) 80%, transparent);
+}
+
+.price .can { margin-bottom: 0; }
+
+/* мелкие услуги одной строкой */
+.extras { display: grid; gap: 12px; margin-bottom: 16px; }
+.extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--tile-2);
+  border: 1px solid var(--edge);
+}
+.extra__t { font-weight: 650; font-size: 16px; }
+.extra__p { font-weight: 750; font-size: 16px; color: var(--neon-2); font-variant-numeric: tabular-nums; margin-left: auto; }
+.extra__d { width: 100%; color: var(--text-2); font-size: 14.5px; }
+
+.note { color: var(--text-2); font-size: 14.8px; margin: 0; max-width: 68ch; }
+.note b { color: var(--text); font-weight: 650; }
+
 /* ═══════════════ ШАГИ ═══════════════ */
 .steps { display: grid; gap: 18px; }
 .step { display: grid; gap: 5px; }
@@ -564,9 +615,75 @@ footer a:hover { text-decoration: underline; }
     <div class="mini__d">Письма и документы превращаются в таблицу: тема, категория, срочность. Сотруднику остаётся решение.</div>
   </div>
 
+  <!-- ═════ ЗАГОЛОВОК: ЦЕНЫ ═════ -->
+  <div class="tile tile--plain w6 rise">
+    <span class="mono">03 · сколько стоит</span>
+    <h2 class="sec-h">Цены известны до начала работы</h2>
+  </div>
+
+  <!-- ═════ ЦЕНА 1 ═════ -->
+  <div class="tile price w2 rise">
+    <div class="mono price__kind">Бот заявок и уведомлений</div>
+    <div class="price__num">от 15 000 ₽</div>
+    <div class="mono price__term">3–5 дней</div>
+    <ul class="can">
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Приём заявок и вопросов от клиентов</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Уведомление вам и запись в таблицу</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ответы на частые вопросы</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Запуск и работа круглосуточно</span></li>
+    </ul>
+  </div>
+
+  <!-- ═════ ЦЕНА 2 ═════ -->
+  <div class="tile tile--hot price w2 rise">
+    <div class="price__badge">есть готовая основа</div>
+    <div class="mono price__kind">Бот записи с оплатой</div>
+    <div class="price__num glow-text">от 35 000 ₽</div>
+    <div class="mono price__term">1–2 недели</div>
+    <ul class="can">
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Каталог услуг с ценами, выбор специалиста</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Календарь со свободными окнами</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Оплата картой в Telegram или на месте</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Напоминания и отмена записи</span></li>
+    </ul>
+  </div>
+
+  <!-- ═════ ЦЕНА 3 ═════ -->
+  <div class="tile price w2 rise">
+    <div class="mono price__kind">Мини-приложение</div>
+    <div class="price__num">от 60 000 ₽</div>
+    <div class="mono price__term">2–3 недели</div>
+    <ul class="can">
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Полный интерфейс внутри Telegram</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Личный кабинет, каталог или заказы</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Уведомления по расписанию</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ничего не нужно устанавливать</span></li>
+    </ul>
+  </div>
+
+  <!-- ═════ ДОПОЛНИТЕЛЬНО ═════ -->
+  <div class="tile w6 rise">
+    <div class="extras">
+      <div class="extra">
+        <span class="extra__t">Автоматизация под задачу</span>
+        <span class="extra__p">от 10 000 ₽</span>
+        <span class="extra__d">Парсер, сводка, разбор входящих, связка сайта с таблицей и мессенджером — цена зависит от объёма.</span>
+      </div>
+      <div class="extra">
+        <span class="extra__t">Поддержка и доработки</span>
+        <span class="extra__p">от 3 000 ₽ / мес</span>
+        <span class="extra__d">Слежу, чтобы всё работало, чиню поломки и вношу небольшие правки без отдельной оплаты.</span>
+      </div>
+    </div>
+    <p class="note">
+      <b>Точную цену называю до начала работы</b> — после того, как разберём задачу. Дальше она не меняется:
+      если я ошибся в оценке, это моя проблема, а не ваша. Начинаем с предоплаты 50%, остальное — когда всё работает.
+    </p>
+  </div>
+
   <!-- ═════ КАК РАБОТАЮ ═════ -->
   <div class="tile w4 rise">
-    <span class="mono">03 · как проходит работа</span>
+    <span class="mono">04 · как проходит работа</span>
     <h2 class="sec-h" style="margin-bottom:22px">Три шага, без сюрпризов по деньгам и срокам</h2>
     <div class="steps">
       <div class="step">
@@ -589,7 +706,7 @@ footer a:hover { text-decoration: underline; }
 
   <!-- ═════ ПРИЗЫВ ═════ -->
   <div class="tile tile--hot cta w2 rise">
-    <span class="mono">04 · связаться</span>
+    <span class="mono">05 · связаться</span>
     <h2>Что у вас делают руками?</h2>
     <p>Двух предложений хватит. Отвечу, можно ли это автоматизировать, сколько займёт и сколько будет стоить.</p>
     <div><a class="btn btn--go" href="https://t.me/r1tak4">Написать @r1tak4</a></div>
