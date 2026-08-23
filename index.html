@@ -422,6 +422,44 @@ a { color: var(--neon); }
 .cant svg { flex: none; margin-top: 5px; color: var(--text-3); }
 .cant b { color: var(--text-2); font-weight: 600; }
 
+/* ═══════════════ ОТЗЫВЫ ═══════════════ */
+.reviews { display: grid; gap: 12px; margin-bottom: 20px; }
+
+.review {
+  padding: 18px 19px;
+  border-radius: 14px;
+  background: var(--tile-2);
+  border: 1px solid var(--edge);
+}
+.review__text { margin: 0 0 14px; font-size: 15.4px; color: var(--text); }
+.review__who { display: flex; align-items: center; gap: 10px; }
+.review__ava {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  flex: none;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 14px;
+  color: var(--on-neon);
+  background: linear-gradient(140deg, var(--neon), var(--neon-2));
+}
+.review__name { font-weight: 650; font-size: 14.5px; line-height: 1.25; }
+.review__biz { font-size: 12.5px; color: var(--text-3); }
+
+/* пока отзывов нет — говорим об этом прямо */
+.reviews--none {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 34px 20px;
+  border: 1px dashed var(--edge);
+  border-radius: 14px;
+}
+.reviews--none .big { font-weight: 700; font-size: 17px; }
+.reviews--none .small { color: var(--text-2); font-size: 14.8px; max-width: 42ch; }
+
+.review__cta { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
+
 /* ═══════════════ ШАГИ ═══════════════ */
 .steps { display: grid; gap: 18px; }
 .step { display: grid; gap: 5px; }
@@ -474,6 +512,8 @@ footer a:hover { text-decoration: underline; }
   .w6 { grid-column: span 6; }
   .ba { grid-template-columns: 1fr 1fr; }
   .incl { grid-template-columns: 1fr 1fr; gap: 34px; }
+  .reviews { grid-template-columns: 1fr 1fr; }
+  .reviews--none { grid-column: 1 / -1; }
   .extras { grid-template-columns: 1fr 1fr; }
   .steps { grid-template-columns: repeat(3, 1fr); gap: 22px; }
 }
@@ -639,10 +679,22 @@ footer a:hover { text-decoration: underline; }
     <h2 class="sec-h">Стартовые цены на первые проекты</h2>
   </div>
 
-  <!-- ═════ ЦЕНА 1 ═════ -->
-  <div class="tile price w3 rise">
+  <!-- ═════ ЦЕНА 1: ПРОСТОЙ БОТ ═════ -->
+  <div class="tile price w2 rise">
+    <div class="mono price__kind">Простой Telegram-бот</div>
+    <div class="price__num glow-text">от 3 000 ₽</div>
+    <div class="mono price__term">1–2 дня</div>
+    <ul class="can">
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Приветствие и меню с кнопками</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ссылки на сайт, соцсети, контакты</span></li>
+      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ответы на частые вопросы</span></li>
+    </ul>
+  </div>
+
+  <!-- ═════ ЦЕНА 2 ═════ -->
+  <div class="tile price w2 rise">
     <div class="mono price__kind">Бот заявок и уведомлений</div>
-    <div class="price__num">от 8 000 ₽</div>
+    <div class="price__num glow-text">от 8 000 ₽</div>
     <div class="mono price__term">3–5 дней</div>
     <ul class="can">
       <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Приём заявок и вопросов от клиентов</span></li>
@@ -652,11 +704,10 @@ footer a:hover { text-decoration: underline; }
     </ul>
   </div>
 
-  <!-- ═════ ЦЕНА 2 ═════ -->
-  <div class="tile tile--hot price w3 rise">
-    <div class="price__badge">есть готовая основа</div>
+  <!-- ═════ ЦЕНА 3 ═════ -->
+  <div class="tile price w2 rise">
     <div class="mono price__kind">Бот записи с оплатой</div>
-    <div class="price__num glow-text">от 18 000 ₽</div>
+    <div class="price__num glow-text">от 12 000 ₽</div>
     <div class="mono price__term">1–2 недели</div>
     <ul class="can">
       <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Каталог услуг с ценами, выбор специалиста</span></li>
@@ -666,10 +717,10 @@ footer a:hover { text-decoration: underline; }
     </ul>
   </div>
 
-  <!-- ═════ ЦЕНА 3: AI-ПОМОЩНИК ═════ -->
-  <div class="tile tile--warm price w3 rise">
+  <!-- ═════ ЦЕНА 4: AI-ПОМОЩНИК ═════ -->
+  <div class="tile price w3 rise">
     <div class="mono price__kind">AI-помощник для клиентов</div>
-    <div class="price__num">от 20 000 ₽</div>
+    <div class="price__num glow-text">от 20 000 ₽</div>
     <div class="mono price__term">1–2 недели</div>
     <ul class="can">
       <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Отвечает своими словами, а не кнопками по сценарию</span></li>
@@ -679,10 +730,10 @@ footer a:hover { text-decoration: underline; }
     </ul>
   </div>
 
-  <!-- ═════ ЦЕНА 4 ═════ -->
+  <!-- ═════ ЦЕНА 5 ═════ -->
   <div class="tile price w3 rise">
     <div class="mono price__kind">Мини-приложение</div>
-    <div class="price__num">от 30 000 ₽</div>
+    <div class="price__num glow-text">от 30 000 ₽</div>
     <div class="mono price__term">2–3 недели</div>
     <ul class="can">
       <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Полный интерфейс внутри Telegram</span></li>
@@ -748,9 +799,45 @@ footer a:hover { text-decoration: underline; }
     </p>
   </div>
 
+  <!-- ═════ ОТЗЫВЫ ═════
+       КАК ДОБАВИТЬ ОТЗЫВ:
+       1. Удали блок <div class="reviews--none"> ниже — он нужен, только пока отзывов нет.
+       2. Вставь внутрь <div class="reviews"> вот такой блок на каждый отзыв:
+
+       <div class="review">
+         <p class="review__text">«Текст отзыва своими словами клиента.»</p>
+         <div class="review__who">
+           <div class="review__ava">А</div>
+           <div>
+             <div class="review__name">Имя клиента</div>
+             <div class="review__biz">Название бизнеса, город</div>
+           </div>
+         </div>
+       </div>
+
+       Не пиши отзывы сам. Один настоящий стоит дороже десяти придуманных,
+       а придуманные видно — и они отпугивают сильнее, чем пустой блок.
+  -->
+  <div class="tile w6 rise">
+    <span class="mono">04 · отзывы</span>
+    <h2 class="sec-h" style="margin-bottom:22px">Что говорят те, для кого я уже сделал</h2>
+
+    <div class="reviews">
+      <div class="reviews--none">
+        <div class="big">Пока пусто — и это честно</div>
+        <div class="small">Первые проекты в работе. Как появятся отзывы, они будут здесь — настоящие, с именами и названиями.</div>
+      </div>
+    </div>
+
+    <div class="review__cta">
+      <a class="btn btn--go" href="https://t.me/r1tak4">Оставить отзыв</a>
+      <span class="mono">работали вместе? напишите пару строк — опубликую</span>
+    </div>
+  </div>
+
   <!-- ═════ КАК РАБОТАЮ ═════ -->
   <div class="tile w4 rise">
-    <span class="mono">04 · как проходит работа</span>
+    <span class="mono">05 · как проходит работа</span>
     <h2 class="sec-h" style="margin-bottom:22px">Три шага, без сюрпризов по деньгам и срокам</h2>
     <div class="steps">
       <div class="step">
@@ -773,7 +860,7 @@ footer a:hover { text-decoration: underline; }
 
   <!-- ═════ ПРИЗЫВ ═════ -->
   <div class="tile tile--hot cta w2 rise">
-    <span class="mono">05 · связаться</span>
+    <span class="mono">06 · связаться</span>
     <h2>Что у вас делают руками?</h2>
     <p>Двух предложений хватит. Отвечу, можно ли это автоматизировать, сколько займёт и сколько будет стоить.</p>
     <div><a class="btn btn--go" href="https://t.me/r1tak4">Написать @r1tak4</a></div>
