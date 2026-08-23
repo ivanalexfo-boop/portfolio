@@ -9,8 +9,9 @@
   • Цвета — в блоке :root. Дизайн только тёмный: неон на светлом фоне не светится.
   • Свечения фона — в body::before (пятна) и body::after (затемнение по краям).
   • Диалоги в чате — массив SCENARIOS внизу, в теге <script>. Крутятся по кругу.
-  • Видео: внутри .shot замени <div class="shot__empty"> на
-    <video src="video/имя.mp4" autoplay loop muted playsinline></video>
+  • Сайт из двух страниц: index.html (главная) и works.html (работы с видео).
+    Стили у каждой свои — если меняешь цвета, поменяй :root в обоих файлах.
+  • Плитка-счётчик работ ведёт на works.html. Добавил работу — поменяй там цифру.
 -->
 <html lang="ru">
 <head>
@@ -22,6 +23,10 @@
 <meta property="og:description" content="Запись клиентов, заказы, заявки и напоминания без ручной работы. Запуск за 1–2 недели.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#0a0510">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════ ТОКЕНЫ ═══════════════
@@ -40,8 +45,11 @@
   --neon-2:   #ffa31a;   /* второй неон — янтарь */
   --on-neon:  #12030a;
 
-  --font-ui:   "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+  /* Три шрифта: заголовки — широкий геометрический, текст — спокойный,
+     метки и цифры — моноширинный. Подключены выше через Google Fonts. */
+  --font-display: "Unbounded", "Manrope", "Segoe UI", sans-serif;
+  --font-ui:      "Manrope", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
 
   --maxw: 1180px;
   --r:    18px;
@@ -172,10 +180,11 @@ a { color: var(--neon); }
 .lead { display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 32px 24px; }
 
 .lead h1 {
-  font-size: clamp(31px, 5.2vw, 46px);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.033em;
+  font-family: var(--font-display);
+  font-size: clamp(25px, 4.1vw, 38px);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
   margin: 0;
   text-wrap: balance;
 }
@@ -286,10 +295,11 @@ a { color: var(--neon); }
 
 /* ═══════════════ ЗАГОЛОВКИ РАЗДЕЛОВ ═══════════════ */
 .sec-h {
-  font-size: clamp(22px, 3.4vw, 30px);
-  font-weight: 800;
-  letter-spacing: -0.026em;
-  line-height: 1.14;
+  font-family: var(--font-display);
+  font-size: clamp(19px, 2.6vw, 25px);
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 1.26;
   margin: 26px 0 2px;
   text-wrap: balance;
 }
@@ -341,6 +351,53 @@ a { color: var(--neon); }
 .case__foot { display: flex; flex-wrap: wrap; gap: 5px 18px; padding-top: 14px; border-top: 1px solid var(--edge); }
 .case__foot b { color: var(--text-2); font-weight: 600; }
 
+/* ═══════════════ ПЛИТКА-СЧЁТЧИК РАБОТ ═══════════════
+   Вся плитка — одна большая ссылка на works.html         */
+.count {
+  display: grid;
+  gap: 18px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.count:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--neon) 62%, transparent);
+  box-shadow: 0 20px 54px -20px color-mix(in srgb, var(--neon) 72%, transparent);
+}
+
+.count__num {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 11vw, 84px);
+  font-weight: 700;
+  line-height: .92;
+  letter-spacing: -0.03em;
+}
+
+.count__word { margin-top: 2px; }
+
+.count__t { font-weight: 700; font-size: 17.5px; margin-bottom: 10px; letter-spacing: -0.01em; }
+
+.count__list { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+.count__list li { display: flex; gap: 9px; align-items: flex-start; font-size: 15.2px; color: var(--text-2); }
+.count__list svg { flex: none; margin-top: 5px; color: var(--neon-2); }
+
+.count__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  font-size: 15.5px;
+  color: var(--neon);
+}
+.count__go span { font-size: 20px; transition: transform .18s ease; }
+.count:hover .count__go span { transform: translateX(5px); }
+
+@media (min-width: 700px) {
+  .count { grid-template-columns: auto 1fr auto; gap: 34px; }
+}
+
 /* ═══════════════ МАЛЕНЬКИЕ ПЛИТКИ ═══════════════ */
 .mini { display: grid; gap: 8px; align-content: start; }
 .mini__ic {
@@ -361,10 +418,11 @@ a { color: var(--neon); }
 .price__kind { color: var(--neon-2); margin-bottom: 6px; }
 
 .price__num {
-  font-size: clamp(24px, 3.2vw, 29px);
-  font-weight: 800;
-  letter-spacing: -0.026em;
-  line-height: 1.1;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.5vw, 25px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 
@@ -475,10 +533,11 @@ a { color: var(--neon); }
 /* ═══════════════ ФИНАЛ ═══════════════ */
 .cta { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 32px 24px; }
 .cta h2 {
-  font-size: clamp(23px, 3.6vw, 33px);
-  font-weight: 800;
-  letter-spacing: -0.028em;
-  line-height: 1.1;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.9vw, 27px);
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 1.24;
   margin: 0;
   max-width: 18ch;
   text-wrap: balance;
@@ -548,7 +607,7 @@ footer a:hover { text-decoration: underline; }
     <p>Запись клиентов, заказы, заявки, напоминания, отчёты — беру то, что у вас сейчас делают вручную, и превращаю в то, что работает само.</p>
     <div class="lead__cta">
       <a class="btn btn--go" href="https://t.me/r1tak4">Обсудить задачу</a>
-      <a class="btn btn--quiet" href="#works">Смотреть работы</a>
+      <a class="btn btn--quiet" href="works.html">Смотреть работы</a>
     </div>
     <p class="mono">Запуск за 1–2 недели · первый разбор задачи бесплатно</p>
   </div>
@@ -571,82 +630,30 @@ footer a:hover { text-decoration: underline; }
   </div>
 
   <!-- ═════ ЗАГОЛОВОК: РАБОТЫ ═════ -->
-  <div class="tile tile--plain w4 rise" id="works">
+  <div class="tile tile--plain w6 rise" id="works">
     <span class="mono">01 · работы</span>
     <h2 class="sec-h">Что уже сделано и как это меняет работу</h2>
   </div>
 
-  <!-- ═════ КЕЙС 1 ═════ -->
-  <div class="tile w3 rise">
-    <div class="mono case__kind">Бот записи и оплаты</div>
-    <h3 class="case__name">Клиенты записываются сами, без администратора</h3>
-    <p class="case__for">Сделано для барбершопа. Услуги, мастера и расписание задаются настройками — тот же бот подходит салону, автосервису, студии, клинике.</p>
-
-    <div class="ba">
-      <div class="ba__col">
-        <div class="mono ba__tag">Было</div>
-        <p>Запись через переписку и звонки, администратор вручную сверяет окна. Заявки теряются, часть клиентов не приходит.</p>
-      </div>
-      <div class="ba__col ba__col--after">
-        <div class="mono ba__tag">Стало</div>
-        <p>Клиент записывается сам за полминуты в любое время. Расписание актуально, бот напоминает дважды.</p>
-      </div>
+  <!-- ═════ ПЛИТКА-СЧЁТЧИК: ВЕДЁТ НА works.html ═════
+       Когда добавишь новую работу — поменяй цифру в .count__num
+       и допиши строку в список ниже. Сами работы живут в works.html -->
+  <a class="tile tile--hot count w6 rise" href="works.html">
+    <div>
+      <div class="count__num glow-text">2</div>
+      <div class="mono count__word">работы</div>
     </div>
 
-    <ul class="can">
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Каталог услуг с ценами, выбор специалиста</span></li>
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Календарь на две недели — только свободные окна</span></li>
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Оплата картой прямо в Telegram или на месте</span></li>
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Напоминания за сутки и за два часа, отмена в кнопку</span></li>
-    </ul>
-
-    <div class="shot">
-      <!-- ЗАМЕНИ на: <video src="video/zapis.mp4" autoplay loop muted playsinline></video> -->
-      <div class="shot__empty">видео: выбор услуги → календарь → оплата → напоминание</div>
+    <div>
+      <div class="count__t">Смотреть в деле — с видео и описанием</div>
+      <ul class="count__list">
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Бот записи с оплатой и напоминаниями</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Мини-приложение внутри Telegram</span></li>
+      </ul>
     </div>
 
-    <div class="mono case__foot">
-      <!-- ВПИШИ реальный срок -->
-      <span>срок: <b>укажите</b></span>
-      <span>Python · aiogram 3 · SQLite</span>
-    </div>
-  </div>
-
-  <!-- ═════ КЕЙС 2 ═════ -->
-  <div class="tile w3 rise">
-    <div class="mono case__kind">Мини-приложение</div>
-    <h3 class="case__name">Полноценное приложение внутри Telegram</h3>
-    <p class="case__for">Показано на трекере привычек. Тот же каркас — под личный кабинет, каталог, заказы или запись.</p>
-
-    <div class="ba">
-      <div class="ba__col">
-        <div class="mono ba__tag">Обычно</div>
-        <p>Нужно приложение в сторах: разработка, модерация, установка, регистрация, забытый пароль.</p>
-      </div>
-      <div class="ba__col ba__col--after">
-        <div class="mono ba__tag">Здесь</div>
-        <p>Тот же интерфейс открывается кнопкой в чате. Ничего не ставят и не регистрируются — вход уже есть.</p>
-      </div>
-    </div>
-
-    <ul class="can">
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Вкладки, календарь, статистика, настройки</span></li>
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Уведомления приходят точно ко времени события</span></li>
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Время напоминаний пользователь настраивает сам</span></li>
-      <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>На телефоне и компьютере работает одинаково</span></li>
-    </ul>
-
-    <div class="shot">
-      <!-- ЗАМЕНИ на: <video src="video/miniapp.mp4" autoplay loop muted playsinline></video> -->
-      <div class="shot__empty">видео: открытие приложения → отметка → статистика</div>
-    </div>
-
-    <div class="mono case__foot">
-      <!-- ВПИШИ реальный срок -->
-      <span>срок: <b>укажите</b></span>
-      <span>Node.js · Express · Mini Apps</span>
-    </div>
-  </div>
+    <div class="count__go">Открыть <span aria-hidden="true">→</span></div>
+  </a>
 
   <!-- ═════ ЗАГОЛОВОК: ЕЩЁ ═════ -->
   <div class="tile tile--plain w6 rise">
