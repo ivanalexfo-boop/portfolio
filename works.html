@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<!--
+  СТРАНИЦА РАБОТ — Vanya (@r1tak4)
+
+  • Каждая работа — блок <article class="work">. Чтобы добавить новую:
+    скопируй такой блок целиком и поменяй тексты.
+  • ВАЖНО: добавил работу — открой index.html и поменяй цифру
+    в плитке-счётчике (класс .count__num), иначе счёт разойдётся.
+  • Видео: внутри .shot замени <div class="shot__empty"> на
+    <video src="video/имя.mp4" autoplay loop muted playsinline></video>
+    Файлы клади в папку portfolio/video/
+  • Стили здесь свои — если меняешь цвета, поменяй :root и в index.html.
+-->
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Работы — Vanya</title>
+<meta name="description" content="Telegram-боты и мини-приложения, которые я сделал: видео работы, что было до и что стало после.">
+<meta property="og:title" content="Работы — Vanya">
+<meta property="og:description" content="Боты и мини-приложения в деле: видео, задача и результат.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0a0510">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════ ТОКЕНЫ (те же, что на главной) ═══════════════ */
+:root, :root[data-theme="light"], :root[data-theme="dark"] {
+  --void:     #08040d;
+  --tile:     #120a1b;
+  --tile-2:   #1b1027;
+  --edge:     #2a1838;
+  --text:     #fdeef7;
+  --text-2:   #b8a2c4;
+  --text-3:   #7d6a8c;
+
+  --neon:     #ff2e88;
+  --neon-2:   #ffa31a;
+  --on-neon:  #12030a;
+
+  --font-display: "Unbounded", "Manrope", "Segoe UI", sans-serif;
+  --font-ui:      "Manrope", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
+
+  --maxw: 980px;
+  --r:    18px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(46vw 40vw at 10% 0%,   color-mix(in srgb, var(--neon)   54%, transparent), transparent 62%),
+    radial-gradient(42vw 38vw at 94% 16%,  color-mix(in srgb, var(--neon-2) 44%, transparent), transparent 60%),
+    radial-gradient(50vw 44vw at 76% 92%,  color-mix(in srgb, var(--neon)   38%, transparent), transparent 62%);
+  filter: blur(70px);
+  opacity: .5;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 40%, transparent 0%, color-mix(in srgb, var(--void) 74%, transparent) 55%, var(--void) 100%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--void) 55%, transparent), transparent 26%, transparent 74%, var(--void));
+}
+
+.wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding: 22px 18px 0; }
+
+a { color: var(--neon); }
+:focus-visible { outline: 2px solid var(--neon); outline-offset: 3px; border-radius: 6px; }
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.glow-text {
+  background: linear-gradient(96deg, var(--neon), var(--neon-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 27px;
+  border-radius: 11px;
+  font-size: 16px;
+  font-weight: 650;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.btn--go {
+  background: linear-gradient(96deg, var(--neon), var(--neon-2));
+  color: var(--on-neon);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--neon) 45%, transparent),
+              0 10px 34px -8px color-mix(in srgb, var(--neon) 75%, transparent);
+}
+.btn--go:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+
+/* ═══════════════ ШАПКА СТРАНИЦЫ ═══════════════ */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--text-3);
+  padding: 24px 0 30px;
+  transition: color .16s ease;
+}
+.back:hover { color: var(--neon); }
+.back span { transition: transform .16s ease; }
+.back:hover span { transform: translateX(-4px); }
+
+.top { padding-bottom: 34px; }
+
+.top h1 {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 5vw, 42px);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+  margin: 10px 0 14px;
+  text-wrap: balance;
+}
+
+.top p { color: var(--text-2); margin: 0; max-width: 54ch; }
+
+/* ═══════════════ РАБОТА ═══════════════ */
+.works { display: grid; gap: 20px; padding-bottom: 20px; }
+
+.work {
+  position: relative;
+  background: color-mix(in srgb, var(--tile) 82%, transparent);
+  border: 1px solid var(--edge);
+  border-radius: var(--r);
+  padding: 26px 22px;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.work::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 14%; right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--neon) 55%, transparent), transparent);
+}
+
+.work__kind { color: var(--neon-2); margin-bottom: 11px; }
+
+.work__name {
+  font-family: var(--font-display);
+  font-size: clamp(19px, 2.8vw, 25px);
+  font-weight: 700;
+  line-height: 1.26;
+  letter-spacing: -0.016em;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+
+.work__for { font-size: 15.2px; color: var(--text-3); margin: 0 0 22px; max-width: 62ch; }
+
+/* видео */
+.shot { border-radius: 13px; overflow: hidden; margin-bottom: 22px; }
+.shot video, .shot img { display: block; width: 100%; height: auto; }
+.shot__empty {
+  aspect-ratio: 16 / 9;
+  display: grid; place-items: center;
+  text-align: center; padding: 20px;
+  font-family: var(--font-mono);
+  font-size: 12px; line-height: 1.8;
+  color: var(--text-3);
+  background: var(--tile-2);
+  border: 1px dashed var(--edge);
+  border-radius: 13px;
+}
+
+/* было → стало */
+.ba { display: grid; gap: 10px; margin-bottom: 22px; }
+.ba__col { padding: 15px 16px; border-radius: 12px; background: var(--tile-2); border: 1px solid var(--edge); }
+.ba__col--after {
+  background: color-mix(in srgb, var(--neon) 11%, var(--tile-2));
+  border-color: color-mix(in srgb, var(--neon) 30%, transparent);
+}
+.ba__tag { margin-bottom: 5px; }
+.ba__col--after .ba__tag { color: var(--neon); }
+.ba__col p { margin: 0; font-size: 15px; color: var(--text-2); }
+.ba__col--after p { color: var(--text); }
+
+.work__h { font-weight: 700; font-size: 16.5px; margin: 0 0 12px; }
+
+.can { list-style: none; padding: 0; margin: 0 0 22px; display: grid; gap: 9px; }
+.can li { display: flex; gap: 10px; align-items: flex-start; font-size: 15.2px; color: var(--text-2); }
+.can svg { flex: none; margin-top: 5px; color: var(--neon-2); }
+
+.work__foot {
+  display: flex; flex-wrap: wrap;
+  gap: 6px 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--edge);
+}
+.work__foot b { color: var(--text-2); font-weight: 600; }
+
+/* ═══════════════ ПРИЗЫВ ═══════════════ */
+.end {
+  background: color-mix(in srgb, var(--tile) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--neon) 34%, transparent);
+  border-radius: var(--r);
+  padding: 34px 24px;
+  margin-bottom: 26px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.end h2 {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3vw, 27px);
+  font-weight: 700;
+  line-height: 1.24;
+  letter-spacing: -0.018em;
+  margin: 0 0 12px;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+.end p { color: var(--text-2); margin: 0 0 24px; max-width: 46ch; }
+
+footer {
+  display: flex; flex-wrap: wrap;
+  gap: 8px 18px; justify-content: space-between;
+  padding: 4px 6px 44px;
+}
+footer a { text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+.rise { opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s cubic-bezier(.22,.9,.34,1); }
+.rise.seen { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { opacity: 1; transform: none; transition: none; }
+  .btn, .back, .back span { transition: none; }
+}
+
+@media (min-width: 700px) {
+  .work { padding: 32px 30px; }
+  .ba { grid-template-columns: 1fr 1fr; }
+  .end { padding: 46px 40px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <a class="back" href="index.html"><span aria-hidden="true">←</span> на главную</a>
+
+  <header class="top">
+    <p class="mono">портфолио · работы</p>
+    <h1>Боты <span class="glow-text">в деле</span></h1>
+    <p>Здесь то, что уже сделано: видео работы, что было до и что изменилось после. Каждый бот настраивается под конкретный бизнес — услуги, цены и расписание задаются без переписывания кода.</p>
+  </header>
+
+  <div class="works">
+
+    <!-- ═════ РАБОТА 1 ═════ -->
+    <article class="work rise">
+      <div class="mono work__kind">Бот записи и оплаты</div>
+      <h2 class="work__name">Клиенты записываются сами, без администратора</h2>
+      <p class="work__for">Сделано для барбершопа. Услуги, мастера и расписание задаются настройками — тот же бот подходит салону красоты, автосервису, студии или клинике: любому бизнесу, где записывают на время.</p>
+
+      <div class="shot">
+        <!-- ЗАМЕНИ на: <video src="video/zapis.mp4" autoplay loop muted playsinline></video> -->
+        <div class="shot__empty">видео 20–30 сек:<br>выбор услуги → мастер → календарь → оплата → напоминание</div>
+      </div>
+
+      <div class="ba">
+        <div class="ba__col">
+          <div class="mono ba__tag">Было</div>
+          <p>Запись через переписку и звонки. Администратор вручную сверяет свободные окна и отвечает каждому клиенту. Заявки теряются, часть клиентов забывает прийти.</p>
+        </div>
+        <div class="ba__col ba__col--after">
+          <div class="mono ba__tag">Стало</div>
+          <p>Клиент записывается сам за полминуты, в любое время суток. Расписание всегда актуальное, о визите бот напоминает дважды.</p>
+        </div>
+      </div>
+
+      <p class="work__h">Что умеет</p>
+      <ul class="can">
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Каталог услуг с ценами и длительностью, выбор специалиста</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Календарь на две недели вперёд — показывает только реально свободные окна</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Оплата картой прямо в Telegram или на месте — на выбор клиента</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Напоминания за сутки и за два часа до визита</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Раздел «мои записи» с отменой в одну кнопку</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Напоминания переживают перезапуск — ничего не теряется</span></li>
+      </ul>
+
+      <div class="mono work__foot">
+        <!-- ВПИШИ реальный срок -->
+        <span>срок: <b>укажите</b></span>
+        <span>Python · aiogram 3 · SQLite · Telegram Payments</span>
+      </div>
+    </article>
+
+    <!-- ═════ РАБОТА 2 ═════ -->
+    <article class="work rise">
+      <div class="mono work__kind">Мини-приложение</div>
+      <h2 class="work__name">Полноценное приложение внутри Telegram — устанавливать нечего</h2>
+      <p class="work__for">Показано на трекере привычек. Тот же каркас работает под личный кабинет клиента, каталог товаров, заказы или запись.</p>
+
+      <div class="shot">
+        <!-- ЗАМЕНИ на: <video src="video/miniapp.mp4" autoplay loop muted playsinline></video> -->
+        <div class="shot__empty">видео 20–30 сек:<br>открытие приложения → отметка → расписание → статистика</div>
+      </div>
+
+      <div class="ba">
+        <div class="ba__col">
+          <div class="mono ba__tag">Обычно</div>
+          <p>Чтобы дать клиенту личный кабинет, нужно приложение в сторах: разработка, модерация, установка, регистрация, забытый пароль.</p>
+        </div>
+        <div class="ba__col ba__col--after">
+          <div class="mono ba__tag">Здесь</div>
+          <p>Тот же интерфейс открывается кнопкой прямо в чате. Ничего не ставят, не регистрируются и не помнят паролей — вход уже есть.</p>
+        </div>
+      </div>
+
+      <p class="work__h">Что внутри</p>
+      <ul class="can">
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Вкладки, календарь, статистика и настройки — как в обычном приложении</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Повторяющиеся события с выбором дней недели</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Уведомления приходят точно ко времени события</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Время утреннего напоминания и вечерней сводки пользователь задаёт сам</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Время считается по нужному часовому поясу, а не по поясу сервера</span></li>
+        <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>На телефоне и компьютере работает одинаково</span></li>
+      </ul>
+
+      <div class="mono work__foot">
+        <!-- ВПИШИ реальный срок -->
+        <span>срок: <b>укажите</b></span>
+        <span>Node.js · Express · SQLite · Telegram Mini Apps</span>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="end rise">
+    <h2>Нужно похожее под ваш бизнес?</h2>
+    <p>Расскажите, что у вас сейчас делают руками. Отвечу, можно ли это автоматизировать, за какой срок и сколько будет стоить — бесплатно и без обязательств.</p>
+    <a class="btn btn--go" href="https://t.me/r1tak4">Написать @r1tak4</a>
+  </div>
+
+  <footer class="mono">
+    <a href="index.html">← на главную</a>
+    <a href="https://t.me/r1tak4">@r1tak4</a>
+  </footer>
+
+</div>
+
+<script>
+/* плавное появление работ при прокрутке */
+const rise = new IntersectionObserver((entries, obs) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('seen'); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.rise').forEach(el => rise.observe(el));
+</script>
+
+</body>
+</html>
