@@ -26,7 +26,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════ ТОКЕНЫ ═══════════════
@@ -380,11 +380,11 @@ a { color: var(--neon); }
 }
 
 .count__num {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: clamp(58px, 12vw, 92px);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: #fff;
   text-shadow:
     0 0 12px color-mix(in srgb, var(--neon) 95%, transparent),
@@ -414,8 +414,43 @@ a { color: var(--neon); }
 .count__go span { font-size: 20px; transition: transform .18s ease; }
 .count:hover .count__go span { transform: translateX(5px); }
 
+/* Смайлики в свободном месте плитки — лёгкое покачивание */
+.count__icons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  justify-self: center;
+}
+.count__icons i {
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  font-size: 22px;
+  font-style: normal;
+  border-radius: 13px;
+  background: var(--tile-2);
+  border: 1px solid var(--edge);
+  animation: bob 4.5s ease-in-out infinite;
+}
+.count__icons i:nth-child(2) { animation-delay: .35s; }
+.count__icons i:nth-child(3) { animation-delay: .7s; }
+.count__icons i:nth-child(4) { animation-delay: 1.05s; }
+.count__icons i:nth-child(5) { animation-delay: 1.4s; }
+.count__icons i:nth-child(6) { animation-delay: 1.75s; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.count:hover .count__icons i { border-color: color-mix(in srgb, var(--neon) 40%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .count__icons i { animation: none; }
+}
+
 @media (min-width: 700px) {
-  .count { grid-template-columns: auto 1fr; gap: 40px; }
+  /* текст слева, смайлики по центру, цифра справа */
+  .count { grid-template-columns: 1fr auto auto; gap: 34px; }
 }
 
 /* ═══════════════ МАЛЕНЬКИЕ ПЛИТКИ ═══════════════ */
@@ -659,11 +694,6 @@ footer a:hover { text-decoration: underline; }
        Когда добавишь новую работу — поменяй цифру в .count__num
        и допиши строку в список ниже. Сами работы живут в works.html -->
   <a class="tile tile--hot count w6 rise" href="works.html">
-    <div class="count__figure">
-      <div class="count__num">2</div>
-      <div class="mono count__word">работы</div>
-    </div>
-
     <div class="count__side">
       <div class="count__t">Смотреть в деле — с видео и описанием</div>
       <ul class="count__list">
@@ -671,6 +701,15 @@ footer a:hover { text-decoration: underline; }
         <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Мини-приложение внутри Telegram</span></li>
       </ul>
       <div class="count__go">Открыть <span aria-hidden="true">→</span></div>
+    </div>
+
+    <div class="count__icons" aria-hidden="true">
+      <i>🤖</i><i>💻</i><i>⚙️</i><i>🐍</i><i>📱</i><i>⚡</i>
+    </div>
+
+    <div class="count__figure">
+      <div class="count__num">2</div>
+      <div class="mono count__word">работы</div>
     </div>
   </a>
 
