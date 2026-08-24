@@ -367,19 +367,39 @@ a { color: var(--neon); }
   box-shadow: 0 20px 54px -20px color-mix(in srgb, var(--neon) 72%, transparent);
 }
 
-.count__num {
-  font-family: var(--font-display);
-  font-size: clamp(52px, 11vw, 84px);
-  font-weight: 700;
-  line-height: .92;
-  letter-spacing: -0.03em;
+/* Цифра — неоновая трубка: белое ядро плюс свечение.
+   Читается лучше градиента, у которого тонкие штрихи блёкнут. */
+.count__figure {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 26px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--neon) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--neon) 28%, transparent);
 }
 
-.count__word { margin-top: 2px; }
+.count__num {
+  font-family: var(--font-display);
+  font-size: clamp(58px, 12vw, 92px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow:
+    0 0 12px color-mix(in srgb, var(--neon) 95%, transparent),
+    0 0 34px color-mix(in srgb, var(--neon) 75%, transparent),
+    0 0 72px color-mix(in srgb, var(--neon) 50%, transparent);
+}
 
-.count__t { font-weight: 700; font-size: 17.5px; margin-bottom: 10px; letter-spacing: -0.01em; }
+.count__word { color: var(--neon); }
 
-.count__list { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+/* Весь текст — в правой части */
+.count__side { display: grid; gap: 14px; justify-items: start; }
+
+.count__t { font-weight: 700; font-size: 18px; letter-spacing: -0.012em; }
+
+.count__list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .count__list li { display: flex; gap: 9px; align-items: flex-start; font-size: 15.2px; color: var(--text-2); }
 .count__list svg { flex: none; margin-top: 5px; color: var(--neon-2); }
 
@@ -395,7 +415,7 @@ a { color: var(--neon); }
 .count:hover .count__go span { transform: translateX(5px); }
 
 @media (min-width: 700px) {
-  .count { grid-template-columns: auto 1fr auto; gap: 34px; }
+  .count { grid-template-columns: auto 1fr; gap: 40px; }
 }
 
 /* ═══════════════ МАЛЕНЬКИЕ ПЛИТКИ ═══════════════ */
@@ -639,43 +659,44 @@ footer a:hover { text-decoration: underline; }
        Когда добавишь новую работу — поменяй цифру в .count__num
        и допиши строку в список ниже. Сами работы живут в works.html -->
   <a class="tile tile--hot count w6 rise" href="works.html">
-    <div>
-      <div class="count__num glow-text">2</div>
+    <div class="count__figure">
+      <div class="count__num">2</div>
       <div class="mono count__word">работы</div>
     </div>
 
-    <div>
+    <div class="count__side">
       <div class="count__t">Смотреть в деле — с видео и описанием</div>
       <ul class="count__list">
         <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Бот записи с оплатой и напоминаниями</span></li>
         <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Мини-приложение внутри Telegram</span></li>
       </ul>
+      <div class="count__go">Открыть <span aria-hidden="true">→</span></div>
     </div>
-
-    <div class="count__go">Открыть <span aria-hidden="true">→</span></div>
   </a>
 
-  <!-- ═════ КАК РАБОТАЮ ═════ -->
-  <div class="tile w6 rise">
-    <span class="mono">02 · как проходит работа</span>
-    <h2 class="sec-h" style="margin-bottom:22px">Три шага, без сюрпризов по деньгам и срокам</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step__n">01</div>
-        <div class="step__t">Смотрим задачу</div>
-        <p class="step__d">Рассказываете, что делается руками. Говорю, можно ли автоматизировать, за какой срок и почём. Бесплатно.</p>
-      </div>
-      <div class="step">
-        <div class="step__n">02</div>
-        <div class="step__t">Делаю и показываю</div>
-        <p class="step__d">Присылаю рабочую версию, вы пробуете вживую. Правим, пока не станет удобно.</p>
-      </div>
-      <div class="step">
-        <div class="step__n">03</div>
-        <div class="step__t">Запускаю и остаюсь рядом</div>
-        <p class="step__d">Работает круглосуточно. Сломается — чиню. Нужна доработка — сделаю.</p>
-      </div>
-    </div>
+  <!-- ═════ ЗАГОЛОВОК: ЕЩЁ ═════ -->
+  <div class="tile tile--plain w6 rise">
+    <span class="mono">02 · ещё берусь</span>
+    <h2 class="sec-h">Если что-то делается руками — скорее всего, можно не делать</h2>
+  </div>
+
+  <!-- ═════ ТРИ МАЛЕНЬКИЕ ═════ -->
+  <div class="tile tile--warm mini w2 rise">
+    <div class="mini__ic" aria-hidden="true">📥</div>
+    <div class="mini__t">Заявки доходят сами</div>
+    <div class="mini__d">Заявка с сайта сразу падает в таблицу и уведомлением ответственному. Никто ничего не переносит.</div>
+  </div>
+
+  <div class="tile tile--warm mini w2 rise">
+    <div class="mini__ic" aria-hidden="true">📊</div>
+    <div class="mini__t">Сводка по конкурентам</div>
+    <div class="mini__d">Программа обходит нужные сайты, собирает цены и каждое утро присылает, что изменилось за сутки.</div>
+  </div>
+
+  <div class="tile tile--warm mini w2 rise">
+    <div class="mini__ic" aria-hidden="true">🗂️</div>
+    <div class="mini__t">Входящие разбираются сами</div>
+    <div class="mini__d">Письма и документы превращаются в таблицу: тема, категория, срочность. Сотруднику остаётся решение.</div>
   </div>
 
   <!-- ═════ ЗАГОЛОВОК: ЦЕНЫ ═════ -->
@@ -840,33 +861,31 @@ footer a:hover { text-decoration: underline; }
     </div>
   </div>
 
-  <!-- ═════ ЗАГОЛОВОК: ЕЩЁ ═════ -->
-  <div class="tile tile--plain w6 rise">
-    <span class="mono">05 · ещё берусь</span>
-    <h2 class="sec-h">Если что-то делается руками — скорее всего, можно не делать</h2>
-  </div>
-
-  <!-- ═════ ТРИ МАЛЕНЬКИЕ ═════ -->
-  <div class="tile tile--warm mini w2 rise">
-    <div class="mini__ic" aria-hidden="true">📥</div>
-    <div class="mini__t">Заявки доходят сами</div>
-    <div class="mini__d">Заявка с сайта сразу падает в таблицу и уведомлением ответственному. Никто ничего не переносит.</div>
-  </div>
-
-  <div class="tile tile--warm mini w2 rise">
-    <div class="mini__ic" aria-hidden="true">📊</div>
-    <div class="mini__t">Сводка по конкурентам</div>
-    <div class="mini__d">Программа обходит нужные сайты, собирает цены и каждое утро присылает, что изменилось за сутки.</div>
-  </div>
-
-  <div class="tile tile--warm mini w2 rise">
-    <div class="mini__ic" aria-hidden="true">🗂️</div>
-    <div class="mini__t">Входящие разбираются сами</div>
-    <div class="mini__d">Письма и документы превращаются в таблицу: тема, категория, срочность. Сотруднику остаётся решение.</div>
+  <!-- ═════ КАК РАБОТАЮ ═════ -->
+  <div class="tile w4 rise">
+    <span class="mono">05 · как проходит работа</span>
+    <h2 class="sec-h" style="margin-bottom:22px">Три шага, без сюрпризов по деньгам и срокам</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step__n">01</div>
+        <div class="step__t">Смотрим задачу</div>
+        <p class="step__d">Рассказываете, что делается руками. Говорю, можно ли автоматизировать, за какой срок и почём. Бесплатно.</p>
+      </div>
+      <div class="step">
+        <div class="step__n">02</div>
+        <div class="step__t">Делаю и показываю</div>
+        <p class="step__d">Присылаю рабочую версию, вы пробуете вживую. Правим, пока не станет удобно.</p>
+      </div>
+      <div class="step">
+        <div class="step__n">03</div>
+        <div class="step__t">Запускаю и остаюсь рядом</div>
+        <p class="step__d">Работает круглосуточно. Сломается — чиню. Нужна доработка — сделаю.</p>
+      </div>
+    </div>
   </div>
 
   <!-- ═════ ПРИЗЫВ ═════ -->
-  <div class="tile tile--hot cta w6 rise">
+  <div class="tile tile--hot cta w2 rise">
     <span class="mono">06 · связаться</span>
     <h2>Что у вас делают руками?</h2>
     <p>Двух предложений хватит. Отвечу, можно ли это автоматизировать, сколько займёт и сколько будет стоить.</p>
