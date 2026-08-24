@@ -414,43 +414,56 @@ a { color: var(--neon); }
 .count__go span { font-size: 20px; transition: transform .18s ease; }
 .count:hover .count__go span { transform: translateX(5px); }
 
-/* Смайлики в свободном месте плитки — лёгкое покачивание */
+/* ── Смайлики-силуэты: фоновая текстура плитки ──
+   Лежат под содержимым, обесцвечены и притушены — читаются
+   как фактура, а не как значки. Позиции заданы вручную,
+   чтобы разброс выглядел случайным, но не мешал тексту.      */
 .count__icons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 9px;
-  justify-self: center;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;   /* чтобы не перехватывали клик по плитке */
+  z-index: 0;
 }
+
 .count__icons i {
-  width: 46px; height: 46px;
-  display: grid; place-items: center;
-  font-size: 22px;
+  position: absolute;
   font-style: normal;
-  border-radius: 13px;
-  background: var(--tile-2);
-  border: 1px solid var(--edge);
-  animation: bob 4.5s ease-in-out infinite;
-}
-.count__icons i:nth-child(2) { animation-delay: .35s; }
-.count__icons i:nth-child(3) { animation-delay: .7s; }
-.count__icons i:nth-child(4) { animation-delay: 1.05s; }
-.count__icons i:nth-child(5) { animation-delay: 1.4s; }
-.count__icons i:nth-child(6) { animation-delay: 1.75s; }
-
-@keyframes bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+  line-height: 1;
+  filter: grayscale(1) brightness(1.9);
+  opacity: .12;
+  /* rotate и translate — отдельные свойства, поэтому поворот
+     не конфликтует с анимацией сдвига */
+  animation: drift 6s ease-in-out infinite;
 }
 
-.count:hover .count__icons i { border-color: color-mix(in srgb, var(--neon) 40%, transparent); }
+@keyframes drift {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -7px; }
+}
+
+.count__icons i:nth-child(1)  { left: 34%; top:  16%; font-size: 30px; rotate: -14deg; animation-delay: 0s;    }
+.count__icons i:nth-child(2)  { left: 45%; top:  62%; font-size: 44px; rotate:   9deg; animation-delay: .6s;   }
+.count__icons i:nth-child(3)  { left: 55%; top:   8%; font-size: 26px; rotate:  20deg; animation-delay: 1.2s;  }
+.count__icons i:nth-child(4)  { left: 62%; top:  44%; font-size: 36px; rotate:  -7deg; animation-delay: 1.8s;  }
+.count__icons i:nth-child(5)  { left: 50%; top:  33%; font-size: 22px; rotate:  27deg; animation-delay: 2.4s;  }
+.count__icons i:nth-child(6)  { left: 72%; top:  20%; font-size: 32px; rotate: -22deg; animation-delay: 3s;    }
+.count__icons i:nth-child(7)  { left: 68%; top:  78%; font-size: 24px; rotate:  13deg; animation-delay: 3.6s;  }
+.count__icons i:nth-child(8)  { left: 40%; top:  86%; font-size: 27px; rotate: -26deg; animation-delay: 4.2s;  }
+.count__icons i:nth-child(9)  { left: 79%; top:  58%; font-size: 21px; rotate:  16deg; animation-delay: 4.8s;  }
+.count__icons i:nth-child(10) { left: 29%; top:  52%; font-size: 20px; rotate: -11deg; animation-delay: 5.4s;  }
+.count__icons i:nth-child(11) { left: 57%; top:  92%; font-size: 19px; rotate:  30deg; animation-delay: 2.1s;  }
+.count__icons i:nth-child(12) { left: 76%; top:   2%; font-size: 18px; rotate:  -5deg; animation-delay: .9s;   }
+
+/* содержимое — поверх текстуры */
+.count__side, .count__figure { position: relative; z-index: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .count__icons i { animation: none; }
 }
 
 @media (min-width: 700px) {
-  /* текст слева, смайлики по центру, цифра справа */
-  .count { grid-template-columns: 1fr auto auto; gap: 34px; }
+  /* текст слева, цифра справа; смайлики лежат фоном между ними */
+  .count { grid-template-columns: 1fr auto; gap: 34px; }
 }
 
 /* ═══════════════ МАЛЕНЬКИЕ ПЛИТКИ ═══════════════ */
@@ -704,7 +717,7 @@ footer a:hover { text-decoration: underline; }
     </div>
 
     <div class="count__icons" aria-hidden="true">
-      <i>🤖</i><i>💻</i><i>⚙️</i><i>🐍</i><i>📱</i><i>⚡</i>
+      <i>🤖</i><i>💻</i><i>⚙️</i><i>🐍</i><i>📱</i><i>⚡</i><i>🔧</i><i>💾</i><i>🧩</i><i>🚀</i><i>⌨️</i><i>🖥️</i>
     </div>
 
     <div class="count__figure">
