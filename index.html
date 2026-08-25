@@ -641,6 +641,66 @@ a { color: var(--neon); }
 
 .review__cta { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
 
+/* ── Форма отзыва ── */
+.rform {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 22px 20px;
+  border-radius: 14px;
+  background: var(--tile-2);
+  border: 1px solid var(--edge);
+}
+.rform[hidden] { display: none; }
+
+.rform__row { display: grid; gap: 6px; }
+.rform__row label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.rform input, .rform textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 15.6px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--void) 55%, transparent);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition: border-color .15s ease;
+}
+.rform textarea { min-height: 110px; resize: vertical; line-height: 1.5; }
+.rform input:focus, .rform textarea:focus { outline: none; border-color: var(--neon); }
+.rform input::placeholder, .rform textarea::placeholder { color: var(--text-3); }
+
+.rform__foot { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+.rform button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+.rform button[disabled] { opacity: .55; cursor: default; }
+
+.rform__count { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
+
+.rform__msg { font-size: 15px; margin: 0; }
+.rform__msg--ok  { color: var(--neon-2); }
+.rform__msg--err { color: var(--neon); }
+
+/* пока грузится список */
+.reviews__loading {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 26px 4px;
+  text-align: center;
+}
+
 /* ═══════════════ ШАГИ ═══════════════ */
 .steps { display: grid; gap: 18px; }
 .step { display: grid; gap: 5px; }
@@ -961,17 +1021,45 @@ footer a:hover { text-decoration: underline; }
     <span class="mono">04 · отзывы</span>
     <h2 class="sec-h" style="margin-bottom:22px">Что говорят те, для кого я уже сделал</h2>
 
-    <div class="reviews">
-      <div class="reviews--none">
-        <div class="big">Пока пусто — и это честно</div>
-        <div class="small">Первые проекты в работе. Как появятся отзывы, они будут здесь — настоящие, с именами и названиями.</div>
-      </div>
+    <!-- сюда подгружаются одобренные отзывы из базы -->
+    <div class="reviews" id="reviewList">
+      <div class="reviews__loading">загружаю отзывы…</div>
     </div>
 
     <div class="review__cta">
-      <a class="btn btn--go" href="https://t.me/r1tak4">Оставить отзыв</a>
-      <span class="mono">работали вместе? напишите пару строк — опубликую</span>
+      <button class="btn btn--go" type="button" id="reviewToggle">Оставить отзыв</button>
+      <span class="mono">работали вместе? напишите пару строк</span>
     </div>
+
+    <!-- ФОРМА ОТЗЫВА
+         Отзыв уходит в базу скрытым. На сайте появляется только после того,
+         как ты пометишь его approved = true в панели Supabase. -->
+    <form class="rform" id="reviewForm" hidden>
+      <div class="rform__row">
+        <label for="rf-name">Как вас зовут</label>
+        <input id="rf-name" name="name" type="text" required minlength="2" maxlength="60"
+               placeholder="Иван" autocomplete="name">
+      </div>
+
+      <div class="rform__row">
+        <label for="rf-biz">Бизнес и город — по желанию</label>
+        <input id="rf-biz" name="business" type="text" maxlength="80"
+               placeholder="Барбершоп «Фейд», Москва">
+      </div>
+
+      <div class="rform__row">
+        <label for="rf-body">Отзыв</label>
+        <textarea id="rf-body" name="body" required minlength="10" maxlength="800"
+                  placeholder="Что делали, что изменилось после."></textarea>
+      </div>
+
+      <div class="rform__foot">
+        <button class="btn btn--go" type="submit" id="rf-send">Отправить</button>
+        <span class="rform__count" id="rf-count">0 / 800</span>
+      </div>
+
+      <p class="rform__msg" id="rf-msg" hidden></p>
+    </form>
   </div>
 
   <!-- ═════ КАК РАБОТАЮ ═════ -->
@@ -1196,6 +1284,132 @@ const rise = new IntersectionObserver((e, o) => {
   e.forEach(x => { if (x.isIntersecting) { x.target.classList.add('seen'); o.unobserve(x.target); } });
 }, { threshold: 0.1 });
 document.querySelectorAll('.rise').forEach(el => rise.observe(el));
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ОТЗЫВЫ
+   Хранятся в Supabase. Посетитель отправляет отзыв — он ложится
+   в базу скрытым (approved = false). На сайте показываются только
+   одобренные. Чтобы одобрить: панель Supabase → Table Editor →
+   reviews → поставить галочку approved у нужной строки.
+
+   Ключ ниже публичный и предназначен для кода страницы: сам по себе
+   он не даёт ни читать неодобренное, ни менять чужое — всё решают
+   политики доступа в базе.
+   ═══════════════════════════════════════════════ */
+(() => {
+  const API = 'https://zzoxtzbjhcuggklbnxpc.supabase.co/rest/v1/reviews';
+  const KEY = 'sb_publishable_nmwz_RAVEhL1fo8OELbekw_nnOYVktx';
+  const HEAD = { apikey: KEY, Authorization: 'Bearer ' + KEY };
+
+  const list   = document.getElementById('reviewList');
+  const form   = document.getElementById('reviewForm');
+  const toggle = document.getElementById('reviewToggle');
+  const send   = document.getElementById('rf-send');
+  const msg    = document.getElementById('rf-msg');
+  const bodyEl = document.getElementById('rf-body');
+  const count  = document.getElementById('rf-count');
+
+  /* ── показ списка ── */
+
+  const esc = s => String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+  function empty(text) {
+    list.innerHTML =
+      '<div class="reviews--none">' +
+        '<div class="big">Пока пусто — и это честно</div>' +
+        '<div class="small">' + text + '</div>' +
+      '</div>';
+  }
+
+  function render(rows) {
+    if (!rows.length) {
+      empty('Первые проекты в работе. Как появятся отзывы, они будут здесь — настоящие, с именами и названиями.');
+      return;
+    }
+    list.innerHTML = rows.map(r => {
+      const initial = esc((r.name || '?').trim().charAt(0).toUpperCase());
+      const where = r.business ? '<div class="review__biz">' + esc(r.business) + '</div>' : '';
+      return '<div class="review">' +
+               '<p class="review__text">«' + esc(r.body) + '»</p>' +
+               '<div class="review__who">' +
+                 '<div class="review__ava">' + initial + '</div>' +
+                 '<div><div class="review__name">' + esc(r.name) + '</div>' + where + '</div>' +
+               '</div>' +
+             '</div>';
+    }).join('');
+  }
+
+  async function load() {
+    try {
+      const r = await fetch(
+        API + '?select=name,business,body&approved=eq.true&order=created_at.desc&limit=12',
+        { headers: HEAD });
+      if (!r.ok) throw new Error(r.status);
+      render(await r.json());
+    } catch (e) {
+      // база недоступна — показываем то же, что при пустом списке,
+      // чтобы посетитель не видел техническую ошибку
+      empty('Первые проекты в работе. Как появятся отзывы, они будут здесь — настоящие, с именами и названиями.');
+    }
+  }
+
+  /* ── форма ── */
+
+  toggle.addEventListener('click', () => {
+    form.hidden = !form.hidden;
+    toggle.textContent = form.hidden ? 'Оставить отзыв' : 'Свернуть форму';
+    if (!form.hidden) document.getElementById('rf-name').focus();
+  });
+
+  bodyEl.addEventListener('input', () => {
+    count.textContent = bodyEl.value.length + ' / 800';
+  });
+
+  function say(text, kind) {
+    msg.textContent = text;
+    msg.className = 'rform__msg rform__msg--' + kind;
+    msg.hidden = false;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const name = form.name.value.trim();
+    const biz  = form.business.value.trim();
+    const body = form.body.value.trim();
+
+    if (name.length < 2)   return say('Напишите, как вас зовут — хотя бы два символа.', 'err');
+    if (body.length < 10)  return say('Отзыв слишком короткий — расскажите чуть подробнее.', 'err');
+    if (body.length > 800) return say('Отзыв длиннее 800 символов, немного сократите.', 'err');
+
+    send.disabled = true;
+    send.textContent = 'Отправляю…';
+    msg.hidden = true;
+
+    try {
+      const r = await fetch(API, {
+        method: 'POST',
+        headers: { ...HEAD, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ name, business: biz || null, body })
+      });
+      if (!r.ok) throw new Error(await r.text());
+
+      form.reset();
+      count.textContent = '0 / 800';
+      say('Спасибо! Отзыв отправлен — появится на сайте после проверки.', 'ok');
+      send.textContent = 'Отправлено';
+    } catch (err) {
+      say('Не получилось отправить. Попробуйте ещё раз или напишите в Telegram: @r1tak4', 'err');
+      send.disabled = false;
+      send.textContent = 'Отправить';
+    }
+  });
+
+  load();
+})();
 </script>
 
 </body>
