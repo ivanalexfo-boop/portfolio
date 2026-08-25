@@ -254,9 +254,43 @@ a { color: var(--neon); }
 
 .work__for { font-size: 15.2px; color: var(--text-3); margin: 0 0 22px; max-width: 62ch; }
 
-/* видео */
-.shot { border-radius: 13px; overflow: hidden; margin-bottom: 22px; }
-.shot video, .shot img { display: block; width: 100%; height: auto; }
+/* видео — подходит и вертикальному, и горизонтальному:
+   ролик вписывается по высоте, лишнее место по бокам заливается фоном */
+.shot {
+  border-radius: 13px;
+  overflow: hidden;
+  margin-bottom: 22px;
+  background: var(--tile-2);
+  border: 1px solid var(--edge);
+  display: grid;
+  place-items: center;
+}
+.shot video, .shot img {
+  display: block;
+  max-width: 100%;
+  max-height: 560px;
+  width: auto;
+  height: auto;
+}
+
+/* строка «попробовать самому» под видео */
+.tryit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: -6px 0 22px;
+  font-size: 15.4px;
+  color: var(--text-2);
+}
+.tryit a {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--neon);
+  border-bottom: 1px solid color-mix(in srgb, var(--neon) 40%, transparent);
+}
+.tryit a:hover { border-bottom-color: var(--neon); }
+.tryit small { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); letter-spacing: .06em; }
 .shot__empty {
   aspect-ratio: 16 / 9;
   display: grid; place-items: center;
@@ -367,9 +401,14 @@ footer a:hover { text-decoration: underline; }
       <p class="work__for">Сделано для барбершопа. Услуги, мастера и расписание задаются настройками — тот же бот подходит салону красоты, автосервису, студии или клинике: любому бизнесу, где записывают на время.</p>
 
       <div class="shot">
-        <!-- ЗАМЕНИ на: <video src="video/zapis.mp4" autoplay loop muted playsinline></video> -->
-        <div class="shot__empty">видео 20–30 сек:<br>выбор услуги → мастер → календарь → оплата → напоминание</div>
+        <video src="video/barber.mp4" controls loop muted playsinline preload="metadata"></video>
       </div>
+
+      <p class="tryit">
+        <span>Попробовать самому:</span>
+        <a href="https://t.me/barberG0_bot">@barberG0_bot</a>
+        <small>бот ответит сразу</small>
+      </p>
 
       <div class="ba">
         <div class="ba__col">
