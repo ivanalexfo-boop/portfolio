@@ -15,9 +15,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Работы — Vanya</title>
+<title>Работы — VanRyzenbots</title>
 <meta name="description" content="Telegram-боты и мини-приложения, которые я сделал: видео работы, что было до и что стало после.">
-<meta property="og:title" content="Работы — Vanya">
+<meta property="og:title" content="Работы — VanRyzenbots">
 <meta property="og:description" content="Боты и мини-приложения в деле: видео, задача и результат.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://ivanalexfo-boop.github.io/portfolio/logo.png">
@@ -207,6 +207,16 @@ a { color: var(--neon); }
 
 .top { padding-bottom: 34px; }
 
+/* Название — логотип-надпись */
+.brand {
+  font-family: var(--font-display);
+  font-size: clamp(19px, 2.4vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
 .top h1 {
   font-family: var(--font-display);
   font-size: clamp(26px, 5vw, 42px);
@@ -387,6 +397,7 @@ footer a:hover { text-decoration: underline; }
   <a class="back" href="index.html"><span aria-hidden="true">←</span> на главную</a>
 
   <header class="top">
+    <div class="brand">VanRyzen<span class="glow-text">bots</span></div>
     <p class="mono">портфолио · работы</p>
     <h1>Боты <span class="glow-text">в деле</span></h1>
     <p>Здесь то, что уже сделано: видео работы, что было до и что изменилось после. Каждый бот настраивается под конкретный бизнес — услуги, цены и расписание задаются без переписывания кода.</p>
