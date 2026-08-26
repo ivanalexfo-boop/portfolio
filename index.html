@@ -281,6 +281,8 @@ a { color: var(--neon); }
   box-shadow: 0 0 22px -4px color-mix(in srgb, var(--neon) 80%, transparent);
 }
 
+.chat__ava svg { width: 19px; height: 19px; }
+
 .chat__who { font-weight: 650; font-size: 15px; line-height: 1.25; }
 .chat__state { font-size: 11.5px; color: var(--neon-2); font-family: var(--font-mono); letter-spacing: .08em; }
 
@@ -819,7 +821,7 @@ footer a:hover { text-decoration: underline; }
   <!-- ═════ ЧАТ ═════ -->
   <div class="tile tile--hot chat w2 rise" id="demo">
     <div class="chat__bar">
-      <div class="chat__ava" id="chatAva" aria-hidden="true">Г</div>
+      <div class="chat__ava" id="chatAva" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
       <div>
         <div class="chat__who" id="chatWho">Гараж 14</div>
         <div class="chat__state">бот · отвечает сразу</div>
@@ -1137,9 +1139,22 @@ footer a:hover { text-decoration: underline; }
    ДИАЛОГИ В ЧАТЕ — три сценария по кругу.
    Чтобы добавить свой: скопируй блок и поменяй тексты.
    ═══════════════════════════════════════════════ */
+/* Значки-аватарки. Векторные, а не эмодзи: красятся цветом интерфейса
+   и остаются чёткими на любом экране. Чтобы добавить свой — возьми
+   контур с lucide.dev и вставь сюда таким же образом. */
+const svg = d =>
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+  'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+
+const ICON = {
+  wrench: svg('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+  box: svg('<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>'),
+  scissors: svg('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88"/><path d="M14.47 14.48 20 20"/><path d="M8.12 8.12 12 12"/>')
+};
+
 const SCENARIOS = [
   {
-    label: 'пример: автосервис', who: 'Гараж 14', icon: 'Г',
+    label: 'пример: автосервис', who: 'Гараж 14', icon: ICON.wrench,
     clock: ['10:12','10:12','10:13','10:13','10:13','10:14','10:14'],
     steps: [
       { from:'bot',  wait:700, text:'Здравствуйте! Записываю на сервис. Что нужно сделать?',
@@ -1155,7 +1170,7 @@ const SCENARIOS = [
     ]
   },
   {
-    label: 'пример: интернет-магазин', who: 'Кофе Роста', icon: 'К',
+    label: 'пример: интернет-магазин', who: 'Кофе Роста', icon: ICON.box,
     clock: ['14:31','14:31','14:32','14:32','14:33','14:33','14:34'],
     steps: [
       { from:'bot',  wait:700, text:'Заказ на 1 840 ₽ собран. Как удобнее получить?',
@@ -1170,7 +1185,7 @@ const SCENARIOS = [
     ]
   },
   {
-    label: 'пример: студия красоты', who: 'Студия «Форма»', icon: 'Ф',
+    label: 'пример: студия красоты', who: 'Студия «Форма»', icon: ICON.scissors,
     clock: ['19:04','19:04','19:05','19:05','19:06','19:06','19:07'],
     steps: [
       { from:'bot',  wait:700, text:'Добрый вечер! К кому записать?',
@@ -1260,7 +1275,7 @@ function typing() {
 function setScene(i) {
   const s = SCENARIOS[i];
   who.textContent = s.who;
-  ava.textContent = s.icon;
+  ava.innerHTML = s.icon;   // значок — разметка, а не текст
   label.textContent = s.label;
   pips.forEach((p, n) => p.classList.toggle('on', n === i));
   body.textContent = '';
