@@ -414,6 +414,8 @@ main .sub{color:#d2d0f5}
 
 .cr-hint{font-size:11px;color:var(--muted);margin-top:6px}
 .mult.m60{border-color:var(--win);color:var(--win)}
+
+.ct-out small{font-size:11px;color:var(--muted)}
 </style>
 
 <div class="sky" aria-hidden="true"></div>
@@ -536,7 +538,7 @@ main .sub{color:#d2d0f5}
 
   <section class="view" id="view-contract" hidden>
     <h2>Контракт</h2>
-    <p class="sub">Положи от 3 до 10 аур одного тира. Результат — одна аура примерно на сумму вложенного. 3 ауры — 60% шанс, что она будет тиром выше, 10 аур — гарантированно.</p>
+    <p class="sub">Положи от 3 до 10 любых аур — можно смешивать тиры. Результат — одна аура примерно на сумму вложенного. С шансом от 60% (3 ауры) до 100% (10 аур) она будет тиром выше самой редкой из вложенных.</p>
     <div class="tier-tabs" id="ctTiers"></div>
     <div class="ct-bar">
       <div class="ct-slots" id="ctSlots"></div>
@@ -910,7 +912,18 @@ function renderRoulettes(){
 }
 const CARD_W=st=>(st.querySelector(".item")?.getBoundingClientRect().width||124)+8;
 function fillStrip(st,ids,reset=true){st.style.transition="none";st.innerHTML=ids.map(id=>card(BY_ID[id])).join("");st.style.transform=`translateX(${reset?0:-(CARD_W(st)*2)}px)`}
-function prefill(){document.querySelectorAll("#roulettes .strip").forEach(st=>fillStrip(st,Array.from({length:12},()=>pickWeighted(current.drops).id),false))}
+// Лента прокрутки: соседние ауры не повторяются; «витринные» веса — чтобы мелькали все ауры кейса
+const SHOW_W=[.32,.3,.24,.14];
+function stripIds(rf,len,fixed={}){
+  const opts=rf.b.map((id,i)=>({id,w:SHOW_W[i]})), out=[];
+  for(let i=0;i<len;i++){
+    if(fixed[i]){out.push(fixed[i]);continue}
+    const bad=new Set([out[i-1],fixed[i+1]]), c=opts.filter(o=>!bad.has(o.id)), t=c.reduce((s,o)=>s+o.w,0);
+    out.push(pickWeighted(c.map(o=>({id:o.id,w:o.w/t}))).id);
+  }
+  return out;
+}
+function prefill(){document.querySelectorAll("#roulettes .strip").forEach(st=>fillStrip(st,stripIds(current,12),false))}
 function updateOpenBtn(){
   if(!current) return;
   const cost=current.price*openCount, b=$("#openBtn");
@@ -938,9 +951,9 @@ async function openRift(byTicket){
   const strips=[...document.querySelectorAll("#roulettes .strip")].slice(0,n);
   const runs=strips.map((st,i)=>{
     const inst=makeInst(rollRift(current),current.id);
-    const ids=Array.from({length:WIN_AT+6},(_,j)=>j===WIN_AT?inst.id:pickWeighted(current.drops).id);
-    let tease=false;
-    if(!fast&&expensive.length&&rnd()<.35&&!expensive.includes(inst.id)){ids[WIN_AT+1]=pick(expensive);tease=true}
+    let tease=!fast&&expensive.length&&rnd()<.35&&!expensive.includes(inst.id);
+    const fixed={[WIN_AT]:inst.id}; if(tease) fixed[WIN_AT+1]=pick(expensive);
+    const ids=stripIds(current,WIN_AT+6,fixed);
     return {st,inst,ids,tease,dur:fast?1:9+i*.35};
   });
   runs.forEach(r=>S.inv.unshift(r.inst)); save(); // результат сохраняется сразу
@@ -1057,7 +1070,7 @@ async function runBattle(rifts,botName){
     $("#bTrack").innerHTML=rounds.map((x,i)=>rchip(RIFT_BY[x.rf],i===r?"cur":i<r?"done":"")).join("");
     const WIN=fast?14:34, dur=fast?.9:3.8;
     const strips=[$("#sideA .vstrip"),$("#sideB .vstrip")], res=[R.a,R.b];
-    strips.forEach((st,p)=>{const seq=Array.from({length:WIN+4},(_,j)=>j===WIN?res[p]:pickWeighted(rf.drops).id);st.style.transition="none";st.style.transform="translateY(0)";st.innerHTML=seq.map(mini).join("")});
+    strips.forEach((st,p)=>{const seq=stripIds(rf,WIN+4,{[WIN]:res[p]});st.style.transition="none";st.style.transform="translateY(0)";st.innerHTML=seq.map(mini).join("")});
     const H=strips[0].children[0].getBoundingClientRect().height+6, boxH=strips[0].parentNode.getBoundingClientRect().height;
     strips.forEach(st=>{st.getBoundingClientRect();const inCard=10+rnd()*(H-26);st.style.transition=`transform ${dur}s cubic-bezier(.1,.62,.08,1)`;st.style.transform=`translateY(${-(WIN*H+inCard)+boxH/2}px)`});
     let last=-1,on=true;(function follow(){if(!on)return;const idx=Math.floor((boxH/2-stripPos(strips[0],"y"))/H);if(idx!==last){if(last>=0)tick();last=idx}requestAnimationFrame(follow)})();
@@ -1174,17 +1187,19 @@ $("#upBtn").addEventListener("click",async()=>{
 });
 
 // ================= contract (10 → next tier) =================
-const ctSel=new Set(); let ctTier="common";
-// Контракт: от 3 до 10 аур одного тира. Шанс получить ауру тира выше = кол-во / 10
-// (10 аур — гарантированно), иначе выпадает аура того же тира.
+const ctSel=new Set(); let ctFilter="all";
+// Контракт: от 3 до 10 любых аур вперемешку. База — самый высокий тир среди вложенных.
+// Шанс получить ауру тиром выше: 3 ауры — 60%, 10 аур — гарантированно.
 const CT_MIN=3, CT_MAX=10;
 function nextTier(k){return TIERS[TIER_IDX[k]+1]?.k}
 const ctUpChance=n=>Math.min(1,.6+(n-CT_MIN)/(CT_MAX-CT_MIN)*.4);
-function ctPool(tier,up){
-  // Результат зависит от суммарной стоимости вложенного: аура в диапазоне 0.4–2.5 от суммы,
-  // ближе к сумме — вероятнее. «Ап» — ауры тиром выше вложенных, иначе — того же тира или ниже.
-  const sel=S.inv.filter(x=>ctSel.has(x.uid)); if(!sel.length) return [];
-  const sum=sel.reduce((s,x)=>s+x.value,0), ti=TIER_IDX[ctTier];
+const ctSelected=()=>S.inv.filter(x=>ctSel.has(x.uid));
+function ctBase(){const sel=ctSelected();return sel.length?TIERS[Math.max(...sel.map(x=>TIER_IDX[BY_ID[x.id].tier]))].k:"common"}
+function ctPool(up){
+  // аура в диапазоне 0.4–2.5 от суммы вложенного; ближе к сумме — вероятнее.
+  // «Ап» — тир выше базового, иначе — базовый тир или ниже.
+  const sel=ctSelected(); if(!sel.length) return [];
+  const sum=sel.reduce((s,x)=>s+x.value,0), ti=TIER_IDX[ctBase()];
   const inRange=AURAS.filter(a=>a.tier!=="unique"&&a.price>=sum*.4&&a.price<=sum*2.5);
   let c=inRange.filter(a=>up?TIER_IDX[a.tier]>ti:TIER_IDX[a.tier]<=ti);
   if(!c.length) c=inRange.length?inRange:AURAS.filter(a=>a.tier!=="unique").sort((x,y)=>Math.abs(Math.log(x.price/sum))-Math.abs(Math.log(y.price/sum))).slice(0,1);
@@ -1193,27 +1208,28 @@ function ctPool(tier,up){
 }
 function renderContract(){
   for(const u of [...ctSel]) if(!S.inv.some(x=>x.uid===u)) ctSel.delete(u);
-  $("#ctTiers").innerHTML=TIERS.filter(t=>t.k!=="anomaly"&&t.k!=="unique").map(t=>{const n=S.inv.filter(x=>BY_ID[x.id].tier===t.k).length;
-    return `<button type="button" class="t-${t.k}" data-tier="${t.k}" aria-pressed="${t.k===ctTier}">${t.name} · ${n}</button>`}).join("");
-  const sel=S.inv.filter(x=>ctSel.has(x.uid)), nt=nextTier(ctTier), n=ctSel.size, up=ctUpChance(n);
+  const count=k=>S.inv.filter(x=>k==="all"||BY_ID[x.id].tier===k).length;
+  $("#ctTiers").innerHTML=`<button type="button" class="t-unique" data-tier="all" aria-pressed="${ctFilter==="all"}">Все · ${count("all")}</button>`+
+    TIERS.filter(t=>t.k!=="unique"&&count(t.k)).map(t=>`<button type="button" class="t-${t.k}" data-tier="${t.k}" aria-pressed="${t.k===ctFilter}">${t.name} · ${count(t.k)}</button>`).join("");
+  const sel=ctSelected(), base=ctBase(), nt=nextTier(base)||base, n=ctSel.size, up=ctUpChance(n), sum=sel.reduce((s,x)=>s+x.value,0);
   $("#ctSlots").innerHTML=Array.from({length:CT_MAX},(_,i)=>{const x=sel[i];return x?`<div class="ct-slot on t-${BY_ID[x.id].tier}">${art(x.id)}</div>`:`<div class="ct-slot${i<CT_MIN?" need":""}"></div>`}).join("");
   $("#ctOut").className="ct-out t-"+nt;
-  $("#ctOut").innerHTML=`<span>${TIERS[TIER_IDX[nt]].name}</span><b class="num">${n>=CT_MIN?Math.round(up*100)+"%":"—"}</b>`;
-  const pool=n>=CT_MIN?ctPool(nt,true):[];
-  const hasUp=pool.some(p=>TIER_IDX[BY_ID[p.id].tier]>TIER_IDX[ctTier]);
-  if(pool.length&&!hasUp){$("#ctPool").innerHTML=`<span class="t-${ctTier}">На сумму ${fmt(sel.reduce((s,x)=>s+x.value,0))} аур тира выше нет — положи дороже или больше аур. Выпадет: ${pool.map(p=>esc(BY_ID[p.id].name)).join(", ")}</span>`}
-  else $("#ctPool").innerHTML=pool.length?`<span class="t-${nt}"><b>Тир выше — ${Math.round(up*100)}%:</b></span>`+pool.map(p=>`<span class="t-${BY_ID[p.id].tier}">${esc(BY_ID[p.id].name)} ${(p.w*up*100).toFixed(0)}%</span>`).join("")+(up<1?`<span class="t-${ctTier}">иначе — аура тира ${TIERS[TIER_IDX[ctTier]].name}</span>`:""):"";
+  $("#ctOut").innerHTML=`<span>${n?"выше "+TIERS[TIER_IDX[base]].name:"—"}</span><b class="num">${n>=CT_MIN?Math.round(up*100)+"%":"—"}</b>${n?`<small class="num">на ${fmt(sum)}</small>`:""}`;
+  const pool=n>=CT_MIN?ctPool(true):[];
+  const hasUp=pool.some(p=>TIER_IDX[BY_ID[p.id].tier]>TIER_IDX[base]);
+  if(pool.length&&!hasUp){$("#ctPool").innerHTML=`<span class="t-${base}">На сумму ${fmt(sum)} аур тира выше ${TIERS[TIER_IDX[base]].name} нет — добавь дороже. Выпадет: ${pool.map(p=>esc(BY_ID[p.id].name)).join(", ")}</span>`}
+  else $("#ctPool").innerHTML=pool.length?`<span class="t-${nt}"><b>Тир выше — ${Math.round(up*100)}%:</b></span>`+pool.map(p=>`<span class="t-${BY_ID[p.id].tier}">${esc(BY_ID[p.id].name)} ${(p.w*up*100).toFixed(0)}%</span>`).join("")+(up<1?`<span class="t-${base}">иначе — аура тира ${TIERS[TIER_IDX[base]].name} или ниже</span>`:""):"";
   const b=$("#ctBtn"); b.disabled=busy||n<CT_MIN; b.textContent=n<CT_MIN?`Добавь ещё ${CT_MIN-n}`:`Синтез · ${Math.round(up*100)}%`;
-  const inv=S.inv.filter(x=>BY_ID[x.id].tier===ctTier).sort((a,b)=>a.value-b.value);
+  const inv=S.inv.filter(x=>ctFilter==="all"||BY_ID[x.id].tier===ctFilter).sort((a,b)=>a.value-b.value);
   $("#ctInv").innerHTML=inv.length?inv.map(x=>{const on=ctSel.has(x.uid);return instCard(x,{note:x.src?RIFT_BY[x.src]?.tag.split(" ")[0]||"":"",cls:"pick"+(on?" sel":"")+(!on&&n>=CT_MAX?" off":""),extra:`data-ct="${x.uid}"`})}).join("")
-    :`<div class="empty" style="grid-column:1/-1">Нет аур тира ${TIERS[TIER_IDX[ctTier]].name}.</div>`;
+    :`<div class="empty" style="grid-column:1/-1">Аур пока нет — открой разлом.</div>`;
 }
-$("#ctTiers").addEventListener("click",e=>{const b=e.target.closest("[data-tier]");if(!b||busy)return;ctTier=b.dataset.tier;ctSel.clear();renderContract()});
+$("#ctTiers").addEventListener("click",e=>{const b=e.target.closest("[data-tier]");if(!b||busy)return;ctFilter=b.dataset.tier;renderContract()});
 $("#ctInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-ct]");if(!b)return;const u=+b.dataset.ct;if(ctSel.has(u))ctSel.delete(u);else if(ctSel.size<CT_MAX)ctSel.add(u);renderContract()});
 $("#ctBtn").addEventListener("click",async()=>{
   const n=ctSel.size; if(busy||n<CT_MIN) return;
   ac();
-  const nt=nextTier(ctTier), upPool=ctPool(nt,true), samePool=ctPool(ctTier,false), isUp=rnd()<ctUpChance(n);
+  const upPool=ctPool(true), samePool=ctPool(false), isUp=rnd()<ctUpChance(n);
   const id=pickWeighted(isUp?upPool:samePool).id, sum=S.inv.filter(x=>ctSel.has(x.uid)).reduce((s,x)=>s+x.value,0);
   const show=[...upPool,...samePool];
   S.inv=S.inv.filter(x=>!ctSel.has(x.uid)); ctSel.clear();
