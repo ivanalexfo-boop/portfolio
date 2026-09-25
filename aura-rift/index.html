@@ -704,8 +704,8 @@ for(const rf of RIFTS){
 const MIN_RIFT=RIFTS[0].price;
 
 // ================= state & save =================
-const START_BALANCE=1000, KEY="aura-battle-v1";
-function fresh(){return {balance:START_BALANCE,inv:[],uid:1,collected:[],lastWheel:0,luckUntil:0,tickets:{},promos:[],savedAt:0,
+const START_BALANCE=10000, KEY="aura-battle-v1";
+function fresh(){return {start10k:true,balance:START_BALANCE,inv:[],uid:1,collected:[],lastWheel:0,luckUntil:0,tickets:{},promos:[],savedAt:0,
   stats:{opened:0,upWin:0,upLose:0,contracts:0,best:0,battles:0,battlesWon:0,crashBest:0,afk:0}}}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s&&Array.isArray(s.inv)?s:null}catch(e){return null}}
 let S=load()||fresh();
@@ -728,12 +728,14 @@ function setSaveBadge(st){const b=$("#saveBadge");b.dataset.st=st;b.title=st==="
     if(d&&d.json&&(d.savedAt||0)>(S.savedAt||0)){
       const r=JSON.parse(d.json);
       if(r&&Array.isArray(r.inv)){S=r;S.inv=S.inv.filter(x=>BY_ID[x.id]);S.tickets=S.tickets||{};S.stats=Object.assign(fresh().stats,S.stats||{});
-        try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderAll();toast("Прогресс загружен из облака")}
+        try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}topUpStart();renderAll();toast("Прогресс загружен из облака")}
     }
     cloud=ref; setSaveBadge("ok");
     if(!d||(S.savedAt||0)>(d.savedAt||0)) pushCloud();
   }catch(e){setSaveBadge("off")}
 })();
+function topUpStart(){if(!S.start10k){S.start10k=true;S.balance+=START_BALANCE-1000;save()}}
+topUpStart();
 function makeInst(id,src){return {uid:S.uid++,id,value:BY_ID[id].price,src:src||null}}
 function collect(id){if(!S.collected.includes(id))S.collected.push(id)}
 function invValue(){return S.inv.reduce((s,x)=>s+x.value,0)}
