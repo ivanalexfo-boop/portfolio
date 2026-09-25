@@ -407,6 +407,9 @@ main .sub{color:#d2d0f5}
 .mult{font-family:var(--mono);font-weight:700;font-size:14px;padding:8px 16px;border-radius:10px;background:rgba(15,12,46,.85);border:1.5px solid rgba(139,92,255,.5)}
 .mult:hover:not([disabled]){border-color:var(--win);color:var(--win)}
 .mult[disabled]{opacity:.4;cursor:not-allowed}
+
+.ct-slot.need{border-color:rgba(255,197,61,.55)}
+.ct-out b{font-family:var(--mono);font-size:18px;color:var(--text)}
 </style>
 
 <div class="sky" aria-hidden="true"></div>
@@ -531,7 +534,7 @@ main .sub{color:#d2d0f5}
 
   <section class="view" id="view-contract" hidden>
     <h2>Контракт</h2>
-    <p class="sub">Положи ровно 10 аур одного тира — получишь одну гарантированную ауру на тир выше. Результат выбирается из разломов, откуда пришли вложенные ауры.</p>
+    <p class="sub">Положи от 3 до 10 аур одного тира. Чем больше вложишь, тем выше шанс получить ауру тиром выше: 3 ауры — 30%, 10 аур — гарантированно. Если не повезёт, выпадет аура того же тира.</p>
     <div class="tier-tabs" id="ctTiers"></div>
     <div class="ct-bar">
       <div class="ct-slots" id="ctSlots"></div>
@@ -1066,13 +1069,22 @@ async function runBattle(rifts,botName){
 }
 
 // ================= upgrade =================
-let upSrc=null, upDst=null, needleAngle=0, boost=0;
+let upSrc=null, upDst=null, needleAngle=0, boost=0, upLock=null; // upLock: что показывать, пока крутится
 const MAX_CHANCE=.8;
 (function ticks(){let s="";for(let i=0;i<40;i++)s+=`<line x1="115" y1="${i%5?11:8}" x2="115" y2="17" transform="rotate(${i*9} 115 115)" stroke="${i%5?"#4a4390":"#fff"}" stroke-width="${i%5?1.2:2}" stroke-linecap="round"/>`;$("#dialTicks").innerHTML=s})();
 const srcInst=()=>S.inv.find(x=>x.uid===upSrc);
 function maxBoost(){const s=srcInst();if(!s||!upDst)return 0;return Math.max(0,Math.min(S.balance,Math.floor(MAX_CHANCE*BY_ID[upDst].price-s.value)))}
 function chance(){const s=srcInst();if(!s||!upDst)return 0;return Math.min(MAX_CHANCE,(s.value+boost)/BY_ID[upDst].price)}
 function renderUpgrade(){
+  if(upLock){ // во время прокрутки круг показывает зафиксированный шанс
+    const c=upLock.c;
+    $("#chance").textContent=(c*100).toFixed(c<.1?2:1).replace(/\.0+$/,"")+"%";
+    $("#dialArc").setAttribute("stroke-dasharray",`${(c*552.92).toFixed(2)} 553`);
+    $("#upSrc").innerHTML=instCard(upLock.src); $("#upDst").innerHTML=card(BY_ID[upLock.dst]);
+    $("#upBtn").disabled=true; $("#boostRange").disabled=true;
+    document.querySelectorAll("#mults .mult").forEach(b=>b.disabled=true);
+    return;
+  }
   const s=srcInst(); if(!s) upSrc=null;
   if(s&&upDst&&BY_ID[upDst].price<=s.value) upDst=null;
   const mb=maxBoost(); if(boost>mb) boost=mb;
@@ -1117,14 +1129,14 @@ $("#upBtn").addEventListener("click",async()=>{
   S.balance-=paid; S.inv=S.inv.filter(x=>x.uid!==s.uid);
   let inst=null; if(win){inst=makeInst(upDst,null);S.inv.unshift(inst);S.stats.upWin++}else S.stats.upLose++;
   save(); renderTop();
-  busy=true; renderUpgrade(); $("#upSrc").innerHTML=instCard(s);
+  busy=true; upLock={src:s,dst:upDst,c}; renderUpgrade();
   const target=needleAngle-(needleAngle%360)+360*5+r*360; needleAngle=target;
   const nd=$("#needle"); nd.style.transform=`rotate(${target}deg)`;
   let prev=null,acc=0,on=true;
   (function follow(){if(!on)return;const m=getComputedStyle(nd).transform;if(m&&m!=="none"){const d=new DOMMatrixReadOnly(m),a=Math.atan2(d.b,d.a)*180/Math.PI;if(prev!==null){let da=a-prev;if(da<-180)da+=360;if(da>180)da-=360;acc+=Math.abs(da);if(acc>=18){acc=0;tick()}}prev=a}requestAnimationFrame(follow)})();
   await wait(4500); on=false;
   const dl=$("#dial"); dl.classList.add(win?"hit":"miss"); setTimeout(()=>dl.classList.remove("hit","miss"),1100);
-  busy=false; upSrc=null; boost=0;
+  busy=false; upLock=null; upSrc=null; boost=0;
   if(win){addFeed(inst);save();renderAll();const a=BY_ID[inst.id];
     modal(`<div class="modal-title win">Апгрейд удался!</div>${instCard(inst)}${prizeActions([inst],inst.value)}`,a.tier);celebrate(a.tier);bindPrize([inst],inst.value);
   } else {renderAll();loseSound();
@@ -1135,14 +1147,17 @@ $("#upBtn").addEventListener("click",async()=>{
 
 // ================= contract (10 → next tier) =================
 const ctSel=new Set(); let ctTier="common";
-const CT_N=10;
+// Контракт: от 3 до 10 аур одного тира. Шанс получить ауру тира выше = кол-во / 10
+// (10 аур — гарантированно), иначе выпадает аура того же тира.
+const CT_MIN=3, CT_MAX=10;
 function nextTier(k){return TIERS[TIER_IDX[k]+1]?.k}
-function ctPool(){
-  // вероятность результата: каждая вложенная аура «голосует» за следующий тир своего разлома
-  const out={}, sel=S.inv.filter(x=>ctSel.has(x.uid)), nt=nextTier(ctTier); if(!sel.length||!nt||nt==="unique") return [];
-  const fallback=AURAS.filter(a=>a.tier===nt);
+const ctUpChance=n=>Math.min(1,n/CT_MAX);
+function ctPool(tier){
+  // каждая вложенная аура «голосует» за ауры нужного тира из своего разлома
+  const out={}, sel=S.inv.filter(x=>ctSel.has(x.uid)); if(!sel.length||!tier||tier==="unique") return [];
+  const fallback=AURAS.filter(a=>a.tier===tier);
   for(const x of sel){
-    const rf=x.src&&RIFT_BY[x.src]; let cands=rf?rf.items.map(id=>BY_ID[id]).filter(a=>a.tier===nt):[];
+    const rf=x.src&&RIFT_BY[x.src]; let cands=rf?rf.items.map(id=>BY_ID[id]).filter(a=>a.tier===tier):[];
     if(!cands.length) cands=fallback;
     cands.forEach(a=>out[a.id]=(out[a.id]||0)+1/cands.length/sel.length);
   }
@@ -1152,31 +1167,34 @@ function renderContract(){
   for(const u of [...ctSel]) if(!S.inv.some(x=>x.uid===u)) ctSel.delete(u);
   $("#ctTiers").innerHTML=TIERS.filter(t=>t.k!=="anomaly"&&t.k!=="unique").map(t=>{const n=S.inv.filter(x=>BY_ID[x.id].tier===t.k).length;
     return `<button type="button" class="t-${t.k}" data-tier="${t.k}" aria-pressed="${t.k===ctTier}">${t.name} · ${n}</button>`}).join("");
-  const sel=S.inv.filter(x=>ctSel.has(x.uid)), nt=nextTier(ctTier);
-  $("#ctSlots").innerHTML=Array.from({length:CT_N},(_,i)=>{const x=sel[i];return x?`<div class="ct-slot on t-${BY_ID[x.id].tier}">${art(x.id)}</div>`:`<div class="ct-slot"></div>`}).join("");
-  $("#ctOut").className="ct-out t-"+nt; $("#ctOut").innerHTML=`<span>1 × ${TIERS[TIER_IDX[nt]].name}</span>`;
-  const pool=ctPool();
-  $("#ctPool").innerHTML=pool.length?pool.map(p=>`<span class="t-${BY_ID[p.id].tier}">${esc(BY_ID[p.id].name)} ${(p.w*100).toFixed(0)}%</span>`).join(""):"";
-  const b=$("#ctBtn"); b.disabled=busy||ctSel.size!==CT_N; b.textContent=ctSel.size===CT_N?"Синтез":`Ещё ${CT_N-ctSel.size}`;
+  const sel=S.inv.filter(x=>ctSel.has(x.uid)), nt=nextTier(ctTier), n=ctSel.size, up=ctUpChance(n);
+  $("#ctSlots").innerHTML=Array.from({length:CT_MAX},(_,i)=>{const x=sel[i];return x?`<div class="ct-slot on t-${BY_ID[x.id].tier}">${art(x.id)}</div>`:`<div class="ct-slot${i<CT_MIN?" need":""}"></div>`}).join("");
+  $("#ctOut").className="ct-out t-"+nt;
+  $("#ctOut").innerHTML=`<span>${TIERS[TIER_IDX[nt]].name}</span><b class="num">${n>=CT_MIN?Math.round(up*100)+"%":"—"}</b>`;
+  const pool=n>=CT_MIN?ctPool(nt):[];
+  $("#ctPool").innerHTML=pool.length?`<span class="t-${nt}"><b>Тир выше — ${Math.round(up*100)}%:</b></span>`+pool.map(p=>`<span class="t-${BY_ID[p.id].tier}">${esc(BY_ID[p.id].name)} ${(p.w*up*100).toFixed(0)}%</span>`).join("")+(up<1?`<span class="t-${ctTier}">иначе — аура тира ${TIERS[TIER_IDX[ctTier]].name}</span>`:""):"";
+  const b=$("#ctBtn"); b.disabled=busy||n<CT_MIN; b.textContent=n<CT_MIN?`Добавь ещё ${CT_MIN-n}`:`Синтез · ${Math.round(up*100)}%`;
   const inv=S.inv.filter(x=>BY_ID[x.id].tier===ctTier).sort((a,b)=>a.value-b.value);
-  $("#ctInv").innerHTML=inv.length?inv.map(x=>{const on=ctSel.has(x.uid);return instCard(x,{note:x.src?RIFT_BY[x.src]?.name.split(" ")[0]||"":"",cls:"pick"+(on?" sel":"")+(!on&&ctSel.size>=CT_N?" off":""),extra:`data-ct="${x.uid}"`})}).join("")
+  $("#ctInv").innerHTML=inv.length?inv.map(x=>{const on=ctSel.has(x.uid);return instCard(x,{note:x.src?RIFT_BY[x.src]?.tag.split(" ")[0]||"":"",cls:"pick"+(on?" sel":"")+(!on&&n>=CT_MAX?" off":""),extra:`data-ct="${x.uid}"`})}).join("")
     :`<div class="empty" style="grid-column:1/-1">Нет аур тира ${TIERS[TIER_IDX[ctTier]].name}.</div>`;
 }
 $("#ctTiers").addEventListener("click",e=>{const b=e.target.closest("[data-tier]");if(!b||busy)return;ctTier=b.dataset.tier;ctSel.clear();renderContract()});
-$("#ctInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-ct]");if(!b)return;const u=+b.dataset.ct;if(ctSel.has(u))ctSel.delete(u);else if(ctSel.size<CT_N)ctSel.add(u);renderContract()});
+$("#ctInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-ct]");if(!b)return;const u=+b.dataset.ct;if(ctSel.has(u))ctSel.delete(u);else if(ctSel.size<CT_MAX)ctSel.add(u);renderContract()});
 $("#ctBtn").addEventListener("click",async()=>{
-  if(busy||ctSel.size!==CT_N) return;
+  const n=ctSel.size; if(busy||n<CT_MIN) return;
   ac();
-  const pool=ctPool(), id=pickWeighted(pool).id, sum=S.inv.filter(x=>ctSel.has(x.uid)).reduce((s,x)=>s+x.value,0);
+  const nt=nextTier(ctTier), upPool=ctPool(nt), samePool=ctPool(ctTier), isUp=rnd()<ctUpChance(n);
+  const id=pickWeighted(isUp?upPool:samePool).id, sum=S.inv.filter(x=>ctSel.has(x.uid)).reduce((s,x)=>s+x.value,0);
+  const show=[...upPool,...samePool];
   S.inv=S.inv.filter(x=>!ctSel.has(x.uid)); ctSel.clear();
   const inst=makeInst(id,null); S.inv.unshift(inst); S.stats.contracts++; save(); renderTop();
   busy=true;
   modal(`<div class="modal-title">Синтез…</div><div class="anim" id="reveal" style="height:230px;display:grid;place-items:center"></div>`,BY_ID[id].tier);
-  for(let k=0;k<16;k++){$("#reveal").innerHTML=card(BY_ID[pickWeighted(pool).id]);tick();await wait(90+k*10)}
+  for(let k=0;k<16;k++){$("#reveal").innerHTML=card(BY_ID[pick(show).id]);tick();await wait(90+k*10)}
   busy=false; addFeed(inst); save(); renderAll();
   const a=BY_ID[id], diff=inst.value-sum;
-  modal(`<div class="modal-title ${diff>=0?"win":""}">${TIERS[TIER_IDX[a.tier]].name}!</div>${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${fmt(sum)} · ${diff>=0?"+":"−"}${fmt(Math.abs(diff))}</div>${prizeActions([inst],inst.value)}`,a.tier);
-  celebrate(a.tier); bindPrize([inst],inst.value);
+  modal(`<div class="modal-title ${isUp?"win":""}">${isUp?`Тир выше: ${TIERS[TIER_IDX[a.tier]].name}!`:"Тир не повысился"}</div>${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${n} аур на ${fmt(sum)} · ${diff>=0?"+":"−"}${fmt(Math.abs(diff))}</div>${prizeActions([inst],inst.value)}`,a.tier);
+  if(isUp) celebrate(a.tier); else loseSound(); bindPrize([inst],inst.value);
 });
 
 // ================= crash (continuous rounds + players) =================
