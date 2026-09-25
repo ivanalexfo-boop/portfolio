@@ -1,5 +1,5 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}</style></head><body>
-<title>Кейс Арена</title>
+<title>Брейнрот Кейсы</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Onest:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -164,11 +164,19 @@ h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted
 .slot{min-height:176px;border:1.5px dashed var(--line);border-radius:14px;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:10px}
 .slot .item{width:100%;max-width:190px}
 .slot-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;font-weight:700}
-.dial{position:relative;width:190px;height:190px}
-.dial svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 14px rgba(255,61,154,.45))}
-.dial .needle{transform-origin:95px 95px;transition:transform 4.2s cubic-bezier(.12,.72,.08,1)}
+.dial{position:relative;width:220px;height:220px}
+.dial svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 18px rgba(157,92,255,.45));overflow:visible}
+.dial .needle{transform-origin:110px 110px;transition:transform 4.2s cubic-bezier(.12,.72,.08,1)}
+.dial[data-arrow="arrow"] .arw-neon,.dial[data-arrow="neon"] .arw-arrow{display:none}
+.dial.hit #dialArc{animation:arcHit .5s ease 2}
+@keyframes arcHit{50%{stroke-width:24}}
+.dial.miss svg{animation:shake .4s ease}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.arrow-pick{display:flex;gap:4px;justify-content:center;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.arrow-pick button{flex:1;font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;color:var(--muted);white-space:nowrap}
+.arrow-pick button[aria-pressed="true"]{background:var(--grad);color:#fff}
 .dial-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
-.dial-c .num{font-size:30px;font-weight:700}
+.dial-c .num{font-size:34px;font-weight:700;text-shadow:0 0 18px rgba(255,61,154,.5)}
 .dial-c small{color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 .mults{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:14px 0 4px}
 .mult{font-family:var(--mono);font-weight:700;font-size:13px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
@@ -392,6 +400,15 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
   .ava{width:22px;height:22px;font-size:11px}
   .b-start .btn{width:100%;margin-left:0}
 }
+
+/* ---------- brainrots ---------- */
+.item .gun{height:74px}
+.item.st .gun,.mini.gold .gun,.feed-item.gold .gun{filter:sepia(1) saturate(3.2) hue-rotate(-12deg) brightness(1.12) drop-shadow(0 0 8px rgba(255,197,61,.8))}
+.item .stb,.feed-item .stb,.mini .stb{background:linear-gradient(135deg,#fff1b8,#ffc53d 50%,#e08a00);color:#3a2300}
+.item.st .w{color:#ffd35c}
+.item.st{box-shadow:inset 0 0 0 1px rgba(255,197,61,.55)}
+.case-art .peek{height:64px;top:-6px}
+.open-head .case-art .peek{height:54px}
 </style>
 
 <div class="sky" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -399,7 +416,7 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
 <canvas id="confetti" aria-hidden="true"></canvas>
 <header class="top">
   <div class="top-in">
-    <div class="logo"><i></i>КЕЙС <span>АРЕНА</span></div>
+    <div class="logo"><i></i>БРЕЙНРОТ <span>КЕЙСЫ</span></div>
     <button class="snd" id="sndBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="w1" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="bal" title="Виртуальный баланс">
       <span class="coin"></span><span class="num" id="balance">0</span>
@@ -455,40 +472,59 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
   <!-- UPGRADE -->
   <section class="view" id="view-upgrade" hidden>
     <h2>Апгрейд</h2>
-    <p class="sub">Поставь свой скин и выбери дороже. Выиграл — забираешь цель, проиграл — теряешь свой.</p>
+    <p class="sub">Поставь своего брейнрота и выбери дороже. Выиграл — забираешь цель, проиграл — теряешь своего.</p>
     <div class="up-stage">
       <div>
-        <div class="slot-label">Твой скин</div>
-        <div class="slot" id="upSrc">Выбери скин из инвентаря ниже</div>
+        <div class="slot-label">Твой брейнрот</div>
+        <div class="slot" id="upSrc">Выбери брейнрота из инвентаря ниже</div>
       </div>
       <div class="dial-wrap">
-        <div class="dial">
-          <svg viewBox="0 0 190 190" aria-hidden="true">
-            <circle cx="95" cy="95" r="80" fill="none" stroke="#3a2f6b" stroke-width="14"/>
-            <circle id="dialArc" cx="95" cy="95" r="80" fill="none" stroke="url(#dialGrad)" stroke-width="14"
-              stroke-dasharray="0 503" transform="rotate(-90 95 95)" stroke-linecap="butt"/>
+        <div class="dial" id="dial" data-arrow="arrow">
+          <svg viewBox="0 0 220 220" aria-hidden="true">
+            <defs>
+              <radialGradient id="dialCore" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3a2a86"/><stop offset="1" stop-color="#140d33"/></radialGradient>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <circle cx="110" cy="110" r="106" fill="#0f0a24" stroke="#3a2f6b" stroke-width="2"/>
+            <line x1="110" y1="12" x2="110" y2="21" transform="rotate(0 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(10 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(20 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(30 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(40 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(50 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(60 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(70 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(80 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(90 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(100 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(110 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(120 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(130 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(140 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(150 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(160 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(170 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(180 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(190 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(200 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(210 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(220 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(230 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(240 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(250 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(260 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(270 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(280 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(290 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(300 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(310 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(320 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="12" x2="110" y2="21" transform="rotate(330 110 110)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(340 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/><line x1="110" y1="15" x2="110" y2="21" transform="rotate(350 110 110)" stroke="#6f67a0" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="110" cy="110" r="84" fill="none" stroke="rgba(255,84,112,.28)" stroke-width="18"/>
+            <circle id="dialArc" cx="110" cy="110" r="84" fill="none" stroke="url(#dialGrad)" stroke-width="18"
+              stroke-dasharray="0 528" transform="rotate(-90 110 110)" stroke-linecap="butt" filter="url(#glow)"/>
+            <circle cx="110" cy="110" r="72" fill="url(#dialCore)" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
             <g class="needle" id="needle">
-              <path d="M95 4 L103 22 L87 22 Z" fill="#ffffff"/>
+              <g class="arw-arrow">
+                <path d="M110 26 L123 52 L110 46 L97 52 Z" fill="#fff" stroke="#1a0f2e" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M110 46 L110 58" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+              </g>
+              <g class="arw-neon" filter="url(#glow)">
+                <path d="M110 110 L110 34" stroke="rgba(34,211,238,.35)" stroke-width="3" stroke-dasharray="3 5"/>
+                <circle cx="110" cy="26" r="11" fill="#22d3ee"/>
+                <circle cx="110" cy="26" r="5.5" fill="#fff"/>
+              </g>
             </g>
           </svg>
           <div class="dial-c"><span class="num" id="chance">0%</span><small>шанс</small></div>
         </div>
+        <div class="arrow-pick" id="arrowPick" role="group" aria-label="Вид указателя">
+          <button type="button" data-arrow="arrow">➤ Стрелка</button>
+          <button type="button" data-arrow="neon">● Неон</button>
+        </div>
       </div>
       <div>
         <div class="slot-label">Цель</div>
-        <div class="slot" id="upDst">Выбери скин, который хочешь получить</div>
+        <div class="slot" id="upDst">Выбери брейнрота, которого хочешь получить</div>
       </div>
     </div>
     <div class="mults" id="mults"></div>
     <div class="up-go"><button class="btn btn-main" id="upBtn" type="button" disabled>Апгрейд</button></div>
     <div class="cols">
       <div>
-        <h3>Твой инвентарь</h3>
+        <h3>Твои брейнроты</h3>
         <div class="scroll"><div class="grid sm" id="upInv"></div></div>
       </div>
       <div>
         <h3>Что хочешь получить</h3>
-        <input class="search" id="upSearch" type="search" placeholder="Поиск: AWP, нож, Asiimov…" autocomplete="off">
+        <input class="search" id="upSearch" type="search" placeholder="Поиск: Tralalero, Sahur…" autocomplete="off">
         <div class="scroll"><div class="grid sm" id="upTargets"></div></div>
       </div>
     </div>
@@ -497,7 +533,7 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
   <!-- CONTRACT -->
   <section class="view" id="view-contract" hidden>
     <h2>Контракт</h2>
-    <p class="sub">Сложи от 3 до 10 скинов. Взамен получишь один случайный: от четверти до пятикратной суммы вложенного.</p>
+    <p class="sub">Сложи от 3 до 10 брейнротов. Взамен получишь одного случайного: от четверти до пятикратной суммы вложенного.</p>
     <div class="ct-bar">
       <div class="ct-stat"><small>Выбрано</small><div class="pips" id="pips"></div></div>
       <div class="ct-stat"><small>Сумма</small><span class="num" id="ctSum"><span class="coin"></span>0</span></div>
@@ -571,7 +607,7 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
     <input id="promoInput" type="text" placeholder="Промокод" aria-label="Промокод" maxlength="24">
     <button class="btn btn-ghost btn-sm" type="submit">Активировать</button>
   </form>
-  <span>Симулятор на виртуальных монетах. Реальных денег и вывода скинов нет.</span>
+  <span>Симулятор на виртуальных монетах. Реальных денег и вывода нет.</span>
   <button id="resetBtn" type="button">Начать заново</button>
 </footer>
 
@@ -581,208 +617,175 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
 <script>
 (() => {
 // ---------- data ----------
-// ---------- skin art: силуэт оружия + раскраска скина ----------
-const SHAPES = {
-  ak:{b:"M3 19 L30 17 L92 17 L94 15 L100 15 L100 18 L125 18 L125 21 L100 22 L96 25 L30 26 L4 30 Z",
-      d:"M42 25 L52 25 L46 38 L38 38 Z M58 25 L70 25 Q70 36 76 44 L66 46 Q58 36 58 25 Z M74 20 L92 20 L92 23 L74 23 Z"},
-  m4:{b:"M3 20 L28 18 L34 20 L38 16 L64 16 L66 19 L98 19 L98 21 L125 21 L125 23 L98 24 L96 27 L34 27 L28 25 L3 28 Z",
-      d:"M40 12 L62 12 L62 16 L40 16 Z M44 27 L53 27 L48 39 L40 39 Z M60 27 L69 27 L67 41 L59 40 Z"},
-  awp:{b:"M2 21 L24 18 L32 23 L48 22 L50 19 L86 19 L86 21 L126 21 L126 23 L86 24 L82 27 L32 28 L24 30 L2 30 Z",
-      d:"M52 11 L84 11 Q86 13.5 84 16 L52 16 Q50 13.5 52 11 Z M40 27 L49 27 L44 38 L36 38 Z M60 27 L68 27 L68 34 L60 34 Z"},
-  pistol:{b:"M20 11 L106 11 L108 14 L106 21 L60 21 Q58 30 48 30 L44 30 L40 44 L22 44 L28 25 L22 21 Z",
-      d:"M20 19.5 L106 19.5 L106 21 L20 21 Z M47 22 L57 22 Q56 27 50 27 Z"},
-  deagle:{b:"M16 9 L110 9 L112 13 L110 22 L62 22 Q60 31 49 31 L46 31 L42 45 L22 45 L28 26 L18 22 Z",
-      d:"M16 20 L110 20 L110 22 L16 22 Z M49 23 L59 23 Q58 28 52 28 Z M60 12 L100 12 L100 14 L60 14 Z"},
-  smg:{b:"M8 18 L28 16 L32 19 L96 19 L98 21 L114 21 L114 24 L98 24 L96 27 L34 27 L30 25 L8 26 Z",
-      d:"M40 27 L49 27 L45 38 L37 38 Z M62 27 L70 27 L70 44 L62 44 Z"},
-  knife:{b:"M44 20 L116 17 Q126 20 118 25 Q96 31 44 30 Z",
-      d:"M6 21 L40 20 L40 30 L8 33 Q2 27 6 21 Z M40 16 L46 16 L46 34 L40 34 Z"},
-  karambit:{b:"M30 34 Q30 12 64 10 Q98 9 116 30 Q94 18 66 20 Q44 22 40 36 Z",
-      d:"M14 28 Q14 22 20 22 L40 22 L42 38 L20 40 Q14 40 14 34 Z M3 32 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0 Z M7 32 a4 4 0 1 1 8 0 a4 4 0 1 1 -8 0 Z"},
-  gloves:{b:"M40 8h8v16h4V5h8v19h4V7h8v17h4V14h8v20c0 9-7 12-16 12H54c-9 0-14-6-14-12z",
-      d:"M42 36h40v9H42z"}
+// ---------- брейнроты: рисуем каждого векторно ----------
+const O='stroke="#1a0f2e" stroke-width="2.5" stroke-linejoin="round"';
+const SM='fill="none" stroke="#1a0f2e" stroke-width="3" stroke-linecap="round"';
+const E=(x,y,r=5)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#1a0f2e" stroke-width="1.5"/><circle cx="${x+r*.2}" cy="${y+r*.15}" r="${r*.52}" fill="#1a0f2e"/><circle cx="${x+r*.35}" cy="${y-r*.1}" r="${r*.18}" fill="#fff"/>`;
+const STAR=(x,y,s=1,c="#fff6a8")=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0 -6 L1.8 -1.8 L6 0 L1.8 1.8 L0 6 L-1.8 1.8 L-6 0 L-1.8 -1.8Z" fill="${c}"/>`;
+const TRAL=`<path d="M40 58 V76 M60 56 V76" stroke="#6fa8dc" stroke-width="6"/>
+  <path d="M8 50 Q30 26 64 34 Q84 38 94 48 Q80 54 64 56 Q34 62 8 50Z" fill="#6fa8dc" ${O}/>
+  <path d="M22 53 Q44 60 72 53 Q48 63 22 53Z" fill="#eaf4ff"/>
+  <path d="M44 35 L50 15 L60 35Z" fill="#6fa8dc" ${O}/>
+  <path d="M10 50 L1 35 L4 50 L1 65Z" fill="#6fa8dc" ${O}/>
+  ${E(79,43,4)}<path d="M76 52 l2.5 3 l2.5 -3 l2.5 3 l2.5 -3" fill="none" stroke="#fff" stroke-width="1.6"/>
+  <path d="M31 76 H49 Q51 85 45 85 H29 Q27 80 31 76Z M51 76 H69 Q71 85 65 85 H49 Q47 80 51 76Z" fill="#2e6cff" ${O}/>
+  <path d="M31 81.5 H49 M51 81.5 H69" stroke="#fff" stroke-width="2"/>`;
+const ART={
+tatasahur:`<path d="M79 58 L95 44 L94 54 L81 68Z" fill="#8aa0b8" ${O}/><path d="M20 80 Q16 42 50 38 Q84 42 80 80 Z" fill="#9fb3c8" ${O}/>
+  <path d="M32 42 Q50 12 68 42" fill="none" stroke="#1a0f2e" stroke-width="5"/><ellipse cx="50" cy="39" rx="16" ry="5" fill="#7d91a8" ${O}/>
+  ${E(40,58)}${E(60,58)}<path d="M42 70 Q50 76 58 70" ${SM}/><rect x="16" y="78" width="68" height="8" rx="4" fill="#5b6b80" ${O}/>`,
+frigo:`<rect x="26" y="84" width="7" height="12" fill="#c9955b" ${O}/><rect x="56" y="84" width="7" height="12" fill="#c9955b" ${O}/>
+  <path d="M30 31 Q40 12 52 31Z" fill="#c9955b" ${O}/><path d="M60 32 Q64 10 80 11 Q94 13 91 24 L82 27 Q74 25 72 34Z" fill="#c9955b" ${O}/>
+  <rect x="22" y="30" width="46" height="55" rx="6" fill="#eef3f8" ${O}/><line x1="22" y1="50" x2="68" y2="50" stroke="#1a0f2e" stroke-width="2.5"/>
+  <rect x="58" y="36" width="4" height="10" rx="2" fill="#9fb3c8"/><rect x="58" y="56" width="4" height="15" rx="2" fill="#9fb3c8"/>${E(82,18,3.5)}`,
+boneca:`<ellipse cx="50" cy="76" rx="38" ry="15" fill="#2b2b33" ${O}/><ellipse cx="50" cy="73" rx="20" ry="6" fill="#111"/>
+  <circle cx="35" cy="31" r="10" fill="#5fcf5a" ${O}/><circle cx="65" cy="31" r="10" fill="#5fcf5a" ${O}/>
+  <ellipse cx="50" cy="52" rx="27" ry="20" fill="#5fcf5a" ${O}/>${E(35,31,6.5)}${E(65,31,6.5)}<path d="M34 57 Q50 66 66 57" ${SM}/>`,
+trippi:`<path d="M30 78 L14 90 L30 88 L34 97 Z" fill="#ff6a3c" ${O}/>
+  <path d="M30 80 Q8 52 32 32 Q54 16 70 26 Q54 28 46 38 Q34 52 44 72 Z" fill="#ff8a5c" ${O}/>
+  <path d="M24 60 L38 56 M22 48 L36 46 M28 38 L40 38" stroke="#d9542a" stroke-width="2.5"/>
+  <path d="M52 30 L54 14 L63 26Z M73 26 L82 14 L83 30Z" fill="#f2c18d" ${O}/><circle cx="67" cy="40" r="18" fill="#f2c18d" ${O}/>
+  ${E(61,39,4.5)}${E(74,39,4.5)}<path d="M63 50 Q67 53 71 50" ${SM}/>`,
+lirili:`<rect x="30" y="86" width="18" height="7" rx="3" fill="#a0522d" ${O}/><rect x="52" y="86" width="18" height="7" rx="3" fill="#a0522d" ${O}/>
+  <rect x="34" y="42" width="32" height="46" rx="14" fill="#4fbf6a" ${O}/><path d="M42 54 v6 M58 60 v6 M50 70 v6 M42 76 v5" stroke="#2f8a45" stroke-width="2.5"/>
+  <ellipse cx="27" cy="30" rx="11" ry="14" fill="#b4bccb" ${O}/><ellipse cx="73" cy="30" rx="11" ry="14" fill="#b4bccb" ${O}/>
+  <ellipse cx="50" cy="31" rx="20" ry="16" fill="#9aa3b5" ${O}/><path d="M50 38 Q50 56 60 58" fill="none" stroke="#1a0f2e" stroke-width="10" stroke-linecap="round"/><path d="M50 38 Q50 56 60 58" fill="none" stroke="#9aa3b5" stroke-width="6" stroke-linecap="round"/>
+  ${E(42,27,3.5)}${E(58,27,3.5)}`,
+brrbrr:`<ellipse cx="33" cy="85" rx="17" ry="8" fill="#d9a877" ${O}/><ellipse cx="67" cy="85" rx="17" ry="8" fill="#d9a877" ${O}/>
+  <rect x="39" y="42" width="22" height="40" rx="6" fill="#8b5a2b" ${O}/><circle cx="50" cy="30" r="25" fill="#3fae4f" ${O}/>
+  <circle cx="34" cy="20" r="7" fill="#58c468"/><circle cx="64" cy="18" r="6" fill="#58c468"/>
+  <ellipse cx="50" cy="35" rx="14" ry="12" fill="#d9a877" ${O}/>${E(44,32,3.5)}${E(56,32,3.5)}<ellipse cx="50" cy="41" rx="4" ry="2.5" fill="#1a0f2e"/>`,
+chimp:`<path d="M22 30 Q18 80 60 88 Q86 90 92 72 Q70 80 52 70 Q36 58 38 28 Z" fill="#ffd93d" ${O}/><path d="M30 31 L27 17 L40 22Z" fill="#8a6d1f" ${O}/>
+  <circle cx="55" cy="52" r="17" fill="#7a4a2a" ${O}/><ellipse cx="55" cy="57" rx="12" ry="9" fill="#e0b48a"/>
+  ${E(49,48,4)}${E(61,48,4)}<path d="M50 61 Q55 65 60 61" ${SM}/>`,
+cappuccina:`<path d="M46 62 L40 91 M54 62 L62 89" stroke="#f2c7a5" stroke-width="5" stroke-linecap="round"/>
+  <path d="M44 44 Q30 36 31 21 M56 44 Q70 36 69 21" fill="none" stroke="#f2c7a5" stroke-width="4" stroke-linecap="round"/>
+  <path d="M44 40 H56 L58 54 H42Z" fill="#ff8fc8" ${O}/><ellipse cx="50" cy="58" rx="25" ry="7" fill="#ff5cb0" ${O}/>
+  <path d="M66 20 Q78 22 64 33" fill="none" stroke="#1a0f2e" stroke-width="2.5"/><path d="M34 14 H66 L62 40 H38 Z" fill="#f4ede1" ${O}/><ellipse cx="50" cy="14" rx="16" ry="4" fill="#8b5a2b" ${O}/>
+  ${E(45,26,3)}${E(55,26,3)}<path d="M47 33 Q50 35 53 33" ${SM}/>`,
+cappassassino:`<path d="M18 92 L86 12" stroke="#1a0f2e" stroke-width="6"/><path d="M18 92 L86 12" stroke="#d6dde8" stroke-width="3"/>
+  <path d="M82 92 L14 12" stroke="#1a0f2e" stroke-width="6"/><path d="M82 92 L14 12" stroke="#d6dde8" stroke-width="3"/>
+  <path d="M72 46 Q90 50 70 68" fill="none" stroke="#1a0f2e" stroke-width="3"/>
+  <path d="M26 30 H74 L68 86 H32 Z" fill="#fff4e6" ${O}/><ellipse cx="50" cy="30" rx="24" ry="6" fill="#7a4a2a" ${O}/>
+  <rect x="27" y="44" width="46" height="13" fill="#1a0f2e"/><path d="M27 48 L12 41 M27 53 L11 58" stroke="#1a0f2e" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M36 51 L46 48.5 M54 48.5 L64 51" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`,
+burbaloni:`<circle cx="50" cy="58" r="31" fill="#7a4a2a" ${O}/><path d="M22 46 Q50 18 78 46" fill="#fffaf0" ${O}/>
+  <circle cx="36" cy="44" r="5" fill="#8a5a36" ${O}/><circle cx="64" cy="44" r="5" fill="#8a5a36" ${O}/>
+  <ellipse cx="50" cy="58" rx="21" ry="17" fill="#b07a4c" ${O}/><ellipse cx="50" cy="66" rx="10" ry="6" fill="#8a5a36"/>
+  ${E(42,54,3.5)}${E(58,54,3.5)}<circle cx="46" cy="65" r="1.5" fill="#1a0f2e"/><circle cx="54" cy="65" r="1.5" fill="#1a0f2e"/>`,
+glorbo:`<ellipse cx="42" cy="62" rx="31" ry="25" fill="#2fa84f" ${O}/><path d="M22 50 Q28 62 22 76 M38 40 Q44 62 38 85 M56 41 Q60 62 56 83" stroke="#1d7a36" stroke-width="3" fill="none"/>
+  <path d="M60 38 Q95 34 97 47 Q95 57 64 58 Z" fill="#6fc36f" ${O}/><path d="M68 57 l3 4 l3 -4 l3 4 l3 -4 l3 4 l3 -4" fill="none" stroke="#fff" stroke-width="2"/>
+  ${E(71,40,4.5)}<circle cx="92" cy="42" r="1.5" fill="#1a0f2e"/>`,
+bombombini:`<ellipse cx="36" cy="75" rx="6" ry="9" fill="#2b2b33" ${O}/><ellipse cx="56" cy="75" rx="6" ry="9" fill="#2b2b33" ${O}/>
+  <path d="M8 51 L92 51 L84 60 L16 60 Z" fill="#9aa3b5" ${O}/><ellipse cx="48" cy="56" rx="23" ry="14" fill="#f6f6f6" ${O}/>
+  <path d="M58 48 Q64 20 75 20 Q84 20 82 29 L70 32 Q68 44 66 51Z" fill="#f6f6f6" ${O}/><path d="M81 24 L95 28 L81 32Z" fill="#ff9a2e" ${O}/>
+  <rect x="68" y="21" width="12" height="7" rx="3.5" fill="#22d3ee" ${O}/>`,
+orangutini:`<ellipse cx="50" cy="62" rx="25" ry="31" fill="#ffc53d" ${O}/>
+  <path d="M32 44 L68 80 M31 60 L57 86 M40 36 L72 68 M68 44 L32 80 M69 60 L43 86 M60 36 L28 68" stroke="#d99a1a" stroke-width="2"/>
+  <path d="M50 34 L37 9 L47 21 L50 3 L54 21 L65 9 Z" fill="#3fae4f" ${O}/>
+  <ellipse cx="50" cy="60" rx="16" ry="14" fill="#c86a2e" ${O}/><ellipse cx="50" cy="65" rx="10" ry="6.5" fill="#f0b98a"/>${E(44,56,3.5)}${E(56,56,3.5)}`,
+trulimero:`<path d="M70 50 L95 34 L90 51 L95 68Z" fill="#2e8fe0" ${O}/><path d="M12 54 Q40 24 74 40 Q84 50 74 60 Q40 80 12 54Z" fill="#4fb6ff" ${O}/>
+  <path d="M48 36 L56 24 L62 40Z" fill="#2e8fe0" ${O}/>
+  <path d="M17 38 L17 22 L28 33Z M34 31 L43 20 L45 35Z" fill="#f2c18d" ${O}/><circle cx="30" cy="48" r="17" fill="#f2c18d" ${O}/>
+  ${E(24,47,3.5)}${E(36,47,3.5)}<path d="M26 56 Q30 59 34 56" ${SM}/>`,
+svinino:`<path d="M68 32 Q76 20 86 20" fill="none" stroke="#c9955b" stroke-width="4"/>${STAR(89,18,1.1,"#ffb020")}
+  <circle cx="50" cy="58" r="31" fill="#2b2b33" ${O}/><path d="M34 44 L31 31 L43 40Z M66 44 L69 31 L57 40Z" fill="#ff9ec4" ${O}/>
+  <ellipse cx="50" cy="58" rx="20" ry="18" fill="#ff9ec4" ${O}/><ellipse cx="50" cy="64" rx="8.5" ry="6" fill="#ff7aa8" ${O}/>
+  <circle cx="47" cy="64" r="1.6" fill="#1a0f2e"/><circle cx="53" cy="64" r="1.6" fill="#1a0f2e"/>${E(43,52,3.5)}${E(57,52,3.5)}`,
+tungtung:`<path d="M42 90 V97 M58 90 V97" stroke="#1a0f2e" stroke-width="7" stroke-linecap="round"/><path d="M42 90 V97 M58 90 V97" stroke="#b07a4c" stroke-width="4" stroke-linecap="round"/>
+  <rect x="30" y="16" width="40" height="76" rx="15" fill="#b07a4c" ${O}/><ellipse cx="50" cy="19" rx="17" ry="5" fill="#d9a877" ${O}/>
+  <path d="M37 32 Q41 52 37 74 M63 36 Q59 56 63 82" stroke="#8b5a2b" stroke-width="2.5" fill="none"/>
+  ${E(42,40,5.5)}${E(58,40,5.5)}<path d="M41 57 Q50 64 59 57" ${SM}/>
+  <path d="M70 54 Q82 48 80 36" fill="none" stroke="#1a0f2e" stroke-width="7" stroke-linecap="round"/><path d="M70 54 Q82 48 80 36" fill="none" stroke="#b07a4c" stroke-width="4" stroke-linecap="round"/>
+  <path d="M74 36 L90 7 L97 12 L82 40Z" fill="#e0b070" ${O}/>`,
+tralalero:TRAL,
+bombardiro:`<ellipse cx="38" cy="73" rx="5" ry="8" fill="#2b2b33" ${O}/><ellipse cx="54" cy="73" rx="5" ry="8" fill="#2b2b33" ${O}/>
+  <path d="M8 50 L1 32 L17 44Z" fill="#4f7a4a" ${O}/><path d="M20 49 L80 49 L70 63 L30 63Z" fill="#4f7a4a" ${O}/>
+  <path d="M5 50 Q20 37 60 39 Q93 39 97 50 Q93 61 60 61 Q20 63 5 50Z" fill="#6fc36f" ${O}/>
+  <path d="M68 59 l3 4 l3 -4 l3 4 l3 -4 l3 4" fill="none" stroke="#fff" stroke-width="2"/>${E(70,44,4.5)}<circle cx="93" cy="47" r="1.5" fill="#1a0f2e"/>
+  <rect x="30" y="41" width="14" height="7" rx="3.5" fill="#22d3ee" ${O}/>`,
+graipussi:`<path d="M30 56 Q25 77 34 93 M42 60 Q40 80 46 95 M58 60 Q60 80 54 95 M70 56 Q75 77 66 93" fill="none" stroke="#1a0f2e" stroke-width="6.5" stroke-linecap="round"/>
+  <path d="M30 56 Q25 77 34 93 M42 60 Q40 80 46 95 M58 60 Q60 80 54 95 M70 56 Q75 77 66 93" fill="none" stroke="#c9a2ff" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M50 16 Q58 3 71 7 Q63 18 50 16Z" fill="#3fae4f" ${O}/>
+  ${[[38,28],[50,24],[62,28],[31,40],[69,40],[38,52],[50,54],[62,52]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="10.5" fill="#8a4fff" ${O}/>`).join("")}
+  <circle cx="50" cy="39" r="14" fill="#9d62ff" ${O}/>${E(45,37,3.8)}${E(56,37,3.8)}<path d="M46 45 Q50 48 54 45" ${SM}/>`,
+vaca:`<ellipse cx="50" cy="56" rx="46" ry="12" fill="none" stroke="#1a0f2e" stroke-width="9"/><ellipse cx="50" cy="56" rx="46" ry="12" fill="none" stroke="#ffc53d" stroke-width="5"/>
+  <path d="M29 28 Q22 15 31 13 Q34 21 38 26Z M71 28 Q78 15 69 13 Q66 21 62 26Z" fill="#f4e3b5" ${O}/>
+  <circle cx="50" cy="50" r="28" fill="#fff" ${O}/><path d="M29 36 Q35 27 44 33 Q40 44 29 41Z M61 58 Q71 52 75 60 Q69 69 61 65Z" fill="#1a0f2e"/>
+  <ellipse cx="50" cy="63" rx="14" ry="9" fill="#ffb3c8" ${O}/><circle cx="45" cy="63" r="2" fill="#1a0f2e"/><circle cx="55" cy="63" r="2" fill="#1a0f2e"/>
+  ${E(41,46,4)}${E(59,46,4)}
+  <path d="M4 56 Q50 82 96 56" fill="none" stroke="#1a0f2e" stroke-width="9"/><path d="M4 56 Q50 82 96 56" fill="none" stroke="#ffc53d" stroke-width="5"/>
+  ${STAR(12,16,.9)}${STAR(88,86,.8)}${STAR(86,20,.6)}`,
+girafa:`${STAR(14,22,1)}${STAR(84,70,.8)}${STAR(20,78,.7)}${STAR(88,14,.6)}
+  <path d="M40 94 L45 42 L57 42 L61 94Z" fill="#ffcf6b" ${O}/><path d="M47 54 h6 v6 h-6z M49 68 h7 v6 h-7z M45 80 h6 v6 h-6z" fill="#c98a2e"/>
+  <path d="M46 20 V9 M60 20 V9" stroke="#1a0f2e" stroke-width="6" stroke-linecap="round"/><path d="M46 20 V9 M60 20 V9" stroke="#c98a2e" stroke-width="3.5" stroke-linecap="round"/>
+  <ellipse cx="55" cy="30" rx="17" ry="11" fill="#ffcf6b" ${O}/>${E(55,27,3.8)}<circle cx="68" cy="32" r="1.6" fill="#1a0f2e"/>
+  <circle cx="54" cy="29" r="24" fill="rgba(190,225,255,.22)" stroke="#bfe4ff" stroke-width="2.5"/><path d="M40 16 Q46 10 54 9" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>`,
+garama:`<path d="M22 32 L26 16 L35 26 L41 12 L47 26 L55 16 L56 32Z" fill="#ffc53d" ${O}/>
+  <ellipse cx="38" cy="62" rx="27" ry="31" fill="#9d5cff" ${O}/>${E(30,54,5.5)}${E(47,54,5.5)}<path d="M29 72 Q38 79 47 72" ${SM}/>
+  <ellipse cx="76" cy="74" rx="17" ry="19" fill="#3ef08f" ${O}/>${E(71,69,3.8)}${E(82,69,3.8)}<path d="M72 81 Q76 84 80 81" ${SM}/>
+  ${STAR(78,30,1)}${STAR(88,48,.6)}`,
+lostral:`<g transform="translate(24 2) scale(.56)">${TRAL}</g><g transform="translate(-2 44) scale(.56)">${TRAL}</g><g transform="translate(46 44) scale(.56)">${TRAL}</g>`
 };
-const SHAPE_OF = {p250:"pistol",mp9:"smg",ump:"smg",glockca:"pistol",mac10:"smg",ssgdet:"awp",m4bor:"m4",aksaf:"ak",uspg:"pistol",
-  deagcw:"deagle",akeb:"ak",uspcx:"pistol",m4ed:"m4",awpwg:"awp",p90as:"smg",glockwe:"pistol",akrl:"ak",m4hb:"m4",deagcr:"deagle",
-  awphb:"awp",uspkc:"pistol",akvul:"ak",m4as:"m4",awpas:"awp",akfs:"ak",awpdl:"awp",falch:"knife",bowie:"knife",m9tt:"knife",
-  karamb:"karambit",bfly:"knife",glvice:"gloves",
-  famas:"m4",galil:"ak",mp7:"smg",aug:"m4",fiveseven:"pistol",p2k:"pistol",akfm:"ak",awpfd:"awp",m4dec:"m4",akneon:"ak",
-  deagbl:"deagle",m4emp:"m4",uspps:"pistol",gut:"knife",akps:"m4",glockfd:"pistol",navaja:"knife",wraps:"gloves",awpgun:"awp"};
-const ASIIMOV = {bands:["#141414","#141414","#ff6a00","#f6f6f6","#f6f6f6","#f6f6f6","#ff6a00","#f6f6f6"],a:0};
-const PAINT = {
-  p250:{g:["#e2c996","#a88452"],camo:["#8f6d3e","#f0e0bb"]},
-  mp9:{g:["#a9b5c6","#5f6b7c"],camo:["#3e4756","#dfe6ef"]},
-  ump:{g:["#2c3038","#15171c"],carbon:"#434856"},
-  glockca:{g:["#ff5a6b","#b3122a"]},
-  mac10:{g:["#ffe14d","#ff7a1a","#e0231b"],a:90},
-  ssgdet:{g:["#6b8a58","#394a30"],camo:["#b39a63","#1f2a1a"]},
-  m4bor:{g:["#5b7b52","#2c3f2a"],camo:["#8fae7c","#1b261a","#b9c697"]},
-  aksaf:{g:["#d6c296","#9a8660"],mesh:"#5b4d33"},
-  uspg:{g:["#5b98ff","#1c3f8f"],stripes:["#c9ddff",2,9,-30]},
-  deagcw:{g:["#a3142a","#3d0710"],web:"#16020a"},
-  akeb:{bands:["#f1f4ff","#2140c9","#10131f","#f1f4ff","#2140c9","#f1f4ff"],a:0},
-  uspcx:{g:["#ff5cc8","#7a3cff","#22d3ee"],a:0,swirl:"#ffffff"},
-  m4ed:{g:["#e0213e","#6a0716"],stripes:["#140405",3,11,40]},
-  awpwg:{g:["#2de0c0","#0a8a8a","#0b4c6b"],a:0},
-  p90as:ASIIMOV,
-  glockwe:{g:["#ff3b3b","#ffffff","#3a7bff"],a:0,swirl:"#ffffff"},
-  akrl:{g:["#2a2d35","#0e0f12"],carbon:"#393c46",stripes:["#ff1a35",2.5,22,0]},
-  m4hb:{g:["#22d3ee","#9d5cff","#ff3d9a","#ffd23d"],a:0,stripes:["#10131f",1.5,13,55]},
-  deagcr:{g:["#202027","#0b0b0e"],stripes:["#ff1f3d",4,13,-45]},
-  awphb:{g:["#22d3ee","#9d5cff","#ff3d9a","#ffd23d"],a:0,stripes:["#10131f",1.5,15,60]},
-  uspkc:{bands:["#e8ebf1","#f5c400","#161616","#e8ebf1","#f5c400"],a:0},
-  akvul:{bands:["#1b2a6b","#f4f6ff","#0e0f14","#2d7bff","#f4f6ff","#1b2a6b"],a:0},
-  m4as:ASIIMOV,
-  awpas:ASIIMOV,
-  akfs:{g:["#2f7a4a","#d4b35a","#2f7a4a"],a:0,stripes:["#f3e2a0",1.5,8,-20]},
-  awpdl:{g:["#f0dfaa","#b89a55"],a:0,scales:"#3f6b3a"},
-  falch:{g:["#aab3bd","#5d6570"],camo:["#2f353d","#dde2e8"]},
-  bowie:{g:["#5b28a8","#1c0b3d"]},
-  m9tt:{g:["#ffd65a","#e08a00"],stripes:["#6a3000",2.5,8,70]},
-  karamb:{g:["#1e3cff","#8a2bff","#ff3db8","#0a1a6b"],a:0},
-  bfly:{g:["#ffe14d","#ff5cc8","#8a3cff"],a:0},
-  glvice:{g:["#ff4fc0","#22d3ee","#ffffff","#ff4fc0"],a:0},
-  famas:{g:["#1ee0ff","#0a4a8a"],stripes:["#ffffff",1.5,10,30]},
-  galil:{g:["#7fd36b","#2f6b3a"],camo:["#c8f0a0","#1a3a20"]},
-  mp7:{g:["#ff3d9a","#2a0b3d"],a:0,stripes:["#ffd6ec",1,12,-50]},
-  aug:{g:["#3ef08f","#1a8a8a","#ff3d9a"],a:0},
-  fiveseven:{g:["#e8c07a","#8a5a2b"],camo:["#3a2410","#f5deb0"]},
-  p2k:{g:["#ffb020","#ff3d00","#3a0a00"],a:0,swirl:"#ffe9a0"},
-  akfm:{g:["#e8eef8","#4a6b9a"],a:0,swirl:"#ffffff"},
-  awpfd:{g:["#ff4fc0","#22d3ee","#ffd23d","#8a3cff"],a:0},
-  m4dec:{g:["#202020","#ff6a00"],a:0,stripes:["#ffffff",1.5,12,-30]},
-  akneon:{g:["#ff3db8","#6a00ff","#00e5ff"],a:0},
-  deagbl:{g:["#ffe14d","#ff5a00","#b01000"],a:90},
-  m4emp:{g:["#1a2a6b","#3b56c9"],stripes:["#ffc53d",1.5,9,-40]},
-  uspps:{bands:["#f6f6fa","#f6f6fa","#161616","#f6f6fa","#161616"],a:0},
-  gut:{g:["#1e3cff","#ff3db8","#0a1a6b"],a:0},
-  akps:{bands:["#f6f6fa","#161616","#f6f6fa","#f6f6fa","#161616"],a:0},
-  glockfd:{g:["#ffe14d","#ff5cc8","#8a3cff"],a:0},
-  navaja:{g:["#a3142a","#3d0710"],web:"#16020a"},
-  wraps:{g:["#ff3b3b","#ffd0d0","#b30000"],a:0},
-  awpgun:{g:["#9fd0ff","#ffe7a0","#5a7bff"],a:0,swirl:"#ffffff"}
-};
-function seeded(str){let h=2166136261;for(const ch of str)h=Math.imul(h^ch.charCodeAt(0),16777619);
-  return()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function buildPaints(){
-  let out=`<linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>`;
-  for(const [id,p] of Object.entries(PAINT)){
-    const r=seeded(id);
-    const cols=p.bands||p.g;
-    const n=cols.length;
-    const stops=p.bands
-      ? cols.map((c,i)=>`<stop offset="${i/n}" stop-color="${c}"/><stop offset="${(i+1)/n}" stop-color="${c}"/>`).join("")
-      : cols.map((c,i)=>`<stop offset="${n===1?0:i/(n-1)}" stop-color="${c}"/>`).join("");
-    const dir = p.a===0 ? 'x1="0" y1="24" x2="128" y2="24"' : p.a===90 ? 'x1="0" y1="6" x2="0" y2="44"' : 'x1="20" y1="0" x2="100" y2="48"';
-    out+=`<linearGradient id="pg-${id}" gradientUnits="userSpaceOnUse" ${dir}>${stops}</linearGradient>`;
-    let over="";
-    if(p.carbon){out+=`<pattern id="pc-${id}" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="1.5" height="1.5" fill="${p.carbon}"/><rect x="1.5" y="1.5" width="1.5" height="1.5" fill="${p.carbon}"/></pattern>`;over+=`<rect width="128" height="48" fill="url(#pc-${id})"/>`}
-    if(p.mesh){out+=`<pattern id="pm-${id}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0H5M0 0V5" stroke="${p.mesh}" stroke-width=".8" opacity=".7"/></pattern>`;over+=`<rect width="128" height="48" fill="url(#pm-${id})"/>`}
-    if(p.camo){for(let i=0;i<22;i++){const c=p.camo[i%p.camo.length];over+=`<ellipse cx="${(r()*128).toFixed(1)}" cy="${(r()*48).toFixed(1)}" rx="${(3+r()*8).toFixed(1)}" ry="${(2+r()*4).toFixed(1)}" transform="rotate(${Math.round(r()*180)} 64 24)" fill="${c}" opacity=".85"/>`}}
-    if(p.stripes){const [c,w,gap,ang]=p.stripes;out+=`<pattern id="ps-${id}" width="${w+gap}" height="48" patternUnits="userSpaceOnUse" patternTransform="rotate(${ang})"><rect width="${w}" height="48" fill="${c}"/></pattern>`;over+=`<rect width="128" height="48" fill="url(#ps-${id})" opacity=".9"/>`}
-    if(p.web){for(let i=0;i<9;i++){const a=i/9*Math.PI;over+=`<line x1="64" y1="24" x2="${(64+Math.cos(a)*90).toFixed(1)}" y2="${(24+Math.sin(a)*90-40).toFixed(1)}" stroke="${p.web}" stroke-width=".7"/>`}
-      for(let k=1;k<6;k++)over+=`<circle cx="64" cy="24" r="${k*9}" fill="none" stroke="${p.web}" stroke-width=".6"/>`}
-    if(p.swirl){for(let i=0;i<6;i++){const y=r()*48,y2=r()*48;over+=`<path d="M${(r()*30).toFixed(0)} ${y.toFixed(0)} C40 ${(r()*48).toFixed(0)} 80 ${(r()*48).toFixed(0)} ${(100+r()*28).toFixed(0)} ${y2.toFixed(0)}" fill="none" stroke="${p.swirl}" stroke-width="${(1+r()*2).toFixed(1)}" opacity=".45"/>`}}
-    if(p.scales){out+=`<pattern id="pd-${id}" width="7" height="5" patternUnits="userSpaceOnUse"><path d="M0 5 Q3.5 0 7 5" fill="none" stroke="${p.scales}" stroke-width=".9"/></pattern>`;over+=`<rect x="30" width="70" height="48" fill="url(#pd-${id})" opacity=".85"/>`}
-    out+=`<pattern id="pt-${id}" width="128" height="48" patternUnits="userSpaceOnUse"><rect width="128" height="48" fill="url(#pg-${id})"/>${over}</pattern>`;
-  }
-  out+=`<linearGradient id="dialGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb020"/><stop offset=".5" stop-color="#ff3d9a"/><stop offset="1" stop-color="#9d5cff"/></linearGradient>`;
-  document.getElementById("paintDefs").innerHTML=out;
+  document.getElementById("paintDefs").innerHTML=`<linearGradient id="dialGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb020"/><stop offset=".5" stop-color="#ff3d9a"/><stop offset="1" stop-color="#9d5cff"/></linearGradient>`;
 }
-// Картинки скинов из CS2 грузятся со Steam. Если Steam недоступен (или страница
-// запрещает внешние картинки), остаётся нарисованная иконка.
-const STEAM="https://community.akamai.steamstatic.com/economy/image/";
-const IMG={"p250":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLhzMOwwjFU0OGvZqBSLPmUBnPelesn5-RrSXDlwRhx5TjSwtmocCifPwQpDpshReBfsxPrk4DhNu3jshue1dy8VcXxuA","mp9":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8js_f7i1k_OaheqlrMv-dGlicyOl-pK8_S3zjxRh_5mmGn9epIymQPQBxDpQlFuUJ5xa6kt2yZLjkswLY2ooT02yg2WH9Y1dp","ump":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkk4a0qB1a4s2tabZvL_6sCG6SxPxJvOhuRz39lh9w42SGzI2uIijBPAIoApEjEe5f5hG9w9LvMOm37lePjYNCyCz43DQJsHigSNbmtg","glockca":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2kpnj9h1I4M28baBSLPmUBnPelb93teA-FivjzB5wsjzTyI2pIn_CPAMoW8N3ROJZshm5w9zgNbnk5xue1dyMA9ZU_Q","mac10":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8n5WxrR1Y-s2jaac8cM-BC2OYzvpJvOhuRz39xR5w4GzUyo6pdnuUawMpWJokTLUL50K6l9XiNO7i4lGKiYsRxCv6jTQJsHim4lDW8g","ssgdet":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLijZGwpR1T9s29e6M9eM-eD3WbxPxJvOhuRz39lxsm6m_XmdugcnOXaFMlD5ImEbQP5kW4kICyM-vj5wXc2dkUzHqoiDQJsHjAk3eMVA","m4bor":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwjFS4_ega6F_H_iKMWGf0-tlpN5rQDu2lBEYvzSCkpu3dyqVZgF1CJAhF7NYtULrlIa2M-Lh4wKMiYlDmyqrhygduCZs6-xXV71lpPMY7TF_eA","aksaf":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wjFL0P-re6xSNPGdMWuZxuZi_rIxSirkkElyt2qEzI2heXiTaVIiX5siROQJtxnul4XnYbvgswOMgolbjXKpnRk9Yjk","uspg":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkjYbf7itX6vytbbZSI-WsG3SA_ut6teZoQT2MmRQguynLyd76I32fbFUkD5EmRu4Ct0O4m9fmY-zlsQSMiN9CnHj2jitL531o4fFCD_TZrkjVNw","deagcw":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL1m5fn8Sdk5-uRf6FvM8-XD3WbxPxJvOhuRz39wEUh5W3Rytyscy7FPAYgWJJzRe4MtUW8loKyZOm3sQzb34lEzyX32zQJsHig-EWd2A","akeb":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSLfGAGmKC2NF6ueZhW2e2wh9y5GjTztirdSqfP1dyCpclR7FZ5xe9wNbhZei25FGPjokXxC2vkGoXuQLr5jvs","uspcx":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkjYbf7itX6vytbbZSI-WsG3SA_u1jpN5lRi67gVNz4G7Qm938cS_Da1AhXpB1EeVb4xm4mtDjN7vj4A3b2NpGyCr52i4Y8G81tMzdoYZ7","m4ed":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwiFO0P_6afBSJeaaAliUwOd7qe5WQyC0nQlp4GqGz42ucCqXaQMhDpd4R-AIsxK6ktXgZePltVPXitoRn3-tjCgd6zErvbijVJZd2Q","awpwg":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_DNk7uW-V7B6Kf6WMWuZxuZi_uRoGH3iw0wh4j7cnt6ucSqSZwUkCMB5TLIPsES_kNbuYeOwtgXai4NbjXKpZ4kj0o0","p90as":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLhx8bf_jdk_6v-JaV-KfmeAXGvzedxuPUnTSjikRgksjuBzoz4dXLFb1QoC8QlTLQD4EPqk4LvN-Pns1aMioNBzTK-0H3gQVv65g","glockwe":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2kpnj9h1Y-s2pZKtuK72fB3aFxP11te99cCW6khUz_TjVyompc3-QOFR2DJQkFOMJtBbqk9LlY-7n5QLZjtkTxCWqhixPv311o7FVIf8eASQ","akrl":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSI_-RHGavzedxuPUnFniykEtzsWWBzoyuIiifaAchDZUjTOZe4RC_w4buM-6z7wzbgokUyzK-0H08hRGDMA","m4hb":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwjFS4_ega6F_H_OGMWrEwL9JuPh5SjuMlxgmoCm6lob-KT-JbwF1WZEjR-YJskK9k9XiYePltAeNjYlAxSn5j34dvCZstb4LB6Ut-7qX0V8Xkv5_2A","deagcr":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL1m5fn8Sdk6OGRbKFsJ_yWMWaXxvxzo_JmXRa_nBovp3PRmNj4c3mTb1RxC5cjF-EItRnrlNzkYrnk5gaI3Y0UmyX52H9K7ixs_a9cBsGEcOCn","awphb":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V6x0MPWBMWWVwP1ij-1gSCGn20pxtm_WzNuoeHKeaFAnCZUiTe5bt0HqxofmZOrm5Q2IjoMQzS_5iShXrnE8NzWs__c","uspkc":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkjYbf7itX6vytbbZSI-WsG3SA_uV_vO1WTCa9kxQ1vjiBpYPwJiPTcFB2Xpp5TO5cskG9lYCxZu_jsVCL3o4Xnij23ClO5ik9tegFA_It8qHJz1aWe-uc160","akvul":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSMuWRDGKC_uJ_t-l9AXCxxEh14zjTztivci2ePQZ2W8NzTecD4BKwloLiYeqxtAOIj9gUyyngznQeF7I6QE8","m4as":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwiFO0P_6V6V-Kf2cGFidxOp_pewnTii3w0x_tmTRnt2qdHyWaFAjA5UlQOYI5BO5k9bhZunm41OI34NDnjK-0H3pAWw_Rw","awpas":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V6V-Kf2cGFidxOp_pewnF3nhxEt0sGnSzN76dH3GOg9xC8FyEORftRe-x9PuYurq71bW3d8UnjK-0H0YSTpMGQ","akfs":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0PSneqF-JeKDC2mE_u995LZWTTuygxIYvzSCkpu3cnvFPQB2DpUkROFY4Rntw93lP7i241DbiI1BxSuviHlKunk_6-sHU71lpPMTRLyP4Q","awpdl":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk4veqYaF7IfysCnWRxuF4j-B-Xxa_nBovp3Pdwtj9cC_GaAd0DZdwQu9fuhS4kNy0NePntVTbjYpCyyT_3CgY5i9j_a9cBkcCWUKV","falch":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1d7v6tYK1iLs-AHliEwP5zj_R7TSi9qhEutDWR1IqtI3_EOgYpC5EmQe5esha7kdHnPu3m4gTdg4MRxC6q2yxO6ik-67scEf1yx78TVSg","bowie":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1I-uC4YbJsLM-RAXCZxNFlv955WjujmRgYvzSCkpu3dHKePw8oW8N5QOYLshW-wdC1N--0tAHajoNCmCj7iStI6Hw-tegBU71lpPP9HYRDsQ","m9tt":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWae_vp_t-R7cCahlBMgtgKJk4jxNWWTa1QhDMMmQOMJ5BPtkYHuM-KwsVTYjIoQy3n-iStL7yxj57wDB_cs5OSJ2H8uCzPz","karamb":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SA1iSze91u_FsTju_qhAmoT-Jn4bjJC_4Ml93UtZuRLQPsBawkNfiMbnl5AKMiopCnin7iCJBv31j4rkBBKEg-6zUjV3GY6p9v8dpLWT3Fg","bfly":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Z-ua6bbZrLOmsD2avx-9ytd5lRi67gVNwsDvSwtqqc3iXZg4kCZYjReYLtRbum9XgYuvm5wbWjtgUzCn3iSsf8G81tFEeH9rw","glvice":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Tk5UvzWCL2kpn2-DFk_OKherB0H_KfG2Kv0ed4u95lRi67gVNx4T-Bw434IHyVb1QlAsd1FOUDthG4xNznMu3m4QXXg90Wzn_33C1I8G81tLaDi_rK","famas":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL3n5vh7h1Y-s2oaalsM8-DG2uDxNF6ueZhW2flxBlxtm_WntqhJyiSbw90CpJyR-8DtRm6kdHkYuLj4QzY2INCzX-skGoXudLVHKnn","galil":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2n5rp8SNJ0PG7V6NsLPmfMWKTztF6ueZhW2exwExw4WrcyImrcHmTbQAlWcQkQudYt0O5lNfgP-nh5AOL3otAziz7kGoXua-HTb4P","mp7":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8jsHf_jdk4uL5V6poLeOaHVicyOl-pK87Hyu1kR5_5j_WntigcXmXOlBzCZUjQeMLtBG6x9HuNrvl4gCP2I1B02yg2TXalB0S","aug":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwi5Hf_jdk7uepV6dlIf2WAmKfz-9_ouRWQyC0nQlpt23VztercCjGbg90C8RyQOcMs0G5x93uZLm37wbe2owTz3j9iShI6TErvbi7ZmzWCw","fiveseven":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL3l4Dl7idN6vyRa7FSJvmFC3SV1-t4j-NoQSi9lCIrujqNjsGheXmXPQcoWMFzEO5ZtUOwkILjY7yzsg3ci91DySiohn4buCht4eYET-N7rZVO80Su","p2k":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL5lYayrXIL0PG7V7Q_cKDDMWGZ0-tJte1sQiy9gRwrjDGMnYftb3-RZldxWJVyF-QLsUG5mofnML_qtg3cjd4TyCr4jXsf63lr4-5TVvA7uvqA-y0nTh8","akfm":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSN_mdGmKC_v1mv_N9cCW6khUz_WvRm9r8JS-SaFMmWcN5ReMD4BDsltDkN-Prs1DfjN9Cn3r_jC4YvHl1o7FVgJsyBlQ","awpfd":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V7R-OfObAXeR1eZJvOhuRz39kE1w4jiAzNiod3qTOgcgXpAlQ-ML5hjqxtHjZOrrtlHWit9EyCj9iDQJsHhCZP-wUg","m4dec":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwjFS4_ega6F_H_eAMWrEwL9JtORqRiSygRI1jDGMnYftb3iUb1dxW5ImFLNftxCxktflZLm2tgaP2otGyn_-hytOvy9q5elQV_A7uvqA6CRSoZY","akneon":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlV6poL_6sHG6UxPxJvOhuRz39xkQhsTnVzoygdy7Ea1UoCZQkRe9bs0brl9TvN-m0tVHYjY5CyS35jjQJsHhk4o5zcA","deagbl":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL1m5fn8Sdk7vORbqhsLfWAMWuZxuZi_uI_TX6wxxkjsGXXnImsJ37COlUoWcByEOMOtxa5kdXmNu3htVPZjN1bjXKpkHLRfQU","m4emp":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwiVI0P_6afBSJf2DC3Wf09F6ueZhW2exwBh_6m3dnt36InjDPQ4oXJt1TbJeshW_mtfjN-vrsgaKiokWy333kGoXuRj4z9Nd","uspps":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkjYbf7itX6vytbbZSI-WsG3SA_v5kue99XD2hkBwqjDGMnYftb3yUPFR0XsNyRrNc5kO5ltziMenr5lONj4kXyi2riywc7y9o5LtQAqQ7uvqAkScWnv4","gut":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1c-uaRaalSIvySDWyAxO9kvN5kTjuxmRguqTiBpYPwJiPTcFInDpVyELMOshO9wYHvZujk5VPagotHnC6viixLui5jsr1XWKcgqKTJz1aW4QQYg2A","glockfd":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2kpnj9h1a7s2oaaBoH_yaCW-Ej-8u5bZvHnq1w0Vz62TUzNj4eCiVblMmXMAkROJeskLpkdXjMrzksVTAy9US8PY25So","navaja":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1c9uK9cZtnIfOYBWmZx-tJuPhWWCyxhiIrujqNjsGtJS-eag4iCpN4QrZYsEK_m9K0ZLzl4gOLiYgQxSj2in9Buis_5OZRT-N7rdEUHJYn","wraps":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu4vx603vRA_Olpfu-TVJ7uK9V6xsLvSEHGaA_vxztN56QyimkhUzti-6lob-KT-Jb1UjX5t0ROIN5xW9l9e2ZOmw5QWLi41Fmy6r3Sgb7C1o5etUBfcgqbqX0V-0bsdMFQ","awpgun":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf-jFk7uW-V6N4LvedB3WvzedxuPUnHnjnzUl0sWrdztitI3rDZgJzAsZ1QOFY4UPqldDgMO_l41HXit9AmTK-0H227dAsvQ","akps":"i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwjFS4_ega6F_H_OGMWrEwL9lj_F7Rienhgk1tjyIpYPwJiPTcAAoCpsiEO5ZsUbpm9C2Zuni4VHW3o5EzSX62HxP7Sg96-hWVqYi_6TJz1aW0nxrkGs"};
 function gun(id, cls="gun"){
-  const sh=SHAPES[SHAPE_OF[id]];
-  const svg=`<svg viewBox="0 0 128 48" aria-hidden="true"><path d="${sh.d}" fill="#1b1d26" fill-rule="evenodd" stroke="rgba(255,255,255,.12)" stroke-width=".6"/>`+
-    `<path d="${sh.b}" fill="url(#pt-${id})" stroke="rgba(0,0,0,.6)" stroke-width=".8"/><path d="${sh.b}" fill="url(#gloss)"/></svg>`;
-  const img=IMG[id]?`<img class="real" src="${STEAM}${IMG[id]}/256fx256f" alt="" decoding="async" draggable="false">`:"";
-  return `<span class="skin ${cls}">${img}${svg}</span>`;
+  return `<span class="skin ${cls}"><svg viewBox="0 0 100 100" aria-hidden="true">${ART[id]||""}</svg></span>`;
 }
-document.addEventListener("load",e=>{const t=e.target;if(t.classList&&t.classList.contains("real"))t.parentNode.classList.add("ok")},true);
-document.addEventListener("error",e=>{const t=e.target;if(t.classList&&t.classList.contains("real"))t.remove()},true);
 const R = {
-  blue:  {name:"Армейское",   odds:79.92},
-  purple:{name:"Запрещённое", odds:15.98},
-  pink:  {name:"Засекреченное",odds:3.2},
-  red:   {name:"Тайное",      odds:0.64},
-  gold:  {name:"Нож / перчатки", odds:0.26}
+  blue:  {name:"Обычный"},
+  purple:{name:"Редкий"},
+  pink:  {name:"Эпический"},
+  red:   {name:"Легендарный"},
+  gold:  {name:"Мифический"}
 };
 const WEARS = [{k:"", n:"", p:1, m:1}]; // износа нет: цена скина фиксированная
 const AVG_WEAR = WEARS.reduce((s,w)=>s+w.p*w.m,0);
-// StatTrak™: 10% дропов из кейсов, стоит в 2 раза дороже
+// Золотая мутация: 10% дропов из кейсов, стоит в 2 раза дороже
 const ST_CHANCE=.1, ST_MULT=2;
 
 const ITEMS = [
-  // id, weapon, skin, rarity, price, icon
-  ["p250",   "P250","Sand Dune","blue",6,"pistol"],
-  ["mp9",    "MP9","Storm","blue",8,"smg"],
-  ["ump",    "UMP-45","Carbon Fiber","blue",10,"smg"],
-  ["glockca","Glock-18","Candy Apple","blue",12,"pistol"],
-  ["mac10",  "MAC-10","Heat","blue",14,"smg"],
-  ["ssgdet", "SSG 08","Detour","blue",16,"sniper"],
-  ["m4bor",  "M4A1-S","Boreal Forest","blue",18,"rifle"],
-  ["aksaf",  "AK-47","Safari Mesh","blue",20,"rifle"],
-  ["uspg",   "USP-S","Guardian","blue",25,"pistol"],
-  ["deagcw", "Desert Eagle","Crimson Web","purple",60,"pistol"],
-  ["akeb",   "AK-47","Elite Build","purple",70,"rifle"],
-  ["uspcx",  "USP-S","Cortex","purple",75,"pistol"],
-  ["m4ed",   "M4A4","Evil Daimyo","purple",80,"rifle"],
-  ["awpwg",  "AWP","Worm God","purple",90,"sniper"],
-  ["p90as",  "P90","Asiimov","purple",110,"smg"],
-  ["glockwe","Glock-18","Water Elemental","pink",220,"pistol"],
-  ["akrl",   "AK-47","Redline","pink",260,"rifle"],
-  ["m4hb",   "M4A1-S","Hyper Beast","pink",320,"rifle"],
-  ["deagcr", "Desert Eagle","Code Red","pink",380,"pistol"],
-  ["awphb",  "AWP","Hyper Beast","pink",450,"sniper"],
-  ["uspkc",  "USP-S","Kill Confirmed","red",1100,"pistol"],
-  ["akvul",  "AK-47","Vulcan","red",1400,"rifle"],
-  ["m4as",   "M4A4","Asiimov","red",1600,"rifle"],
-  ["awpas",  "AWP","Asiimov","red",2200,"sniper"],
-  ["akfs",   "AK-47","Fire Serpent","red",3800,"rifle"],
-  ["awpdl",  "AWP","Dragon Lore","red",45000,"sniper"],
-  ["falch",  "★ Фальшион","Urban Masked","gold",1800,"knife"],
-  ["bowie",  "★ Нож Боуи","Ultraviolet","gold",2400,"knife"],
-  ["m9tt",   "★ Штык-нож M9","Tiger Tooth","gold",6500,"knife"],
-  ["karamb", "★ Керамбит","Doppler","gold",7500,"knife"],
-  ["bfly",   "★ Нож-бабочка","Fade","gold",9000,"knife"],
-  ["glvice", "★ Спортивные перчатки","Vice","gold",12000,"gloves"],
-  ["famas",  "FAMAS","Pulse","blue",32,"rifle"],
-  ["galil",  "Galil AR","Eco","blue",38,"rifle"],
-  ["mp7",    "MP7","Nemesis","purple",45,"smg"],
-  ["aug",    "AUG","Chameleon","purple",55,"rifle"],
-  ["fiveseven","Five-SeveN","Monkey Business","purple",90,"pistol"],
-  ["p2k",    "P2000","Fire Elemental","purple",130,"pistol"],
-  ["akfm",   "AK-47","Frontside Misty","purple",150,"rifle"],
-  ["awpfd",  "AWP","Fever Dream","purple",170,"sniper"],
-  ["m4dec",  "M4A1-S","Decimator","purple",180,"rifle"],
-  ["akneon", "AK-47","Neon Rider","pink",550,"rifle"],
-  ["deagbl", "Desert Eagle","Blaze","pink",600,"pistol"],
-  ["m4emp",  "M4A4","The Emperor","pink",700,"rifle"],
-  ["uspps",  "USP-S","Printstream","red",900,"pistol"],
-  ["gut",    "★ Нож с лезвием-крюком","Doppler","gold",1100,"knife"],
-  ["akps",   "M4A1-S","Printstream","red",1200,"rifle"],
-  ["glockfd","Glock-18","Fade","red",1300,"pistol"],
-  ["navaja", "★ Наваха","Crimson Web","gold",1400,"knife"],
-  ["wraps",  "★ Обмотки рук","Slaughter","gold",3200,"gloves"],
-  ["awpgun", "AWP","Gungnir","red",8000,"sniper"]
-].map(([id,weapon,skin,rarity,price,icon])=>({id,weapon,skin,rarity,price,icon}));
+  // id, имя, редкость, цена
+  ["tatasahur","Ta Ta Ta Ta Sahur","blue",8],
+  ["frigo","Frigo Camelo","blue",12],
+  ["boneca","Boneca Ambalabu","blue",16],
+  ["trippi","Trippi Troppi","blue",22],
+  ["lirili","Lirilì Larilà","blue",30],
+  ["brrbrr","Brr Brr Patapim","purple",55],
+  ["chimp","Chimpanzini Bananini","purple",75],
+  ["cappuccina","Ballerina Cappuccina","purple",100],
+  ["cappassassino","Cappuccino Assassino","purple",130],
+  ["burbaloni","Burbaloni Luliloli","purple",170],
+  ["glorbo","Glorbo Fruttodrillo","pink",240],
+  ["bombombini","Bombombini Gusini","pink",320],
+  ["orangutini","Orangutini Ananassini","pink",420],
+  ["trulimero","Trulimero Trulicina","pink",550],
+  ["svinino","Svinino Bombondino","pink",700],
+  ["tungtung","Tung Tung Tung Sahur","red",1100],
+  ["tralalero","Tralalero Tralala","red",1600],
+  ["bombardiro","Bombardiro Crocodilo","red",2400],
+  ["graipussi","Graipussi Medussi","red",3500],
+  ["vaca","La Vaca Saturno Saturnita","gold",7000],
+  ["girafa","Girafa Celestre","gold",12000],
+  ["garama","Garama and Madundung","gold",25000],
+  ["lostral","Los Tralaleritos","gold",45000]
+].map(([id,name,rarity,price])=>({id,weapon:R[rarity].name,skin:name,rarity,price}));
 const BY_ID = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 
 const CASES = [
-  {id:"start", name:"Первый шаг", tag:"Для разгона", c1:"#4b7bff", c2:"#22d3ee", price:50, lvl:1,
-   items:["ssgdet","aksaf","uspg","famas","galil","mp7","aug","deagcw","akeb","uspcx","m4ed","fiveseven","p2k","glockwe","gut"]},
-  {id:"pistol", name:"Пистолетный раунд", tag:"Пистолеты", c1:"#9d5cff", c2:"#ff3d9a", price:100, lvl:1,
-   items:["uspg","deagcw","uspcx","fiveseven","p2k","glockwe","deagcr","deagbl","uspps","glockfd","navaja"]},
-  {id:"assault", name:"Штурм", tag:"Автоматы", c1:"#ff4d4d", c2:"#ffb020", price:150, lvl:2,
-   items:["galil","aug","akeb","m4ed","akfm","m4dec","akrl","m4hb","akneon","m4emp","akps","akvul","m9tt"]},
-  {id:"sniper", name:"Снайпер", tag:"Шанс на Dragon Lore", c1:"#3ef08f", c2:"#22d3ee", price:300, lvl:3,
-   items:["awpwg","p90as","awpfd","m4dec","deagcr","awphb","akneon","awpas","awpgun","karamb","awpdl"]},
-  {id:"elite", name:"Элита", tag:"Дорогие скины", c1:"#f040ff", c2:"#9d5cff", price:500, lvl:5,
-   items:["m4dec","glockwe","akrl","m4hb","deagcr","awphb","akneon","deagbl","m4emp","uspps","akps","akvul","m4as","awpas","bfly"]},
-  {id:"gold", name:"Золотой", tag:"Ножи и перчатки", c1:"#ffc53d", c2:"#ff7a1a", price:1500, lvl:7,
-   items:["akneon","m4emp","uspps","gut","akps","glockfd","navaja","akvul","m4as","falch","awpas","bowie","wraps","akfs","m9tt","karamb","bfly","glvice"]}
+  {id:"start", name:"Стартовый", tag:"Для разгона", c1:"#4b7bff", c2:"#22d3ee", price:25, lvl:1,
+   items:["tatasahur","frigo","boneca","trippi","lirili","brrbrr","chimp","cappuccina","bombombini"]},
+  {id:"coffee", name:"Кофейный", tag:"Капучино и компания", c1:"#c98a4e", c2:"#ff3d9a", price:100, lvl:1,
+   items:["lirili","brrbrr","chimp","cappuccina","cappassassino","burbaloni","glorbo","bombombini","orangutini","tungtung"]},
+  {id:"sea", name:"Морской", tag:"Шанс на Tralalero", c1:"#22d3ee", c2:"#2e6cff", price:250, lvl:2,
+   items:["cappuccina","cappassassino","burbaloni","glorbo","bombombini","orangutini","trulimero","tralalero","graipussi"]},
+  {id:"sky", name:"Небесный", tag:"Летают и бомбят", c1:"#3ef08f", c2:"#22d3ee", price:500, lvl:3,
+   items:["glorbo","bombombini","orangutini","trulimero","svinino","tungtung","bombardiro","girafa"]},
+  {id:"legend", name:"Легендарный", tag:"Только топ", c1:"#f040ff", c2:"#9d5cff", price:1500, lvl:5,
+   items:["trulimero","svinino","tungtung","tralalero","bombardiro","graipussi","vaca","garama"]},
+  {id:"myth", name:"Мифический", tag:"Los Tralaleritos внутри", c1:"#ffc53d", c2:"#ff7a1a", price:5000, lvl:7,
+   items:["tralalero","bombardiro","graipussi","vaca","girafa","garama","lostral"]}
 ];
 // шанс каждого предмета: шанс его редкости делится поровну между предметами этой редкости в кейсе
 // Баланс «60 на 40»: ~60% дропов дороже кейса, ~40% дешевле.
@@ -824,7 +827,7 @@ const MIN_CASE = CASES[0].price;
 
 // ---------- state ----------
 const START_BALANCE = 1000, BONUS = 300;
-const KEY = "case-arena-v1";
+const KEY = "brainrot-cases-v1";
 let S = load() || fresh();
 function fresh(){return {balance:START_BALANCE, inv:[], feed:[], uid:1, xp:0, collected:[], lastWheel:0, stats:{opened:0, upWin:0, upLose:0, contracts:0, best:0, battlesWon:0, battles:0, crashBest:0}}}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s&&Array.isArray(s.inv)?s:null}catch(e){return null}}
@@ -844,8 +847,8 @@ const wearOf = k=>WEARS.find(w=>w.k===k)||WEARS[0];
 
 function card(it, {value, wear, st=false, cls="", extra=""}={}){
   const v = value ?? it.price;
-  return `<div class="item rar-${it.rarity}${st?" st":""} ${cls}" ${extra}>${st?'<span class="stb">ST™</span>':""}${gun(it.id)}
-    <div class="w">${st?"StatTrak™ ":""}${esc(it.weapon)}</div><div class="s">${esc(it.skin)}</div>
+  return `<div class="item rar-${it.rarity}${st?" st":""} ${cls}" ${extra}>${st?'<span class="stb">GOLD</span>':""}${gun(it.id)}
+    <div class="w">${st?"Золотой ":""}${esc(it.weapon)}</div><div class="s">${esc(it.skin)}</div>
     <div class="meta"><span class="wear">${wear||""}</span><span class="p">${coin(v)}</span></div></div>`;
 }
 const instCard = (x,o={})=>card(BY_ID[x.id],{value:x.value,st:!!x.st,...o});
@@ -937,7 +940,7 @@ for(let i=0;i<12;i++) LIVE.push(botDrop());
 (function loop(){setTimeout(()=>{if(!document.hidden)pushLive(botDrop());loop()},2200+rnd()*4200)})();
 function renderFeed(fresh){
   $("#feed").innerHTML=`<div class="feed-label"><i></i>Лайв</div>`+LIVE.map((d,i)=>{const it=BY_ID[d.id];
-    return `<div class="feed-item rar-${it.rarity}${d.mine?" mine":""}${fresh&&i===0?" new":""}" title="${esc(d.who+": "+(d.st?"StatTrak™ ":"")+it.weapon+" | "+it.skin)}">${d.st?'<span class="stb">ST</span>':""}${gun(it.id)}<span class="fw">${esc(d.who)}</span><span class="fp num">${fmt(d.value)}</span></div>`}).join("");
+    return `<div class="feed-item rar-${it.rarity}${d.st?" gold":""}${d.mine?" mine":""}${fresh&&i===0?" new":""}" title="${esc(d.who+": "+(d.st?"Золотой ":"")+it.weapon+" | "+it.skin)}">${d.st?'<span class="stb">GOLD</span>':""}${gun(it.id)}<span class="fw">${esc(d.who)}</span><span class="fp num">${fmt(d.value)}</span></div>`}).join("");
 }
 
 // ---------- header ----------
@@ -950,7 +953,7 @@ function renderTop(){
   $("#invCount").textContent=S.inv.length;
   const can = S.balance+invValue()<MIN_CASE;
   $("#bonusBtn").disabled=!can;
-  $("#bonusBtn").title=can?`Получить ${BONUS} монет`:"Бонус доступен, когда монет и скинов не хватает даже на самый дешёвый кейс";
+  $("#bonusBtn").title=can?`Получить ${BONUS} монет`:"Бонус доступен, когда монет и брейнротов не хватает даже на самый дешёвый кейс";
 }
 $("#bonusBtn").addEventListener("click",()=>{if(S.balance+invValue()<MIN_CASE){S.balance+=BONUS;save();renderAll();toast(`+${BONUS} монет. Удачи!`)}});
 
@@ -1083,9 +1086,9 @@ function showPrizes(list){
 }
 function showPrize(inst){
   const it=BY_ID[inst.id];
-  modal(`<div class="modal-title">${it.rarity==="gold"?"Вот это дроп!":inst.st?"StatTrak™ дроп!":"Твой дроп"}</div>
+  modal(`<div class="modal-title">${it.rarity==="gold"?"Вот это дроп!":inst.st?"Золотой брейнрот!":"Твой дроп"}</div>
     ${instCard(inst)}
-    ${inst.st?'<div class="sub" style="margin:-6px 0 16px">StatTrak™ — цена ×2</div>':""}
+    ${inst.st?'<div class="sub" style="margin:-6px 0 16px">Золотая мутация — цена ×2</div>':""}
     <div class="modal-actions">
       <button class="btn btn-ghost" id="mSell" type="button">Продать за ${coin(inst.value)}</button>
       <button class="btn btn-main" id="mKeep" type="button">Забрать</button>
@@ -1106,12 +1109,12 @@ function sell(uid,quiet){
 let sellArmed=false;
 function renderInventory(){
   const v=invValue();
-  $("#invSub").innerHTML=S.inv.length?`${S.inv.length} скинов на ${coin(v)}`:"Пусто";
+  $("#invSub").innerHTML=S.inv.length?`${S.inv.length} брейнротов на ${coin(v)}`:"Пусто";
   const sb=$("#sellAllBtn"); sb.hidden=!S.inv.length;
   sb.innerHTML=sellArmed?`Точно? Продать на ${coin(v)}`:"Продать всё";
   $("#invGrid").innerHTML=S.inv.length
     ? S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>`<div class="inv-item">${instCard(x)}<button class="sell" type="button" data-sell="${x.uid}">Продать ${coin(x.value)}</button></div>`).join("")
-    : `<div class="empty" style="grid-column:1/-1">Скинов пока нет. Открой кейс на вкладке «Кейсы».</div>`;
+    : `<div class="empty" style="grid-column:1/-1">Брейнротов пока нет. Открой кейс на вкладке «Кейсы».</div>`;
   const st=S.stats;
   $("#stats").innerHTML=`<div class="stat"><b>${fmt(st.opened)}</b>кейсов открыто</div>
     <div class="stat"><b>${st.upWin} / ${st.upWin+st.upLose}</b>апгрейдов удачных</div>
@@ -1137,11 +1140,11 @@ function chance(){const s=srcInst();if(!s||!upDst)return 0;return Math.min(MAX_C
 function renderUpgrade(){
   const s=srcInst(); if(!s) upSrc=null;
   if(s&&upDst&&BY_ID[upDst].price<=s.value) upDst=null;
-  $("#upSrc").innerHTML=s?instCard(s):"Выбери скин из инвентаря ниже";
-  $("#upDst").innerHTML=upDst?card(BY_ID[upDst]):"Выбери скин, который хочешь получить";
+  $("#upSrc").innerHTML=s?instCard(s):"Выбери брейнрота из инвентаря ниже";
+  $("#upDst").innerHTML=upDst?card(BY_ID[upDst]):"Выбери брейнрота, которого хочешь получить";
   const c=chance();
   $("#chance").textContent=(c*100).toFixed(c&&c<.1?2:1).replace(/\.0+$/,"")+"%";
-  $("#dialArc").setAttribute("stroke-dasharray",`${(c*502.65).toFixed(2)} 503`);
+  $("#dialArc").setAttribute("stroke-dasharray",`${(c*527.79).toFixed(2)} 528`);
   $("#upBtn").disabled=spinning||!s||!upDst;
   $("#upInv").innerHTML=S.inv.length
     ? S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x,{cls:"pick"+(x.uid===upSrc?" sel":""),extra:`data-src="${x.uid}"`})).join("")
@@ -1158,7 +1161,7 @@ $("#upTargets").addEventListener("click",e=>{if(spinning)return;const b=e.target
 $("#upSearch").addEventListener("input",renderUpgrade);
 $("#mults").addEventListener("click",e=>{
   const b=e.target.closest("[data-m]"); if(!b||spinning) return;
-  const s=srcInst(); if(!s){toast("Сначала выбери свой скин");return}
+  const s=srcInst(); if(!s){toast("Сначала выбери своего брейнрота");return}
   const want=s.value*+b.dataset.m;
   const t=ITEMS.filter(i=>i.price>s.value).sort((a,b)=>Math.abs(a.price-want)-Math.abs(b.price-want))[0];
   if(t){upDst=t.id;renderUpgrade()}
@@ -1178,6 +1181,7 @@ $("#upBtn").addEventListener("click",()=>{
   setTimeout(()=>spinT=false,4300);
   setTimeout(()=>{
     spinning=false;
+    const dl=$("#dial"); dl.classList.add(win?"hit":"miss"); setTimeout(()=>dl.classList.remove("hit","miss"),1100);
     const i=S.inv.findIndex(x=>x.uid===s.uid); if(i>=0) S.inv.splice(i,1);
     upSrc=null;
     if(win){
@@ -1192,12 +1196,19 @@ $("#upBtn").addEventListener("click",()=>{
     } else {
       S.stats.upLose++; save(); renderAll(); loseSound();
       modal(`<div class="modal-title lose">Мимо</div>${instCard(s)}
-        <div class="sub" style="margin:-6px 0 16px">Скин сгорел. Шанс был ${(c*100).toFixed(1)}%.</div>
+        <div class="sub" style="margin:-6px 0 16px">Брейнрот сгорел. Шанс был ${(c*100).toFixed(1)}%.</div>
         <div class="modal-actions"><button class="btn btn-main" id="mKeep" type="button">Ещё раз</button></div>`);
       $("#mKeep").onclick=closeModal;
     }
   },4400);
 });
+
+// выбор указателя апгрейда
+let arrowStyle="arrow";
+try{arrowStyle=localStorage.getItem("brainrot-arrow")||"arrow"}catch(e){}
+function renderArrow(){$("#dial").dataset.arrow=arrowStyle;document.querySelectorAll("#arrowPick button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.arrow===arrowStyle))}
+$("#arrowPick").addEventListener("click",e=>{const b=e.target.closest("[data-arrow]");if(!b)return;arrowStyle=b.dataset.arrow;try{localStorage.setItem("brainrot-arrow",arrowStyle)}catch(e){}renderArrow()});
+renderArrow();
 
 // ---------- contract ----------
 const ctSel=new Set();
@@ -1216,7 +1227,7 @@ function renderContract(){
     ? S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>{
         const on=ctSel.has(x.uid);
         return instCard(x,{cls:"pick"+(on?" sel":"")+(!on&&n>=CT_MAX?" off":""),extra:`data-ct="${x.uid}"`})}).join("")
-    : `<div class="empty" style="grid-column:1/-1">Нужно хотя бы 3 скина. Открой пару кейсов.</div>`;
+    : `<div class="empty" style="grid-column:1/-1">Нужно хотя бы 3 брейнрота. Открой пару кейсов.</div>`;
 }
 $("#ctInv").addEventListener("click",e=>{
   if(spinning) return;
@@ -1341,7 +1352,7 @@ function renderBattles(){
   b.disabled=spinning||!bRounds.length||S.balance<cost;
   b.innerHTML=!bRounds.length?"Начать батл":S.balance<cost?`Не хватает ${coin(cost-S.balance)}`:`Начать батл за ${coin(cost)}`;
 }
-function mini(x){const it=BY_ID[x.id];return `<div class="mini rar-${it.rarity}" title="${esc((x.st?"StatTrak™ ":"")+it.weapon+" | "+it.skin)}">${x.st?'<span class="stb">ST</span>':""}${gun(it.id)}<b>${coin(x.value)}</b></div>`}
+function mini(x){const it=BY_ID[x.id];return `<div class="mini rar-${it.rarity}${x.st?" gold":""}" title="${esc((x.st?"Золотой ":"")+it.weapon+" | "+it.skin)}">${x.st?'<span class="stb">GOLD</span>':""}${gun(it.id)}<b>${coin(x.value)}</b></div>`}
 function rollDrop(c){const id=pickWeighted(c.drops).id, st=rnd()<ST_CHANCE;return {id,st,value:Math.round(BY_ID[id].price*(st?ST_MULT:1))}}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 $("#bStart").addEventListener("click",async()=>{
@@ -1531,6 +1542,7 @@ function renderView(){
 }
 function renderAll(){renderTop();renderView()}
 S.collected=S.collected||[]; S.inv.forEach(x=>collect(x.id)); save();
+S.inv=S.inv.filter(x=>BY_ID[x.id]); S.collected=(S.collected||[]).filter(id=>BY_ID[id]);
 buildPaints(); renderCases(); renderFeed(false); renderAll();
 })();
 </script>
