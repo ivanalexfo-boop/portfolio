@@ -308,7 +308,7 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
   <section class="view" id="view-cases">
     <div id="caseList">
       <h2>Кейсы</h2>
-      <p class="sub">Выбери кейс и крути. Примерно каждый четвёртый дроп дороже самого кейса.</p>
+      <p class="sub">Выбери кейс и крути. Примерно в половине открытий скин дороже самого кейса.</p>
       <div class="cases" id="cases"></div>
     </div>
     <div id="caseOpen" hidden>
@@ -537,13 +537,7 @@ const R = {
   red:   {name:"Тайное",      odds:0.64},
   gold:  {name:"Нож / перчатки", odds:0.26}
 };
-const WEARS = [
-  {k:"FN", n:"Прямо с завода", p:.10, m:1.3},
-  {k:"MW", n:"Немного поношенное", p:.25, m:1.1},
-  {k:"FT", n:"После полевых", p:.40, m:1},
-  {k:"WW", n:"Поношенное", p:.15, m:.9},
-  {k:"BS", n:"Закалённое в боях", p:.10, m:.8}
-];
+const WEARS = [{k:"", n:"", p:1, m:1}]; // износа нет: цена скина фиксированная
 const AVG_WEAR = WEARS.reduce((s,w)=>s+w.p*w.m,0);
 // StatTrak™: 10% дропов из кейсов, стоит в 2 раза дороже
 const ST_CHANCE=.1, ST_MULT=2;
@@ -605,33 +599,53 @@ const ITEMS = [
 const BY_ID = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 
 const CASES = [
-  {id:"start", name:"Первый шаг", tag:"Для разгона", c1:"#4b7bff", c2:"#22d3ee",
+  {id:"start", name:"Первый шаг", tag:"Для разгона", c1:"#4b7bff", c2:"#22d3ee", price:50,
    items:["ssgdet","aksaf","uspg","famas","galil","mp7","aug","deagcw","akeb","uspcx","m4ed","fiveseven","p2k","glockwe","gut"]},
-  {id:"pistol", name:"Пистолетный раунд", tag:"Пистолеты", c1:"#9d5cff", c2:"#ff3d9a",
+  {id:"pistol", name:"Пистолетный раунд", tag:"Пистолеты", c1:"#9d5cff", c2:"#ff3d9a", price:100,
    items:["uspg","deagcw","uspcx","fiveseven","p2k","glockwe","deagcr","deagbl","uspps","glockfd","navaja"]},
-  {id:"assault", name:"Штурм", tag:"Автоматы", c1:"#ff4d4d", c2:"#ffb020",
+  {id:"assault", name:"Штурм", tag:"Автоматы", c1:"#ff4d4d", c2:"#ffb020", price:150,
    items:["galil","aug","akeb","m4ed","akfm","m4dec","akrl","m4hb","akneon","m4emp","akps","akvul","m9tt"]},
-  {id:"sniper", name:"Снайпер", tag:"Шанс на Dragon Lore", c1:"#3ef08f", c2:"#22d3ee",
+  {id:"sniper", name:"Снайпер", tag:"Шанс на Dragon Lore", c1:"#3ef08f", c2:"#22d3ee", price:300,
    items:["awpwg","p90as","awpfd","m4dec","deagcr","awphb","akneon","awpas","awpgun","karamb","awpdl"]},
-  {id:"elite", name:"Элита", tag:"Дорогие скины", c1:"#f040ff", c2:"#9d5cff",
+  {id:"elite", name:"Элита", tag:"Дорогие скины", c1:"#f040ff", c2:"#9d5cff", price:500,
    items:["m4dec","glockwe","akrl","m4hb","deagcr","awphb","akneon","deagbl","m4emp","uspps","akps","akvul","m4as","awpas","bfly"]},
-  {id:"gold", name:"Золотой", tag:"Ножи и перчатки", c1:"#ffc53d", c2:"#ff7a1a",
+  {id:"gold", name:"Золотой", tag:"Ножи и перчатки", c1:"#ffc53d", c2:"#ff7a1a", price:1500,
    items:["akneon","m4emp","uspps","gut","akps","glockfd","navaja","akvul","m4as","falch","awpas","bowie","wraps","akfs","m9tt","karamb","bfly","glvice"]}
 ];
 // шанс каждого предмета: шанс его редкости делится поровну между предметами этой редкости в кейсе
-// Баланс: шанс скина ~ 1/цена^1.2 — дешёвые падают чаще, ножи редко.
-// В кейсах нет скинов дешевле ~1/3 цены кейса. Цена кейса = средний дроп / 0.9.
-const RTP = 0.9, SLOPE = 1.2;
+// Баланс «50 на 50»: примерно половина дропов дороже кейса, половина дешевле.
+// Скины дешевле кейса получают 52% шансов, от 1 до 3 цен кейса — остальное,
+// а на скины дороже трёх цен кейса (джекпоты) отведено 0.6%.
+// Внутри групп шанс ~ 1/цена^t; t подбирается так, чтобы в среднем
+// возвращалось 97% цены кейса (с учётом StatTrak™).
+const RTP = 0.97, LOSE_SHARE = 0.52, JACKPOT_SHARE = 0.006;
 for (const c of CASES){
   const ps = c.items.map(id=>BY_ID[id].price);
-  const raw = ps.map(p=>Math.pow(p,-SLOPE)), tot = raw.reduce((x,y)=>x+y,0);
-  c.drops = c.items.map((id,i)=>({id, w:raw[i]/tot}));
-  const ev = c.drops.reduce((s,d)=>s+d.w*BY_ID[d.id].price,0)*AVG_WEAR*(1+ST_CHANCE*(ST_MULT-1))/RTP;
-  c.price = ev<100 ? Math.round(ev/5)*5 : Math.round(ev/10)*10;
+  const groups = [
+    {idx:[], mass:LOSE_SHARE, fixed:false},
+    {idx:[], mass:1-LOSE_SHARE-JACKPOT_SHARE, fixed:false},
+    {idx:[], mass:JACKPOT_SHARE, fixed:true}
+  ];
+  ps.forEach((p,i)=>groups[p<c.price?0:p<3*c.price?1:2].idx.push(i));
+  const live = groups.filter(g=>g.idx.length), tot = live.reduce((s,g)=>s+g.mass,0);
+  const weights = t=>{
+    const w = ps.map(()=>0);
+    for(const g of live){
+      const e = g.fixed?1:t, raw = g.idx.map(i=>Math.pow(ps[i],-e)), sum = raw.reduce((x,y)=>x+y,0);
+      g.idx.forEach((i,k)=>w[i]=g.mass/tot*raw[k]/sum);
+    }
+    return w;
+  };
+  const stAvg = 1+ST_CHANCE*(ST_MULT-1);
+  const ev = t=>weights(t).reduce((s,w,i)=>s+w*ps[i],0)*stAvg;
+  let lo=-6, hi=12;
+  for(let i=0;i<60;i++){const m=(lo+hi)/2; if(ev(m)>RTP*c.price) lo=m; else hi=m}
+  const w = weights((lo+hi)/2);
+  c.drops = c.items.map((id,i)=>({id, w:w[i]}));
   const byR = {};
   c.drops.forEach(d=>{const r=BY_ID[d.id].rarity;byR[r]=(byR[r]||0)+d.w});
   c.rarities = Object.keys(R).filter(r=>byR[r]).map(r=>({r, pct:byR[r]*100}));
-  c.profit = c.drops.reduce((s,d)=>s+d.w*WEARS.reduce((q,wr)=>q+wr.p*((BY_ID[d.id].price*wr.m>=c.price?1-ST_CHANCE:0)+(BY_ID[d.id].price*wr.m*ST_MULT>=c.price?ST_CHANCE:0)),0),0);
+  c.profit = c.drops.reduce((s,d)=>{const p=BY_ID[d.id].price;return s+d.w*((p>=c.price?1-ST_CHANCE:0)+(p*ST_MULT>=c.price?ST_CHANCE:0))},0);
 }
 CASES.sort((a,b)=>a.price-b.price);
 const MIN_CASE = CASES[0].price;
@@ -651,10 +665,10 @@ const fmt = n=>Math.round(n).toLocaleString("ru-RU");
 const coin = n=>`<span class="coin"></span>${fmt(n)}`;
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function pickWeighted(list){let r=rnd(),acc=0;for(const x of list){acc+=x.w;if(r<acc)return x}return list[list.length-1]}
-function rollWear(){let r=rnd(),acc=0;for(const w of WEARS){acc+=w.p;if(r<acc)return w}return WEARS[2]}
+function rollWear(){let r=rnd(),acc=0;for(const w of WEARS){acc+=w.p;if(r<acc)return w}return WEARS[0]}
 function makeInst(id, wear, st){const it=BY_ID[id];const w=wear||rollWear();if(st===undefined)st=rnd()<ST_CHANCE;
   return {uid:S.uid++, id, wear:w.k, st, value:Math.max(1,Math.round(it.price*w.m*(st?ST_MULT:1)))}}
-const wearOf = k=>WEARS.find(w=>w.k===k)||WEARS[2];
+const wearOf = k=>WEARS.find(w=>w.k===k)||WEARS[0];
 
 function card(it, {value, wear, st=false, cls="", extra=""}={}){
   const v = value ?? it.price;
@@ -662,7 +676,7 @@ function card(it, {value, wear, st=false, cls="", extra=""}={}){
     <div class="w">${st?"StatTrak™ ":""}${esc(it.weapon)}</div><div class="s">${esc(it.skin)}</div>
     <div class="meta"><span class="wear">${wear||""}</span><span class="p">${coin(v)}</span></div></div>`;
 }
-const instCard = (x,o={})=>card(BY_ID[x.id],{value:x.value,wear:x.wear,st:!!x.st,...o});
+const instCard = (x,o={})=>card(BY_ID[x.id],{value:x.value,st:!!x.st,...o});
 
 function caseArt(c,pfx=""){
   const top=c.items.reduce((a,b)=>BY_ID[b].price>BY_ID[a].price?b:a);
@@ -688,7 +702,21 @@ function tone(freq,dur,{type="triangle",vol=.12,at=0,slide=0}={}){
   o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.02);
 }
 let lastTick=0;
-function tick(){const n=performance.now();if(n-lastTick<28)return;lastTick=n;tone(1500+rnd()*300,.035,{type:"square",vol:.035})}
+// щелчок как у механической рулетки: короткий шумовой «клик» + глухой «ток»
+let noiseBuf=null;
+function tick(){
+  const n=performance.now(); if(n-lastTick<30) return; lastTick=n;
+  const a=ac(); if(!a) return;
+  if(!noiseBuf){noiseBuf=a.createBuffer(1,Math.floor(a.sampleRate*.04),a.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3)}
+  const t=a.currentTime;
+  const src=a.createBufferSource(); src.buffer=noiseBuf; src.playbackRate.value=.9+Math.random()*.25;
+  const bp=a.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2600+Math.random()*900; bp.Q.value=1.4;
+  const g=a.createGain(); g.gain.setValueAtTime(.55,t); g.gain.exponentialRampToValueAtTime(.001,t+.03);
+  src.connect(bp).connect(g).connect(a.destination); src.start(t); src.stop(t+.04);
+  const o=a.createOscillator(), og=a.createGain(); o.type="sine"; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(90,t+.03);
+  og.gain.setValueAtTime(.18,t); og.gain.exponentialRampToValueAtTime(.001,t+.035);
+  o.connect(og).connect(a.destination); o.start(t); o.stop(t+.04);
+}
 const WIN_NOTES={blue:[523,659],purple:[523,659,784],pink:[523,659,784,1047],red:[523,659,784,1047,1319],gold:[392,523,659,784,1047,1319,1568]};
 function winSound(r){(WIN_NOTES[r]||WIN_NOTES.blue).forEach((f,i)=>{tone(f,.28,{at:i*.085,vol:.1});if(r==="gold")tone(f*2,.2,{at:i*.085+.04,type:"sine",vol:.04})});
   if(r==="gold"||r==="red")tone(1568,.9,{at:.6,type:"sine",vol:.05,slide:2093})}
@@ -870,7 +898,7 @@ function showPrize(inst){
   const it=BY_ID[inst.id];
   modal(`<div class="modal-title">${it.rarity==="gold"?"Вот это дроп!":inst.st?"StatTrak™ дроп!":"Твой дроп"}</div>
     ${instCard(inst)}
-    <div class="sub" style="margin:-6px 0 16px">${esc(wearOf(inst.wear).n)}${inst.st?" · StatTrak™ ×2":""}</div>
+    ${inst.st?'<div class="sub" style="margin:-6px 0 16px">StatTrak™ — цена ×2</div>':""}
     <div class="modal-actions">
       <button class="btn btn-ghost" id="mSell" type="button">Продать за ${coin(inst.value)}</button>
       <button class="btn btn-main" id="mKeep" type="button">Забрать</button>
@@ -921,7 +949,7 @@ function renderUpgrade(){
   const s=srcInst(); if(!s) upSrc=null;
   if(s&&upDst&&BY_ID[upDst].price<=s.value) upDst=null;
   $("#upSrc").innerHTML=s?instCard(s):"Выбери скин из инвентаря ниже";
-  $("#upDst").innerHTML=upDst?card(BY_ID[upDst],{wear:"FT"}):"Выбери скин, который хочешь получить";
+  $("#upDst").innerHTML=upDst?card(BY_ID[upDst]):"Выбери скин, который хочешь получить";
   const c=chance();
   $("#chance").textContent=(c*100).toFixed(c&&c<.1?2:1).replace(/\.0+$/,"")+"%";
   $("#dialArc").setAttribute("stroke-dasharray",`${(c*502.65).toFixed(2)} 503`);
@@ -933,7 +961,7 @@ function renderUpgrade(){
   const min=s?s.value:0;
   const list=ITEMS.filter(i=>i.price>min&&(!q||(i.weapon+" "+i.skin).toLowerCase().includes(q))).sort((a,b)=>a.price-b.price);
   $("#upTargets").innerHTML=list.length
-    ? list.map(i=>card(i,{wear:s?Math.round(Math.min(MAX_CHANCE,s.value/i.price*.95)*100)+"%":"FT",cls:"pick"+(i.id===upDst?" sel":""),extra:`data-dst="${i.id}"`})).join("")
+    ? list.map(i=>card(i,{wear:s?Math.round(Math.min(MAX_CHANCE,s.value/i.price*.95)*100)+"%":"",cls:"pick"+(i.id===upDst?" sel":""),extra:`data-dst="${i.id}"`})).join("")
     : `<div class="empty" style="grid-column:1/-1">Ничего не нашлось.</div>`;
 }
 $("#upInv").addEventListener("click",e=>{if(spinning)return;const b=e.target.closest("[data-src]");if(b){upSrc=+b.dataset.src;renderUpgrade()}});
@@ -964,7 +992,7 @@ $("#upBtn").addEventListener("click",()=>{
     const i=S.inv.findIndex(x=>x.uid===s.uid); if(i>=0) S.inv.splice(i,1);
     upSrc=null;
     if(win){
-      const inst=makeInst(upDst,WEARS[2],false); S.inv.unshift(inst); addFeed(inst); S.stats.upWin++;
+      const inst=makeInst(upDst,WEARS[0],false); S.inv.unshift(inst); addFeed(inst); S.stats.upWin++;
       save(); renderAll();
       modal(`<div class="modal-title win">Апгрейд удался!</div>${instCard(inst)}
         <div class="modal-actions"><button class="btn btn-ghost" id="mSell" type="button">Продать за ${coin(inst.value)}</button>
@@ -1022,7 +1050,7 @@ function contractResult(sum){
     if(!best||d<best.d) best={it,w,d};
   }
   if(!best){ // сумма меньше самого дешёвого скина
-    const it=ITEMS[0]; best={it,w:WEARS[4]};
+    const it=ITEMS[0]; best={it,w:WEARS[0]};
   }
   return makeInst(best.it.id,best.w,false);
 }
@@ -1045,7 +1073,7 @@ $("#ctBtn").addEventListener("click",()=>{
       const profit=inst.value-sum;
       if(profit<0) loseSound();
       modal(`<div class="modal-title ${profit>=0?"win":"lose"}">${profit>=0?"В плюсе":"В минусе"}: ${profit>=0?"+":"−"}${fmt(Math.abs(profit))}</div>
-        ${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${fmt(sum)} · ${esc(wearOf(inst.wear).n)}</div>
+        ${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${fmt(sum)}</div>
         <div class="modal-actions"><button class="btn btn-ghost" id="mSell" type="button">Продать за ${coin(inst.value)}</button>
         <button class="btn btn-main" id="mKeep" type="button">Забрать</button></div>`, BY_ID[inst.id].rarity);
       celebrate(BY_ID[inst.id].rarity);
