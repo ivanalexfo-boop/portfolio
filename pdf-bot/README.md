@@ -6,7 +6,22 @@
 - **Документы, таблицы, презентации** (DOC/DOCX/ODT/RTF/TXT/HTML, XLS/XLSX/ODS/CSV, PPT/PPTX/ODP): LibreOffice в headless-режиме
 - **/merge → картинки → /done**: собирает несколько картинок в один PDF
 
-## Запуск через Docker (рекомендуется)
+## Установка на VPS (Ubuntu/Debian) одной командой
+
+Открой консоль сервера и вставь:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ivanalexfo-boop/portfolio/refs/heads/claude/hello-jhiser/pdf-bot/install.sh | sudo bash
+```
+
+Скрипт поставит LibreOffice и Python, спросит токен, запустит бота как systemd-сервис
+(он сам поднимается после перезагрузки). Повторный запуск той же команды обновляет бота.
+
+- логи: `journalctl -u pdf-bot -f`
+- перезапуск: `systemctl restart pdf-bot`
+- сменить токен: отредактируй `/etc/pdf-bot.env` и перезапусти
+
+## Запуск через Docker
 
 ```bash
 cd pdf-bot
