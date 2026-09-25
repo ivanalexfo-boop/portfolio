@@ -239,7 +239,8 @@ h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted
 .slot-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;font-weight:700}
 .dial{position:relative;width:230px;height:230px}
 .dial svg{width:100%;height:100%;display:block;overflow:visible}
-.dial .needle{transform-origin:115px 115px;transition:transform 4.4s cubic-bezier(.12,.72,.08,1)}
+.dial .needle{position:absolute;inset:0;transform-origin:50% 50%;will-change:transform;transition:transform 6.2s cubic-bezier(.2,.85,.12,1);pointer-events:none}
+.dial .needle svg{width:100%;height:100%;display:block;overflow:visible}
 .dial[data-arrow="arrow"] .arw-neon,.dial[data-arrow="neon"] .arw-arrow{display:none}
 .dial.hit .winarc{animation:arcHit .5s ease 2}
 @keyframes arcHit{50%{stroke-width:26}}
@@ -506,11 +507,9 @@ main .sub{color:#d2d0f5}
             <circle cx="115" cy="115" r="88" fill="none" stroke="#ff4d6d" stroke-opacity=".75" stroke-width="20"/>
             <circle class="winarc" id="dialArc" cx="115" cy="115" r="88" fill="none" stroke="#3ef08f" stroke-width="20" stroke-dasharray="0 553" transform="rotate(-90 115 115)" filter="url(#glow)"/>
             <circle cx="115" cy="115" r="75" fill="url(#dialCore)" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
-            <g class="needle" id="needle">
-              <g class="arw-arrow"><path d="M115 22 L129 50 L115 44 L101 50 Z" fill="#fff" stroke="#07061a" stroke-width="2" stroke-linejoin="round"/><path d="M115 44 L115 58" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
-              <g class="arw-neon" filter="url(#glow)"><path d="M115 115 L115 36" stroke="rgba(34,230,255,.4)" stroke-width="3" stroke-dasharray="3 5"/><circle cx="115" cy="27" r="11" fill="#22e6ff"/><circle cx="115" cy="27" r="5.5" fill="#fff"/></g>
-            </g>
           </svg>
+          <div class="needle" id="needle"><svg viewBox="0 0 230 230" aria-hidden="true"><g class="arw-arrow"><path d="M115 22 L129 50 L115 44 L101 50 Z" fill="#fff" stroke="#07061a" stroke-width="2" stroke-linejoin="round"/><path d="M115 44 L115 58" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
+              <g class="arw-neon" filter="url(#glow)"><path d="M115 115 L115 36" stroke="rgba(34,230,255,.4)" stroke-width="3" stroke-dasharray="3 5"/><circle cx="115" cy="27" r="11" fill="#22e6ff"/><circle cx="115" cy="27" r="5.5" fill="#fff"/></g></svg></div>
           <div class="dial-c"><span class="num" id="chance">0%</span><small>шанс</small></div>
         </div>
         <div class="arrow-pick" id="arrowPick" role="group" aria-label="Вид указателя">
@@ -1130,11 +1129,11 @@ $("#upBtn").addEventListener("click",async()=>{
   let inst=null; if(win){inst=makeInst(upDst,null);S.inv.unshift(inst);S.stats.upWin++}else S.stats.upLose++;
   save(); renderTop();
   busy=true; upLock={src:s,dst:upDst,c}; renderUpgrade();
-  const target=needleAngle-(needleAngle%360)+360*5+r*360; needleAngle=target;
+  const target=needleAngle-(needleAngle%360)+360*6+r*360; needleAngle=target;
   const nd=$("#needle"); nd.style.transform=`rotate(${target}deg)`;
   let prev=null,acc=0,on=true;
   (function follow(){if(!on)return;const m=getComputedStyle(nd).transform;if(m&&m!=="none"){const d=new DOMMatrixReadOnly(m),a=Math.atan2(d.b,d.a)*180/Math.PI;if(prev!==null){let da=a-prev;if(da<-180)da+=360;if(da>180)da-=360;acc+=Math.abs(da);if(acc>=18){acc=0;tick()}}prev=a}requestAnimationFrame(follow)})();
-  await wait(4500); on=false;
+  await wait(6300); on=false;
   const dl=$("#dial"); dl.classList.add(win?"hit":"miss"); setTimeout(()=>dl.classList.remove("hit","miss"),1100);
   busy=false; upLock=null; upSrc=null; boost=0;
   if(win){addFeed(inst);save();renderAll();const a=BY_ID[inst.id];
