@@ -729,8 +729,8 @@ for(const rf of RIFTS){
 const MIN_RIFT=RIFTS[0].price;
 
 // ================= state & save =================
-const START_BALANCE=10000, KEY="aura-battle-v2";
-function fresh(){return {start10k:true,balance:START_BALANCE,inv:[],uid:1,collected:[],lastWheel:0,luckUntil:0,tickets:{},promos:[],savedAt:0,
+const START_BALANCE=1000000, KEY="aura-battle-v2";
+function fresh(){return {start10k:true,start1m:true,balance:START_BALANCE,inv:[],uid:1,collected:[],lastWheel:0,luckUntil:0,tickets:{},promos:[],savedAt:0,
   stats:{opened:0,upWin:0,upLose:0,contracts:0,best:0,battles:0,battlesWon:0,crashBest:0,afk:0}}}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s&&Array.isArray(s.inv)?s:null}catch(e){return null}}
 let S=load()||fresh();
@@ -761,7 +761,7 @@ function setSaveBadge(st){const b=$("#saveBadge");b.dataset.st=st;b.title=st==="
     if(!d||(S.savedAt||0)>(d.savedAt||0)) pushCloud();
   }catch(e){setSaveBadge("off")}
 })();
-function topUpStart(){if(!S.start10k){S.start10k=true;S.balance+=START_BALANCE-1000;save()}}
+function topUpStart(){if(!S.start1m){S.start10k=S.start1m=true;S.balance+=START_BALANCE-10000;save()}}
 topUpStart();
 function makeInst(id,src){return {uid:S.uid++,id,value:BY_ID[id].price,src:src||null}}
 function collect(id){if(!S.collected.includes(id))S.collected.push(id)}
