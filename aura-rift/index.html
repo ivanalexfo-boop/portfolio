@@ -1,0 +1,1312 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}</style></head><body>
+<title>Aura Rift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Onest:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#07061a; --bg2:#0f0c2e; --panel:#15123a; --panel2:#1e1a4d; --line:#2e2870;
+  --text:#f1f0ff; --muted:#9b97cf; --dim:#625d9c;
+  --cyan:#22e6ff; --pink:#ff3dcb; --violet:#8b5cff; --amber:#ffc53d;
+  --grad:linear-gradient(95deg,#22e6ff,#8b5cff 50%,#ff3dcb);
+  --win:#3ef08f; --lose:#ff4d6d;
+  --t-common:#a3adc2; --t-uncommon:#3ef08f; --t-rare:#4b8bff; --t-epic:#b04dff; --t-legendary:#ffc53d; --t-mythic:#ff3d8a; --t-unique:#ffffff;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45;min-height:100%;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* space + grid floor background */
+.sky{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  background:radial-gradient(900px 500px at 50% -10%,#2a1a7a 0%,transparent 60%),radial-gradient(700px 400px at 90% 110%,#3a0f5c 0%,transparent 60%),var(--bg)}
+.sky::before{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 20%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 70%,#cfe,transparent),radial-gradient(1px 1px at 85% 60%,#fff,transparent),radial-gradient(1px 1px at 10% 85%,#fff,transparent),radial-gradient(1.5px 1.5px at 55% 45%,#fdf,transparent);background-size:340px 340px;opacity:.55}
+.sky::after{content:"";position:absolute;left:-20%;right:-20%;bottom:-10%;height:45%;transform:perspective(500px) rotateX(62deg);
+  background-image:linear-gradient(rgba(34,230,255,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,255,.18) 1px,transparent 1px);background-size:48px 48px;
+  mask-image:linear-gradient(to top,#000,transparent)}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(7,6,26,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.logo{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.04em;display:flex;align-items:center;gap:9px;margin-right:auto;white-space:nowrap}
+.logo i{width:24px;height:24px;border-radius:50%;background:conic-gradient(from 0deg,#22e6ff,#8b5cff,#ff3dcb,#22e6ff);box-shadow:0 0 16px #8b5cff;animation:spin 6s linear infinite}
+.logo span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.snd{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);flex:none}
+.snd svg{width:18px;height:18px}.snd .x{display:none}.snd.off{color:var(--dim)}.snd.off .x{display:inline}.snd.off .w1{display:none}
+.bal{display:flex;align-items:center;gap:7px;border-radius:999px;padding:6px 12px;flex:none;
+  background:linear-gradient(var(--panel),var(--panel)) padding-box,var(--grad) border-box;border:1.5px solid transparent}
+.coin{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#9ff3ff 30%,#22e6ff 55%,#6d3cff);box-shadow:0 0 8px rgba(34,230,255,.7);display:inline-block;flex:none;vertical-align:-2px}
+.bal .num{font-weight:700}
+.save-badge{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.save-badge[data-st="ok"]{background:var(--win);box-shadow:0 0 6px var(--win)}
+.pbar{max-width:1100px;margin:0 auto;padding:0 16px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chipx{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+.afk .ring{width:16px;height:16px;border-radius:50%;background:conic-gradient(var(--cyan) calc(var(--p,0)*1%),var(--panel2) 0)}
+.afk b{color:var(--cyan)}
+.luck{color:#bff5c9;border-color:rgba(62,240,143,.5);background:rgba(62,240,143,.12)}
+.wheel-btn{margin-left:auto;display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;padding:6px 13px;border-radius:999px;background:var(--grad);color:#fff;box-shadow:0 4px 16px rgba(139,92,255,.45)}
+.wheel-btn svg{width:16px;height:16px}
+.wheel-btn.ready svg{animation:spin 3s linear infinite}
+.wheel-btn.wait{background:var(--panel2);color:var(--muted);box-shadow:none}
+.tabs{max-width:1100px;margin:0 auto;padding:0 16px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tab{padding:8px 14px;font-weight:700;font-size:14px;color:var(--muted);border-radius:999px;white-space:nowrap;background:rgba(255,255,255,.04)}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:#fff;background:var(--grad);box-shadow:0 4px 18px rgba(139,92,255,.4)}
+.tab .cnt{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.3);border-radius:6px;padding:1px 6px;margin-left:6px}
+
+/* live feed */
+.feed{max-width:1100px;margin:0 auto;padding:14px 16px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.feed-label{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--pink);font-weight:700;display:flex;align-items:center;gap:6px}
+.feed-label i{width:7px;height:7px;border-radius:50%;background:#ff3d5a;box-shadow:0 0 8px #ff3d5a;animation:blink 1.4s infinite}
+.fi{--tc:var(--t-common);flex:none;width:84px;height:66px;border-radius:10px;position:relative;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(80% 90% at 50% 100%,color-mix(in srgb,var(--tc) 40%,transparent),transparent 70%),var(--panel);border-bottom:3px solid var(--tc)}
+.fi.new{animation:feedIn .6s cubic-bezier(.2,1.3,.4,1)}
+.fi .art{width:50px;height:50px}
+.fi .fp{position:absolute;left:5px;bottom:2px;font-size:10px;opacity:.85}
+.fi .fw{position:absolute;right:5px;top:3px;font-size:9px;color:rgba(255,255,255,.65);max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi.mine{outline:1.5px solid var(--cyan);outline-offset:-1.5px}.fi.mine .fw{color:var(--cyan);font-weight:700}
+
+main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0;text-wrap:balance}
+h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;font-weight:700}
+.sub{color:var(--muted);margin:4px 0 18px;font-size:14px}
+
+/* tiers */
+.t-common{--tc:var(--t-common)}.t-uncommon{--tc:var(--t-uncommon)}.t-rare{--tc:var(--t-rare)}.t-epic{--tc:var(--t-epic)}.t-legendary{--tc:var(--t-legendary)}.t-mythic{--tc:var(--t-mythic)}.t-unique{--tc:var(--t-unique)}
+
+/* aura art */
+.art{display:block;position:relative}
+.art svg{width:100%;height:100%;display:block;overflow:visible}
+.anim .spin,.anim .spinr,.anim .pulse,.anim .flick,.anim .bob{transform-origin:50px 50px}
+.anim .spin{animation:spin 7s linear infinite}
+.anim .spinr{animation:spin 11s linear infinite reverse}
+.anim .pulse{animation:pulse 2.4s ease-in-out infinite}
+.anim .flick{animation:flick 1.2s ease-in-out infinite}
+.anim .bob{animation:bob 3s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.08);opacity:.8}}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.08) translateY(-1px)}}
+@keyframes bob{50%{transform:translateY(-2px)}}
+@keyframes blink{50%{opacity:.3}}
+@keyframes feedIn{from{transform:translateX(-30px) scale(.8);opacity:0}}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+
+/* aura card */
+.item{--tc:var(--t-common);position:relative;border-radius:14px;padding:8px 10px 10px;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;gap:1px;text-align:left;min-width:0;color:var(--text);
+  background:radial-gradient(85% 65% at 50% 36%,color-mix(in srgb,var(--tc) 30%,transparent),transparent 72%),linear-gradient(180deg,color-mix(in srgb,var(--tc) 10%,var(--panel2)),var(--panel) 80%);
+  border:1px solid color-mix(in srgb,var(--tc) 35%,var(--line))}
+.item::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--tc);box-shadow:0 0 14px var(--tc)}
+.item.t-unique{background:radial-gradient(85% 65% at 50% 36%,rgba(255,255,255,.25),transparent 72%),linear-gradient(135deg,rgba(255,61,203,.25),rgba(34,230,255,.25),rgba(255,197,61,.25)),var(--panel)}
+.item.t-unique::after{background:linear-gradient(90deg,#ff3dcb,#ffc53d,#3ef08f,#22e6ff,#8b5cff)}
+.item .art{width:100%;height:86px}
+.item .tn{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tc);margin-top:4px}
+.item .nm{font-family:var(--display);font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .meta{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:4px}
+.item .ch{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.item .p{font-family:var(--mono);font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:4px}
+.item .p .coin{width:10px;height:10px}
+.item.pick{cursor:pointer;transition:transform .12s}
+.item.pick:hover{transform:translateY(-3px)}
+.item.sel{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan) inset,0 0 18px rgba(34,230,255,.35)}
+.item.sel::before{content:"✓";position:absolute;top:6px;right:8px;font-weight:800;color:var(--cyan);z-index:2}
+.item.off{opacity:.35;pointer-events:none}
+.item.miss{filter:grayscale(1) brightness(.45)}
+.item .got{position:absolute;top:6px;right:8px;font-size:11px;font-weight:800;color:var(--win);z-index:2}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.grid.sm{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:8px}
+
+/* rifts */
+.rifts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.rift{--c1:#22e6ff;--c2:#8b5cff;border-radius:20px;padding:12px 12px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;position:relative;overflow:hidden;transition:transform .2s;
+  background:radial-gradient(90% 70% at 50% 30%,color-mix(in srgb,var(--c1) 30%,transparent),transparent 70%),linear-gradient(170deg,color-mix(in srgb,var(--c2) 35%,var(--bg2)),var(--bg2) 75%);
+  border:1px solid color-mix(in srgb,var(--c1) 45%,transparent);box-shadow:0 10px 30px -14px var(--c1)}
+.rift:hover{transform:translateY(-4px)}
+.rift-art{width:120px;height:120px}
+.rift-name{font-family:var(--display);font-weight:600;font-size:14px}
+.rift-tag{font-size:12px;color:rgba(255,255,255,.7);margin-top:-3px}
+.price-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#140d3a;font-family:var(--mono);font-weight:700;border-radius:10px;padding:7px 14px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.tkt{position:absolute;top:10px;right:10px;font-size:11px;font-weight:800;background:var(--amber);color:#2a1a00;border-radius:999px;padding:2px 8px}
+
+.back{color:var(--muted);font-weight:500;font-size:14px;display:inline-flex;gap:6px;margin-bottom:12px}
+.back:hover{color:var(--text)}
+.open-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.open-head .rift-art{width:92px;height:92px}
+.roulettes{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.roulette{position:relative;border-radius:16px;height:178px;overflow:hidden;background:linear-gradient(180deg,#1b1260,#0b0826);border:1px solid var(--line);box-shadow:inset 0 0 40px rgba(0,0,0,.6)}
+.roulette::before,.roulette::after{content:"";position:absolute;top:0;bottom:0;width:18%;z-index:2;pointer-events:none}
+.roulette::before{left:0;background:linear-gradient(90deg,#0f0a36,transparent)}
+.roulette::after{right:0;background:linear-gradient(-90deg,#0f0a36,transparent)}
+.marker{position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:linear-gradient(#22e6ff,#ff3dcb);z-index:3;box-shadow:0 0 16px #22e6ff}
+.strip{position:absolute;top:12px;left:0;display:flex;gap:8px;will-change:transform}
+.strip .item{width:124px;flex:none;height:152px;transition:transform .35s,box-shadow .35s}
+.strip .item.won{transform:scale(1.07);box-shadow:0 0 0 2px var(--tc),0 0 28px var(--tc);z-index:1}
+.roulettes.multi .roulette{height:132px}
+.roulettes.multi .strip{top:10px}
+.roulettes.multi .strip .item{width:100px;height:112px;padding:6px 8px}
+.roulettes.multi .item .art{height:56px}
+.roulettes.multi .item .tn{display:none}
+.open-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.counts{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.cnt-btn{font-family:var(--mono);font-weight:700;font-size:13px;padding:6px 10px;border-radius:8px;color:var(--muted)}
+.cnt-btn[aria-pressed="true"]{background:var(--grad);color:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:12px 22px;font-weight:700;font-size:15px}
+.btn-main{background:var(--grad);color:#fff;box-shadow:0 6px 22px rgba(139,92,255,.45);text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.btn-main:hover{filter:brightness(1.08)}
+.btn-main[disabled]{background:var(--panel2);color:var(--dim);cursor:not-allowed;box-shadow:none;text-shadow:none}
+.btn-ghost{background:var(--panel2);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--cyan)}
+.btn-gold{background:linear-gradient(95deg,#ffe38a,#ffc53d,#ff9a1f);color:#2a1a00}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:9px}
+.chk{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--pink);width:16px;height:16px}
+.odds{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0 6px}
+.odd{font-size:12px;background:color-mix(in srgb,var(--tc) 14%,var(--panel));border:1px solid color-mix(in srgb,var(--tc) 40%,transparent);border-radius:999px;padding:3px 10px;display:flex;align-items:center;gap:6px}
+.odd b{width:8px;height:8px;border-radius:50%;background:var(--tc);box-shadow:0 0 6px var(--tc)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(4,3,14,.82);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px}
+.modal-card{--tc:var(--pink);background:radial-gradient(100% 60% at 50% 0%,color-mix(in srgb,var(--tc) 30%,transparent),transparent 70%),var(--panel);
+  border:1px solid color-mix(in srgb,var(--tc) 50%,var(--line));border-radius:22px;padding:22px;width:min(380px,100%);text-align:center;max-height:92vh;overflow:auto;
+  box-shadow:0 20px 60px -10px color-mix(in srgb,var(--tc) 60%,transparent);animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+.modal-card.wide{width:min(580px,100%)}
+.modal-card > .item{margin:14px auto 16px;max-width:260px}
+.modal-card > .item .art{height:150px}
+.modal-title{font-family:var(--display);font-weight:800;font-size:19px}
+.modal-title.win{color:var(--win)}.modal-title.lose{color:var(--lose)}
+.modal-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.prize-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:14px 0 16px;max-height:52vh;overflow:auto}
+.pos{color:var(--win)}.neg{color:var(--lose)}
+
+/* battles */
+.b-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:14px}
+.panel h3{margin-top:0}
+.lobby{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--panel);border:1px solid var(--line);margin-bottom:8px;animation:pop .35s ease}
+.ava{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none;color:#fff}
+.lobby .who{min-width:0;flex:1}
+.lobby .who b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rchips{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+.rchip{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:linear-gradient(135deg,var(--c1),var(--c2));font-size:10px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.lobby .cost{font-family:var(--mono);font-weight:700;font-size:13px;display:flex;gap:4px;align-items:center;white-space:nowrap}
+.b-sel{display:flex;gap:6px;flex-wrap:wrap;min-height:44px;padding:8px;border:1.5px dashed var(--line);border-radius:12px;margin-bottom:10px}
+.b-sel .rchip{width:34px;height:34px;font-size:12px;cursor:pointer;position:relative}
+.b-sel .empty{color:var(--dim);font-size:13px;align-self:center;padding-left:4px}
+.b-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.b-pick button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:12px;font-size:11px;font-weight:700;background:var(--panel);border:1px solid var(--line)}
+.b-pick button .rift-art{width:44px;height:44px}
+.b-pick button .p{font-family:var(--mono);display:flex;gap:3px;align-items:center}
+.b-pick button[disabled]{opacity:.4}
+.arena-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.arena-top .rchips .rchip{width:30px;height:30px}
+.arena-top .rchip.cur{box-shadow:0 0 0 2px #fff,0 0 14px #fff}
+.arena-top .rchip.done{opacity:.35}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:start}
+.vs{font-family:var(--display);font-weight:800;font-size:20px;align-self:center;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;padding-top:60px}
+.side{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:10px;min-width:0;transition:box-shadow .3s,opacity .3s}
+.side.lead{border-color:color-mix(in srgb,var(--win) 60%,var(--line))}
+.side.win{box-shadow:0 0 0 2px var(--win),0 0 26px rgba(62,240,143,.45)}
+.side.lose{opacity:.5}
+.side-head{display:flex;align-items:center;gap:8px;min-width:0}
+.side-head b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-total{font-family:var(--mono);font-weight:700;font-size:16px;margin:6px 0;display:flex;gap:6px;align-items:center}
+.vroul{position:relative;height:130px;overflow:hidden;border-radius:12px;background:linear-gradient(#1b1260,#0b0826)}
+.vroul::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(#0f0a36,transparent 30%,transparent 70%,#0f0a36)}
+.vroul::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:linear-gradient(90deg,#22e6ff,#ff3dcb);box-shadow:0 0 10px #ff3dcb;z-index:3}
+.vstrip{position:absolute;left:8px;right:8px;top:0;display:flex;flex-direction:column;gap:6px;will-change:transform}
+.mini{--tc:var(--t-common);flex:none;height:96px;border-radius:12px;display:flex;align-items:center;gap:8px;padding:6px 10px;min-width:0;
+  background:radial-gradient(70% 90% at 25% 50%,color-mix(in srgb,var(--tc) 35%,transparent),transparent 70%),var(--panel);border:1px solid color-mix(in srgb,var(--tc) 40%,var(--line));border-left:3px solid var(--tc)}
+.mini .art{width:74px;height:74px;flex:none}
+.mini .mi{min-width:0}
+.mini .mi b{display:block;font-family:var(--display);font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini .mi span{font-family:var(--mono);font-size:12px;display:flex;align-items:center;gap:4px}
+.won-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.won-list .mini{height:60px;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.won-list .mini .art{width:46px;height:46px}
+.round-tag{font-size:12px;font-weight:700;color:var(--amber)}
+
+/* upgrade */
+.up-stage{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;border-radius:22px;padding:18px;
+  background:radial-gradient(60% 80% at 50% 50%,rgba(139,92,255,.22),transparent 70%),linear-gradient(160deg,#1a1450,#0c0a2c);border:1px solid var(--line)}
+.slot{min-height:190px;border:1.5px dashed var(--line);border-radius:16px;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:10px}
+.slot .item{width:100%;max-width:200px}
+.slot-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;font-weight:700}
+.dial{position:relative;width:230px;height:230px}
+.dial svg{width:100%;height:100%;display:block;overflow:visible}
+.dial .needle{transform-origin:115px 115px;transition:transform 4.4s cubic-bezier(.12,.72,.08,1)}
+.dial[data-arrow="arrow"] .arw-neon,.dial[data-arrow="neon"] .arw-arrow{display:none}
+.dial.hit .winarc{animation:arcHit .5s ease 2}
+@keyframes arcHit{50%{stroke-width:26}}
+.dial.miss svg{animation:shake .4s ease}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.dial-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
+.dial-c .num{font-size:34px;font-weight:700;color:var(--win);text-shadow:0 0 18px rgba(62,240,143,.5)}
+.dial-c small{color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.arrow-pick{display:flex;gap:4px;justify-content:center;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.arrow-pick button{flex:1;font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;color:var(--muted);white-space:nowrap}
+.arrow-pick button[aria-pressed="true"]{background:var(--grad);color:#fff}
+.boost{margin-top:14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.boost label{font-weight:700;font-size:13px;display:flex;gap:6px;align-items:center}
+.boost input[type=range]{width:100%;accent-color:var(--win)}
+.boost .bv{font-family:var(--mono);font-weight:700;font-size:13px;display:flex;gap:4px;align-items:center;min-width:90px;justify-content:flex-end}
+.up-go{display:flex;justify-content:center;margin-top:14px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--text);font:inherit;margin-bottom:10px}
+.scroll{max-height:470px;overflow:auto;padding-right:4px}
+.empty{color:var(--muted);font-size:14px;padding:24px 8px;text-align:center;border:1.5px dashed var(--line);border-radius:14px}
+
+/* contract */
+.tier-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tier-tabs button{font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;background:color-mix(in srgb,var(--tc) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--tc) 40%,transparent);color:var(--tc)}
+.tier-tabs button[aria-pressed="true"]{background:var(--tc);color:#0b0826}
+.tier-tabs button[disabled]{opacity:.35}
+.ct-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-radius:20px;padding:16px 18px;margin-bottom:14px;
+  background:linear-gradient(120deg,rgba(34,230,255,.18),rgba(139,92,255,.18) 50%,rgba(255,61,203,.18)),var(--bg2);border:1px solid var(--line)}
+.ct-slots{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;flex:1;min-width:220px}
+.ct-slot{aspect-ratio:1;border-radius:8px;border:1.5px dashed var(--line);display:grid;place-items:center;overflow:hidden}
+.ct-slot.on{border:1px solid var(--tc);background:color-mix(in srgb,var(--tc) 18%,var(--panel))}
+.ct-slot .art{width:100%;height:100%}
+.ct-arrow{font-size:22px;color:var(--muted)}
+.ct-out{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--tc)}
+.ct-pool{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.ct-pool span{font-size:12px;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--tc) 15%,var(--panel));border:1px solid color-mix(in srgb,var(--tc) 40%,transparent)}
+
+/* crash */
+.cr-wrap{display:grid;grid-template-columns:1fr 280px;gap:14px}
+.cr-hist{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;min-height:26px}
+.cr-hist span{flex:none;font-family:var(--mono);font-weight:700;font-size:12px;padding:3px 9px;border-radius:999px;background:var(--panel);border:1px solid var(--line)}
+.cr-hist .lo{color:var(--lose)}.cr-hist .mid{color:var(--cyan)}.cr-hist .hi{color:var(--win)}.cr-hist .top{color:var(--amber)}
+.cr-stage{position:relative;height:280px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,#140d4a,#07061a)}
+.cr-stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.cr-mult{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:50px;font-weight:700;text-shadow:0 4px 24px rgba(0,0,0,.6)}
+.cr-mult.boom{color:var(--lose)}.cr-mult.cashed{color:var(--win)}
+.cr-status{position:absolute;left:0;right:0;top:calc(30% + 64px);text-align:center;color:var(--muted);font-size:14px;padding:0 10px}
+.cr-bar{position:absolute;left:0;bottom:0;height:4px;background:var(--grad);transition:width .1s linear}
+.cr-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:14px}
+.cr-field{min-width:0}
+.cr-field label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px}
+.cr-input{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 12px}
+.cr-input input{flex:1;min-width:0;background:none;border:0;color:var(--text);font:700 16px var(--mono);padding:10px 0;outline:none}
+.cr-x{color:var(--muted);font-weight:700}
+.cr-quick{display:flex;gap:4px;margin-top:6px}
+.cr-quick button{flex:1;min-width:0;font-size:12px;font-weight:700;padding:5px 0;border-radius:8px;background:var(--panel2);color:var(--muted)}
+.cr-go{min-width:180px;height:48px;align-self:start;margin-top:21px}
+.cr-go.cash{background:linear-gradient(95deg,#3ef08f,#22e6ff);color:#04210f;text-shadow:none}
+.cr-players{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:12px;max-height:470px;overflow:auto}
+.cr-players h3{margin:0 0 8px;display:flex;justify-content:space-between}
+.cp{display:grid;grid-template-columns:22px 1fr auto auto;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}
+.cp .ava{width:22px;height:22px;font-size:10px}
+.cp .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp .b{font-family:var(--mono);color:var(--muted);display:flex;gap:3px;align-items:center}
+.cp .s{font-family:var(--mono);font-weight:700;min-width:56px;text-align:right}
+.cp.ok .s{color:var(--win)}.cp.bust .s{color:var(--lose)}.cp.me{background:rgba(34,230,255,.08);border-radius:8px}
+
+/* wheel */
+.wheel-wrap{position:relative;width:min(320px,80vw);aspect-ratio:1;margin:14px auto 12px}
+.wheel-wrap svg{width:100%;height:100%;display:block}
+.wheel-rot{transform-origin:160px 160px;transition:transform 5.4s cubic-bezier(.12,.7,.1,1)}
+.wheel-ptr{position:absolute;left:50%;top:-8px;margin-left:-13px;border:13px solid transparent;border-top:24px solid #fff;filter:drop-shadow(0 3px 8px rgba(34,230,255,.8));z-index:2}
+.wheel-note{font-size:12px;color:var(--dim);margin-top:10px}
+
+/* collection & inventory */
+.col-bar{height:10px;border-radius:99px;background:var(--panel2);overflow:hidden;margin:-6px 0 18px}
+.col-bar i{display:block;height:100%;background:var(--grad)}
+.inv-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.inv-bar .grow{margin-right:auto}
+.inv-item{display:flex;flex-direction:column;gap:6px}
+.sell{font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:6px 8px;display:flex;justify-content:center;gap:5px;align-items:center}
+.sell:hover{border-color:var(--amber);color:var(--amber)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:28px}
+.stat{border-radius:14px;padding:12px 14px;font-size:13px;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.08);background:linear-gradient(135deg,rgba(139,92,255,.25),rgba(139,92,255,.05))}
+.stat b{display:block;color:#fff;font-family:var(--mono);font-size:18px}
+
+footer{max-width:1100px;margin:0 auto;padding:0 16px 32px;color:var(--dim);font-size:12.5px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+footer .reset{color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:12.5px}
+.promo{display:flex;gap:8px;width:100%}
+.promo input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--text);font:inherit;text-transform:uppercase}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14px;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:calc(100% - 32px)}
+.afk-pop{position:fixed;z-index:30;pointer-events:none;font-family:var(--mono);font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);animation:floatUp 1.4s ease forwards}
+@keyframes floatUp{to{transform:translateY(-40px);opacity:0}}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:70}
+
+@media (max-width:760px){
+  .top-in{gap:8px}.logo{font-size:14px;gap:7px}.logo i{width:20px;height:20px}
+  .snd{width:30px;height:30px}.bal{padding:5px 10px}
+  .rifts{grid-template-columns:repeat(2,1fr);gap:10px}.rift-art{width:100px;height:100px}
+  .grid,.grid.sm{grid-template-columns:repeat(2,1fr)}
+  .b-grid,.cols,.cr-wrap{grid-template-columns:1fr}
+  .duel{grid-template-columns:1fr 1fr;gap:6px}.vs{display:none}
+  .mini{height:84px;padding:4px 6px;gap:4px}.mini .art{width:56px;height:56px}
+  .up-stage{grid-template-columns:1fr 1fr;padding:12px;gap:10px}
+  .up-stage .dial-wrap{grid-column:1/-1;grid-row:1;justify-self:center}
+  .slot{min-height:160px}
+  .cr-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .cr-go{grid-column:1/-1;width:100%;margin-top:0}
+  .cr-mult{font-size:40px}
+  .boost{grid-template-columns:1fr;gap:6px}.boost .bv{justify-content:flex-start}
+  .open-actions .btn-main{width:100%}
+  .strip .item{width:112px}
+  .roulettes.multi .strip .item{width:92px}
+  .ct-slots{grid-template-columns:repeat(5,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="sky" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<header class="top">
+  <div class="top-in">
+    <div class="logo"><i></i>AURA <span>RIFT</span></div>
+    <button class="snd" id="sndBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="w1" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="bal" title="Баланс"><span class="coin"></span><span class="num" id="balance">0</span><i class="save-badge" id="saveBadge" data-st="off" aria-hidden="true"></i></div>
+  </div>
+  <div class="pbar">
+    <div class="chipx afk" id="afkChip" title="Монеты капают, пока игра открыта"><span class="ring" id="afkRing"></span>AFK <b id="afkTxt">+5 / 10 с</b></div>
+    <div class="chipx luck" id="luckChip" hidden>🍀 Удача +15% · <span id="luckTxt"></span></div>
+    <button class="wheel-btn" id="wheelBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" stroke="currentColor" stroke-width="1.4"/></svg><span id="wheelTxt">Колесо</span></button>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="rifts" aria-selected="true" type="button">Разломы</button>
+    <button class="tab" role="tab" data-tab="battles" aria-selected="false" type="button">Битва аур</button>
+    <button class="tab" role="tab" data-tab="upgrade" aria-selected="false" type="button">Апгрейд</button>
+    <button class="tab" role="tab" data-tab="contract" aria-selected="false" type="button">Контракт</button>
+    <button class="tab" role="tab" data-tab="crash" aria-selected="false" type="button">Краш</button>
+    <button class="tab" role="tab" data-tab="collection" aria-selected="false" type="button">Коллекция</button>
+    <button class="tab" role="tab" data-tab="inventory" aria-selected="false" type="button">Инвентарь<span class="cnt" id="invCount">0</span></button>
+  </nav>
+</header>
+
+<div class="feed" id="feed"></div>
+
+<main>
+  <section class="view" id="view-rifts">
+    <div id="riftList">
+      <h2>Разломы</h2>
+      <p class="sub">Открывай разломы и выбивай ауры. Примерно 6 раз из 10 аура дороже самого разлома.</p>
+      <div class="rifts" id="rifts"></div>
+    </div>
+    <div id="riftOpen" hidden>
+      <button class="back" id="backBtn" type="button">← Все разломы</button>
+      <div class="open-head"><div id="openArt"></div><div><h2 id="openName"></h2><div class="sub" id="openSub" style="margin-bottom:0"></div></div></div>
+      <div class="roulettes" id="roulettes"></div>
+      <div class="open-actions">
+        <button class="btn btn-main" id="openBtn" type="button"></button>
+        <button class="btn btn-gold" id="ticketBtn" type="button" hidden></button>
+        <div class="counts" id="counts" role="group" aria-label="Сколько открыть"></div>
+        <label class="chk"><input type="checkbox" id="fastChk"> Быстро</label>
+      </div>
+      <div class="odds" id="odds"></div>
+      <h3>Что внутри</h3>
+      <div class="grid sm" id="riftItems"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-battles" hidden>
+    <div id="bLobby">
+      <h2>Битва аур</h2>
+      <p class="sub">Оба игрока открывают одни и те же разломы. Чей дроп дороже — забирает всё. Ничья — дополнительный раунд.</p>
+      <div class="b-grid">
+        <div class="panel">
+          <h3>Открытые заявки</h3>
+          <div id="lobbies"></div>
+        </div>
+        <div class="panel">
+          <h3>Создать заявку <span class="num" id="bSelCnt"></span></h3>
+          <div class="b-sel" id="bSel"></div>
+          <div class="b-pick" id="bPick"></div>
+          <div class="open-actions" style="margin-top:12px">
+            <button class="btn btn-main" id="bCreate" type="button" disabled>Создать</button>
+            <label class="chk"><input type="checkbox" id="bFast"> Быстро</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="bArena" hidden>
+      <div class="arena-top"><h2 id="bRound">Раунд 1</h2><div class="rchips" id="bTrack"></div><span class="round-tag" id="bExtra" hidden>⚡ Ничья! Дополнительный раунд</span></div>
+      <div class="duel">
+        <div class="side" id="sideA"></div>
+        <div class="vs">VS</div>
+        <div class="side" id="sideB"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-upgrade" hidden>
+    <h2>Апгрейд</h2>
+    <p class="sub">Шанс = цена твоей ауры / цена цели. Доплати монетами, чтобы расширить зелёный сектор — до 80%. Проиграл — аура сгорает.</p>
+    <div class="up-stage">
+      <div><div class="slot-label">Твоя аура</div><div class="slot anim" id="upSrc">Выбери ауру из инвентаря</div></div>
+      <div class="dial-wrap">
+        <div class="dial" id="dial" data-arrow="arrow">
+          <svg viewBox="0 0 230 230" aria-hidden="true">
+            <circle cx="115" cy="115" r="110" fill="#0a0822" stroke="#2e2870" stroke-width="2"/>
+            <g id="dialTicks"></g>
+            <circle cx="115" cy="115" r="88" fill="none" stroke="#ff4d6d" stroke-opacity=".75" stroke-width="20"/>
+            <circle class="winarc" id="dialArc" cx="115" cy="115" r="88" fill="none" stroke="#3ef08f" stroke-width="20" stroke-dasharray="0 553" transform="rotate(-90 115 115)" filter="url(#glow)"/>
+            <circle cx="115" cy="115" r="75" fill="url(#dialCore)" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+            <g class="needle" id="needle">
+              <g class="arw-arrow"><path d="M115 22 L129 50 L115 44 L101 50 Z" fill="#fff" stroke="#07061a" stroke-width="2" stroke-linejoin="round"/><path d="M115 44 L115 58" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
+              <g class="arw-neon" filter="url(#glow)"><path d="M115 115 L115 36" stroke="rgba(34,230,255,.4)" stroke-width="3" stroke-dasharray="3 5"/><circle cx="115" cy="27" r="11" fill="#22e6ff"/><circle cx="115" cy="27" r="5.5" fill="#fff"/></g>
+            </g>
+          </svg>
+          <div class="dial-c"><span class="num" id="chance">0%</span><small>шанс</small></div>
+        </div>
+        <div class="arrow-pick" id="arrowPick" role="group" aria-label="Вид указателя">
+          <button type="button" data-arrow="arrow">➤ Стрелка</button><button type="button" data-arrow="neon">● Неон</button>
+        </div>
+      </div>
+      <div><div class="slot-label">Цель</div><div class="slot anim" id="upDst">Выбери ауру, которую хочешь</div></div>
+    </div>
+    <div class="boost">
+      <label for="boostRange">⚡ Буст шанса</label>
+      <input type="range" id="boostRange" min="0" max="0" step="1" value="0">
+      <span class="bv"><span class="coin"></span><span id="boostVal">0</span></span>
+    </div>
+    <div class="up-go"><button class="btn btn-main" id="upBtn" type="button" disabled>Апгрейд</button></div>
+    <div class="cols">
+      <div><h3>Твои ауры</h3><div class="scroll"><div class="grid sm" id="upInv"></div></div></div>
+      <div><h3>Что хочешь получить</h3><input class="search" id="upSearch" type="search" placeholder="Поиск ауры…" autocomplete="off"><div class="scroll"><div class="grid sm" id="upTargets"></div></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-contract" hidden>
+    <h2>Контракт</h2>
+    <p class="sub">Положи ровно 10 аур одного тира — получишь одну гарантированную ауру на тир выше. Результат выбирается из разломов, откуда пришли вложенные ауры.</p>
+    <div class="tier-tabs" id="ctTiers"></div>
+    <div class="ct-bar">
+      <div class="ct-slots" id="ctSlots"></div>
+      <span class="ct-arrow">→</span>
+      <div class="ct-out" id="ctOut"></div>
+      <button class="btn btn-main" id="ctBtn" type="button" disabled>Синтез</button>
+    </div>
+    <div class="ct-pool" id="ctPool"></div>
+    <div class="grid sm" id="ctInv"></div>
+  </section>
+
+  <section class="view" id="view-crash" hidden>
+    <h2>Краш</h2>
+    <p class="sub">Ставь до старта раунда. Комета летит, множитель растёт — выведи до взрыва.</p>
+    <div class="cr-wrap">
+      <div>
+        <div class="cr-hist" id="crHist"></div>
+        <div class="cr-stage"><canvas id="crCanvas"></canvas><div class="cr-mult num" id="crMult">1.00×</div><div class="cr-status" id="crStatus"></div><div class="cr-bar" id="crBar"></div></div>
+        <div class="cr-controls">
+          <div class="cr-field"><label for="crBet">Ставка</label>
+            <div class="cr-input"><span class="coin"></span><input id="crBet" type="number" min="1" step="1" value="100" inputmode="numeric"></div>
+            <div class="cr-quick" id="crQuickBet"><button type="button" data-q="half">½</button><button type="button" data-q="double">×2</button><button type="button" data-q="max">Макс</button></div>
+          </div>
+          <div class="cr-field"><label for="crAuto">Автовывод</label>
+            <div class="cr-input"><input id="crAuto" type="number" min="1.01" step="0.01" placeholder="выкл" inputmode="decimal"><span class="cr-x">×</span></div>
+            <div class="cr-quick" id="crQuickAuto"><button type="button" data-a="1.5">1.5×</button><button type="button" data-a="2">2×</button><button type="button" data-a="5">5×</button></div>
+          </div>
+          <button class="btn btn-main cr-go" id="crBtn" type="button">Поставить</button>
+        </div>
+      </div>
+      <div class="cr-players"><h3><span>Игроки</span><span class="num" id="crPot"></span></h3><div id="crTable"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-collection" hidden>
+    <h2>Коллекция аур</h2>
+    <p class="sub" id="colSub"></p>
+    <div class="col-bar"><i id="colFill"></i></div>
+    <div class="grid sm anim" id="colGrid"></div>
+  </section>
+
+  <section class="view" id="view-inventory" hidden>
+    <div class="inv-bar">
+      <div class="grow"><h2>Инвентарь</h2><div class="sub" id="invSub" style="margin-bottom:0"></div></div>
+      <button class="btn btn-ghost btn-sm" id="sellAllBtn" type="button">Продать всё</button>
+    </div>
+    <div class="grid anim" id="invGrid"></div>
+    <div class="stats" id="stats"></div>
+  </section>
+</main>
+
+<footer>
+  <form class="promo" id="promoForm" autocomplete="off"><input id="promoInput" type="text" placeholder="Промокод" aria-label="Промокод" maxlength="24"><button class="btn btn-ghost btn-sm" type="submit">Активировать</button></form>
+  <span>Прототип режима на виртуальных монетах. Реальных денег нет.</span>
+  <button class="reset" id="resetBtn" type="button">Начать заново</button>
+</footer>
+
+<div class="modal" id="modal" hidden><div class="modal-card" id="modalCard"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+// ================= utils =================
+const $ = s=>document.querySelector(s);
+const rnd = ()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296};
+const fmt = n=>Math.round(n).toLocaleString("ru-RU");
+const coin = n=>`<span class="coin"></span>${fmt(n)}`;
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const wait = ms=>new Promise(r=>setTimeout(r,ms));
+const pick = arr=>arr[Math.floor(rnd()*arr.length)];
+function pickWeighted(list){let r=rnd(),acc=0;for(const x of list){acc+=x.w;if(r<acc)return x}return list[list.length-1]}
+
+// ================= tiers & auras =================
+const TIERS=[
+  {k:"common",name:"Common"},{k:"uncommon",name:"Uncommon"},{k:"rare",name:"Rare"},
+  {k:"epic",name:"Epic"},{k:"legendary",name:"Legendary"},{k:"mythic",name:"Mythic"},{k:"unique",name:"Unique"}
+];
+const TIER_IDX=Object.fromEntries(TIERS.map((t,i)=>[t.k,i]));
+const TIER_COLOR={common:"#a3adc2",uncommon:"#3ef08f",rare:"#4b8bff",epic:"#b04dff",legendary:"#ffc53d",mythic:"#ff3d8a",unique:"#ffffff"};
+// id, имя, тир, цена, цвета, слои
+const AURAS=[
+  ["spark","Spark","common",10,["#ffe08a","#ff9f1c"],["orbit"]],
+  ["mist","Mist","common",14,["#e2e8f3","#8a9bb5"],["ring"]],
+  ["dust","Dust","common",19,["#e3c28f","#8a6d3b"],["orbit"]],
+  ["ember","Ember","common",25,["#ffb38a","#e2531c"],["flame"]],
+  ["echo","Echo","common",32,["#a6e4ff","#0ea5e9"],["ring"]],
+  ["breeze","Breeze","uncommon",45,["#b7f7c9","#22c55e"],["ring","orbit"]],
+  ["dew","Dew","uncommon",60,["#c9f7ff","#06b6d4"],["orbit","ring"]],
+  ["pulse","Pulse","uncommon",78,["#f6c4ff","#d946ef"],["ring","pulsering"]],
+  ["dusk","Dusk","uncommon",100,["#ffb070","#7c3aed"],["spikes"]],
+  ["shimmer","Shimmer","uncommon",130,["#fff5a8","#facc15"],["orbit","ring"]],
+  ["tide","Tide","uncommon",165,["#8ec5ff","#1d4ed8"],["vortex"]],
+  ["neon","Neon","rare",210,["#22e6ff","#ff3dcb"],["ring","orbit","pulsering"]],
+  ["cybercore","Cyber Core","rare",280,["#3ef08f","#22e6ff"],["spikes","ring","orbit"]],
+  ["blaze","Blaze","rare",360,["#ffd166","#ff3d00"],["flame","orbit"]],
+  ["frost","Frost","rare",470,["#f0f9ff","#38bdf8"],["spikes","orbit","ring"]],
+  ["toxin","Toxin","rare",600,["#d9f99d","#65a30d"],["vortex","orbit"]],
+  ["storm","Storm","rare",760,["#d6ccff","#6366f1"],["lightning","ring"]],
+  ["phantom","Phantom","epic",1000,["#f1e4ff","#7e22ce"],["vortex","wings","orbit"]],
+  ["nova","Nova","epic",1400,["#fff6d8","#ffb020","#ff3dcb"],["spikes","ring","orbit","pulsering"]],
+  ["sakura","Sakura","epic",1900,["#ffd6ec","#ec4899"],["petals","ring","pulsering"]],
+  ["magma","Magma","epic",2600,["#fde047","#dc2626","#450a0a"],["flame","spikes","orbit"]],
+  ["prism","Prism","epic",3400,["#ff3dcb","#ffd166","#22e6ff","#3ef08f"],["ring","spikes","orbit","rainbow"]],
+  ["eclipse","Eclipse","legendary",5000,["#ffe38a","#ffc53d","#1a1000"],["halo","ring","spikes","corona"]],
+  ["quasar","Quasar","legendary",7500,["#c9f7ff","#6366f1","#ff3dcb"],["vortex","ring","orbit","halo"]],
+  ["phoenix","Phoenix","legendary",11000,["#ffe08a","#ff5a00","#b91c1c"],["wings","flame","orbit","halo"]],
+  ["abyss","Abyss","legendary",16000,["#b69cff","#3b1a8f","#22e6ff"],["vortex","lightning","halo","orbit"]],
+  ["singularity","Singularity","mythic",25000,["#ffffff","#9d5cff","#05020f"],["vortex","ring","spikes","orbit","halo","corona"]],
+  ["chronos","Chronos","mythic",45000,["#fff3c4","#ffc53d","#22e6ff"],["clock","ring","orbit","halo","corona"]],
+  ["celestial","Celestial","mythic",80000,["#ffffff","#fff1c1","#a5f3fc"],["wings","halo","spikes","orbit","corona","pulsering"]],
+  ["fortune","Fortune","unique",250000,["#ffc53d","#3ef08f","#ff3dcb","#22e6ff"],["wings","halo","ring","spikes","orbit","corona","rainbow"]]
+].map(([id,name,tier,price,c,s])=>({id,name,tier,price,c,s}));
+const BY_ID=Object.fromEntries(AURAS.map(a=>[a.id,a]));
+
+// ================= aura art (SVG) =================
+function seeded(str){let h=2166136261;for(const ch of str)h=Math.imul(h^ch.charCodeAt(0),16777619);return()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function buildDefs(){
+  let d=`<radialGradient id="dialCore" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#2a1f7a"/><stop offset="1" stop-color="#0a0822"/></radialGradient>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>
+  <linearGradient id="bodyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1640"/><stop offset="1" stop-color="#05040f"/></linearGradient>
+  <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff3dcb"/><stop offset=".25" stop-color="#ffc53d"/><stop offset=".5" stop-color="#3ef08f"/><stop offset=".75" stop-color="#22e6ff"/><stop offset="1" stop-color="#8b5cff"/></linearGradient>`;
+  for(const a of AURAS){
+    const [c1,c2,c3]=a.c;
+    d+=`<radialGradient id="g-${a.id}"><stop offset="0" stop-color="${c1}" stop-opacity=".95"/><stop offset=".45" stop-color="${c2}" stop-opacity=".55"/><stop offset="1" stop-color="${c3||c2}" stop-opacity="0"/></radialGradient>
+    <linearGradient id="l-${a.id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${c3||c2}"/><stop offset=".6" stop-color="${c2}"/><stop offset="1" stop-color="${c1}"/></linearGradient>`;
+  }
+  $("#defs").innerHTML=d;
+}
+function auraSVG(id){
+  const a=BY_ID[id]; const [c1,c2,c3]=a.c; const r=seeded(id); const t=TIER_IDX[a.tier];
+  const L=a.s, has=k=>L.includes(k); const stroke=has("rainbow")?"url(#rainbow)":c2;
+  let back="", front="";
+  back+=`<circle cx="50" cy="52" r="${34+t*2.5}" fill="url(#g-${a.id})" class="pulse"/>`;
+  if(has("corona")){let p="";for(let i=0;i<24;i++){const an=i/24*Math.PI*2,l=38+(i%2?4:10)+r()*4;p+=`M${50+Math.cos(an)*30} ${52+Math.sin(an)*30}L${(50+Math.cos(an)*l).toFixed(1)} ${(52+Math.sin(an)*l).toFixed(1)}`}back+=`<path class="spinr" d="${p}" stroke="${c1}" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>`}
+  if(has("spikes")){let p="";const n=8+t*2;for(let i=0;i<n*2;i++){const an=i/(n*2)*Math.PI*2-Math.PI/2,rr=i%2?20:34+t*1.5;p+=(i?"L":"M")+(50+Math.cos(an)*rr).toFixed(1)+" "+(52+Math.sin(an)*rr).toFixed(1)}back+=`<path class="spin" d="${p}Z" fill="${c2}" opacity=".45"/>`}
+  if(has("wings")){back+=`<g class="bob" opacity=".9"><path d="M44 50 C30 30 10 28 4 40 C14 40 12 50 22 52 C12 56 16 64 26 62 C20 70 32 72 42 60Z" fill="url(#l-${a.id})" stroke="${c1}" stroke-width="1"/><path d="M56 50 C70 30 90 28 96 40 C86 40 88 50 78 52 C88 56 84 64 74 62 C80 70 68 72 58 60Z" fill="url(#l-${a.id})" stroke="${c1}" stroke-width="1"/></g>`}
+  if(has("vortex")){let p="";for(let k=0;k<3;k++){let s="";for(let i=0;i<=40;i++){const an=i/40*Math.PI*3+k*2.1,rr=6+i*.8;s+=(i?"L":"M")+(50+Math.cos(an)*rr).toFixed(1)+" "+(52+Math.sin(an)*rr*.9).toFixed(1)}p+=`<path d="${s}" fill="none" stroke="${k?c2:c1}" stroke-width="${2.2-k*.5}" stroke-linecap="round" opacity=".75"/>`}back+=`<g class="spin">${p}</g>`}
+  if(has("flame")){let p="";for(let i=0;i<9;i++){const x=22+i*7,h=26+r()*18+(i>2&&i<6?10:0);p+=`<path d="M${x-6} 86 Q${x-8} ${86-h*.5} ${x} ${86-h} Q${x+8} ${86-h*.5} ${x+6} 86Z" fill="url(#l-${a.id})" opacity=".85"/>`}back+=`<g class="flick" style="transform-origin:50px 86px">${p}</g>`}
+  if(has("petals")){let p="";for(let i=0;i<8;i++){const an=i/8*360;p+=`<ellipse cx="50" cy="16" rx="4" ry="7" fill="${i%2?c1:c2}" transform="rotate(${an} 50 52)"/>`}back+=`<g class="spin">${p}</g>`}
+  if(has("clock")){let p=`<circle cx="50" cy="52" r="36" fill="none" stroke="${c2}" stroke-width="1.5" opacity=".8"/>`;for(let i=0;i<12;i++)p+=`<line x1="50" y1="17" x2="50" y2="${i%3?21:24}" stroke="${c1}" stroke-width="${i%3?1.2:2.2}" transform="rotate(${i*30} 50 52)"/>`;back+=p+`<g class="spin"><line x1="50" y1="52" x2="50" y2="22" stroke="${c3}" stroke-width="1.6"/></g>`}
+  // силуэт игрока
+  const body=`<g class="bob"><circle cx="50" cy="38" r="8.5" fill="url(#bodyG)" stroke="${c1}" stroke-opacity=".7" stroke-width="1.2"/><path d="M34 80 C34 60 40 50 50 50 C60 50 66 60 66 80 Z" fill="url(#bodyG)" stroke="${c1}" stroke-opacity=".7" stroke-width="1.2"/></g>`;
+  if(has("ring")) front+=`<ellipse class="spin" cx="50" cy="60" rx="30" ry="9" fill="none" stroke="${stroke}" stroke-width="2.4" stroke-dasharray="${t>2?"":"14 6"}" opacity=".95"/>`;
+  if(has("pulsering")) front+=`<circle class="pulse" cx="50" cy="52" r="40" fill="none" stroke="${c1}" stroke-width="1.2" opacity=".6"/>`;
+  if(has("orbit")){let p="";const n=4+t*2;for(let i=0;i<n;i++){const an=i/n*Math.PI*2,rr=24+r()*14;p+=`<circle cx="${(50+Math.cos(an)*rr).toFixed(1)}" cy="${(52+Math.sin(an)*rr).toFixed(1)}" r="${(1.2+r()*1.8+t*.15).toFixed(1)}" fill="${i%2?c1:c2}"/>`}front+=`<g class="spinr" filter="url(#glow)">${p}</g>`}
+  if(has("lightning")){front+=`<g class="flick" filter="url(#glow)"><path d="M26 22 L34 36 L28 38 L38 54" fill="none" stroke="${c1}" stroke-width="2" stroke-linejoin="round"/><path d="M76 24 L68 40 L74 42 L62 58" fill="none" stroke="${c1}" stroke-width="2" stroke-linejoin="round"/></g>`}
+  if(has("halo")) front+=`<ellipse class="pulse" cx="50" cy="25" rx="13" ry="3.8" fill="none" stroke="${has("rainbow")?"url(#rainbow)":c1}" stroke-width="2.6" filter="url(#glow)"/>`;
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${back}${body}${front}</svg>`;
+}
+const ART_CACHE={};
+const art=(id,cls="art")=>`<span class="${cls}">${ART_CACHE[id]||(ART_CACHE[id]=auraSVG(id))}</span>`;
+
+// rift art: портал
+function riftSVG(rf){
+  const g="rg"+Math.floor(rnd()*1e9);
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="${g}"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="${rf.c1}"/><stop offset=".7" stop-color="${rf.c2}" stop-opacity=".6"/><stop offset="1" stop-color="${rf.c2}" stop-opacity="0"/></radialGradient></defs>
+    <ellipse cx="50" cy="52" rx="34" ry="42" fill="url(#${g})"/>
+    <g class="spin" style="transform-origin:50px 52px"><ellipse cx="50" cy="52" rx="26" ry="36" fill="none" stroke="${rf.c1}" stroke-width="2.5" stroke-dasharray="20 8"/></g>
+    <g class="spinr" style="transform-origin:50px 52px"><ellipse cx="50" cy="52" rx="18" ry="27" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="6 6" opacity=".8"/></g>
+    <path d="M50 20 L54 44 L50 52 L46 44Z M50 84 L46 60 L50 52 L54 60Z" fill="#fff" opacity=".85"/></svg>`;
+}
+
+// ================= rifts =================
+// id, имя, тег, цена, цвета
+const RIFTS=[
+  ["spark","Искровой Разлом","Для старта",52,"#ffd166","#ff7a45","И"],
+  ["cyber","Кибер-Ядро","Неоновые ауры",228,"#22e6ff","#3ef08f","К"],
+  ["neon","Неоновый Разлом","777 огней",777,"#ff3dcb","#22e6ff","Н"],
+  ["storm","Штормовой Разлом","1337 молний",1337,"#8b8bff","#c4b5fd","Ш"],
+  ["abyss","Разлом Бездны","Смотрит в ответ",4200,"#8b5cff","#1e1b4b","Б"],
+  ["star","Звёздный Разлом","It's over 9000",9000,"#ffc53d","#ff3dcb","З"],
+  ["chrono","Хроно-Разлом","Время ломается",22800,"#22e6ff","#ffc53d","Х"],
+  ["void","Сингулярность","Только мифы",42000,"#ffffff","#8b5cff","С"]
+].map(([id,name,tag,price,c1,c2,short])=>({id,name,tag,price,c1,c2,short}));
+const RIFT_BY=Object.fromEntries(RIFTS.map(r=>[r.id,r]));
+// Пул разлома собирается автоматически: ауры от 1/4 до 3 цен разлома + 2 джекпота (до 40 цен).
+// Баланс «60/40»: 40% шансов на ауры дешевле разлома, 0.6% на джекпоты, остальное — на ауры дороже.
+const RTP=0.97, LOSE_SHARE=0.40, JACKPOT_SHARE=0.006;
+for(const rf of RIFTS){
+  const pool=AURAS.filter(a=>a.tier!=="unique");
+  const main=pool.filter(a=>a.price>=rf.price*.25&&a.price<rf.price*3);
+  const jack=pool.filter(a=>a.price>=rf.price*3&&a.price<=rf.price*40).slice(0,2);
+  rf.items=[...main,...jack].map(a=>a.id);
+  const ps=rf.items.map(id=>BY_ID[id].price);
+  const groups=[{idx:[],mass:LOSE_SHARE,fixed:false},{idx:[],mass:1-LOSE_SHARE-JACKPOT_SHARE,fixed:false},{idx:[],mass:JACKPOT_SHARE,fixed:true}];
+  ps.forEach((p,i)=>groups[p<rf.price?0:p<3*rf.price?1:2].idx.push(i));
+  const live=groups.filter(g=>g.idx.length), tot=live.reduce((s,g)=>s+g.mass,0);
+  const weights=t=>{const w=ps.map(()=>0);for(const g of live){const e=g.fixed?1:t,raw=g.idx.map(i=>Math.pow(ps[i],-e)),sum=raw.reduce((x,y)=>x+y,0);g.idx.forEach((i,k)=>w[i]=g.mass/tot*raw[k]/sum)}return w};
+  const ev=t=>weights(t).reduce((s,w,i)=>s+w*ps[i],0);
+  let lo=-6,hi=12;for(let i=0;i<60;i++){const m=(lo+hi)/2;if(ev(m)>RTP*rf.price)lo=m;else hi=m}
+  const w=weights((lo+hi)/2);
+  rf.drops=rf.items.map((id,i)=>({id,w:w[i]}));
+  rf.profit=rf.drops.reduce((s,d)=>s+(BY_ID[d.id].price>=rf.price?d.w:0),0);
+  const byT={};rf.drops.forEach(d=>{const k=BY_ID[d.id].tier;byT[k]=(byT[k]||0)+d.w});
+  rf.tiers=TIERS.filter(t=>byT[t.k]).map(t=>({k:t.k,pct:byT[t.k]*100}));
+}
+const MIN_RIFT=RIFTS[0].price;
+
+// ================= state & save =================
+const START_BALANCE=1000, KEY="aura-rift-v1";
+function fresh(){return {balance:START_BALANCE,inv:[],uid:1,collected:[],lastWheel:0,luckUntil:0,tickets:{},promos:[],savedAt:0,
+  stats:{opened:0,upWin:0,upLose:0,contracts:0,best:0,battles:0,battlesWon:0,crashBest:0,afk:0}}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s&&Array.isArray(s.inv)?s:null}catch(e){return null}}
+let S=load()||fresh();
+S.inv=S.inv.filter(x=>BY_ID[x.id]); S.tickets=S.tickets||{}; S.stats=Object.assign(fresh().stats,S.stats||{});
+let cloud=null, cloudT=null;
+function save(){
+  S.savedAt=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(cloud){clearTimeout(cloudT);cloudT=setTimeout(pushCloud,1500)}
+}
+function pushCloud(){if(!cloud)return;cloud.set({json:JSON.stringify(S),savedAt:S.savedAt}).then(()=>setSaveBadge("ok")).catch(()=>setSaveBadge("off"))}
+function setSaveBadge(st){const b=$("#saveBadge");b.dataset.st=st;b.title=st==="ok"?"Прогресс сохранён в облаке":"Прогресс хранится только в этом браузере"}
+(async()=>{
+  try{
+    const [db,user]=await Promise.all([window.claude?.use?.("db"),window.claude?.use?.("user")]);
+    const uid=db&&user?await user.id():null;
+    if(!uid){setSaveBadge("off");return}
+    const ref=db.doc("data/users/"+uid+"/save");
+    const snap=await ref.get(); const d=snap.exists?snap.data():null;
+    if(d&&d.json&&(d.savedAt||0)>(S.savedAt||0)){
+      const r=JSON.parse(d.json);
+      if(r&&Array.isArray(r.inv)){S=r;S.inv=S.inv.filter(x=>BY_ID[x.id]);S.tickets=S.tickets||{};S.stats=Object.assign(fresh().stats,S.stats||{});
+        try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderAll();toast("Прогресс загружен из облака")}
+    }
+    cloud=ref; setSaveBadge("ok");
+    if(!d||(S.savedAt||0)>(d.savedAt||0)) pushCloud();
+  }catch(e){setSaveBadge("off")}
+})();
+function makeInst(id,src){return {uid:S.uid++,id,value:BY_ID[id].price,src:src||null}}
+function collect(id){if(!S.collected.includes(id))S.collected.push(id)}
+function invValue(){return S.inv.reduce((s,x)=>s+x.value,0)}
+
+// ================= sound =================
+let AC=null, soundOn=true;
+try{soundOn=localStorage.getItem("aura-rift-sound")!=="off"}catch(e){}
+function ac(){if(!soundOn)return null;try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();return AC}catch(e){return null}}
+function tone(freq,dur,{type="triangle",vol=.12,at=0,slide=0}={}){
+  const a=ac(); if(!a) return;
+  const t=a.currentTime+at, o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.008); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.02);
+}
+let lastTick=0, noiseBuf=null;
+function tick(){
+  const n=performance.now(); if(n-lastTick<30) return; lastTick=n;
+  const a=ac(); if(!a) return;
+  if(!noiseBuf){noiseBuf=a.createBuffer(1,Math.floor(a.sampleRate*.04),a.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3)}
+  const t=a.currentTime;
+  const src=a.createBufferSource(); src.buffer=noiseBuf; src.playbackRate.value=.9+Math.random()*.25;
+  const bp=a.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2600+Math.random()*900; bp.Q.value=1.4;
+  const g=a.createGain(); g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+.03);
+  src.connect(bp).connect(g).connect(a.destination); src.start(t); src.stop(t+.04);
+  const o=a.createOscillator(), og=a.createGain(); o.type="sine"; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(90,t+.03);
+  og.gain.setValueAtTime(.16,t); og.gain.exponentialRampToValueAtTime(.001,t+.035); o.connect(og).connect(a.destination); o.start(t); o.stop(t+.04);
+}
+const NOTES=[[523,659],[523,659,784],[523,659,784,1047],[523,659,784,1047,1319],[392,523,659,784,1047,1319],[392,523,659,784,1047,1319,1568],[262,392,523,659,784,1047,1319,1568,2093]];
+function winSound(tier){const i=TIER_IDX[tier]??0;NOTES[i].forEach((f,k)=>{tone(f,.28,{at:k*.08,vol:.1});if(i>=4)tone(f*2,.2,{at:k*.08+.04,type:"sine",vol:.04})});if(i>=3)tone(1568,.9,{at:.6,type:"sine",vol:.05,slide:2093})}
+function loseSound(){tone(330,.45,{type:"sawtooth",vol:.06,slide:110})}
+function confetti(tier){
+  const i=TIER_IDX[tier]??0; if(i<3||matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv=$("#confetti"),ctx=cv.getContext("2d"),W=cv.width=innerWidth,H=cv.height=innerHeight;
+  const cols=i>=5?["#ffffff","#ff3dcb","#22e6ff","#ffc53d","#3ef08f"]:i===4?["#ffc53d","#fff1b8","#ff9a1f"]:["#b04dff","#22e6ff","#ff3dcb"];
+  const ps=Array.from({length:80+i*30},()=>({x:W/2,y:H*.45,vx:(Math.random()-.5)*16,vy:-Math.random()*16-4,s:4+Math.random()*6,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.floor(Math.random()*cols.length)]}));
+  let t=0;(function f(){ctx.clearRect(0,0,W,H);t++;for(const p of ps){p.vy+=.45;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);ctx.restore()}if(t<110)requestAnimationFrame(f);else ctx.clearRect(0,0,W,H)})();
+}
+function celebrate(tier){winSound(tier);confetti(tier)}
+$("#sndBtn").addEventListener("click",()=>{soundOn=!soundOn;try{localStorage.setItem("aura-rift-sound",soundOn?"on":"off")}catch(e){}renderSnd();if(soundOn)tone(880,.12)});
+function renderSnd(){const b=$("#sndBtn");b.classList.toggle("off",!soundOn);b.title=soundOn?"Выключить звук":"Включить звук";b.setAttribute("aria-label",b.title)}
+
+// ================= UI helpers =================
+let toastT;
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+function modal(html,tier,wide){const m=$("#modalCard");m.classList.toggle("wide",!!wide);m.classList.add("anim");m.style.setProperty("--tc",tier?`var(--t-${tier})`:"var(--pink)");m.innerHTML=html;$("#modal").hidden=false}
+function closeModal(){$("#modal").hidden=true}
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+function card(a,{value,note="",cls="",extra=""}={}){
+  return `<div class="item t-${a.tier} ${cls}" ${extra}>${art(a.id)}<div class="tn">${TIERS[TIER_IDX[a.tier]].name}</div><div class="nm">${esc(a.name)}</div>
+    <div class="meta"><span class="ch">${note}</span><span class="p">${coin(value??a.price)}</span></div></div>`;
+}
+const instCard=(x,o={})=>card(BY_ID[x.id],{value:x.value,...o});
+function mini(id){const a=BY_ID[id];return `<div class="mini t-${a.tier}">${art(a.id)}<div class="mi"><b>${esc(a.name)}</b><span>${coin(a.price)}</span></div></div>`}
+function prizeActions(list,total){
+  return `<div class="modal-actions"><button class="btn btn-ghost" id="mSell" type="button">Продать${list.length>1?" всё":""} за ${coin(total)}</button><button class="btn btn-main" id="mKeep" type="button">Забрать</button></div>`;
+}
+function bindPrize(list,total){
+  $("#mSell").onclick=()=>{list.forEach(x=>sell(x.uid,true));toast(`Продано за ${fmt(total)}`);closeModal()};
+  $("#mKeep").onclick=closeModal;
+}
+const bestTier=list=>list.map(x=>BY_ID[x.id].tier).sort((a,b)=>TIER_IDX[b]-TIER_IDX[a])[0];
+
+// ================= live feed =================
+const BOTS=["xX_Shadow_Xx","NeoKid","auraFarmer","Lexa228","zxc_ghost","Mira","pro_gamer67","kittyUwU","Dimon","VoidWalker","sanya_2009","Nikita_Pro","ne_vezet","Grisha","hellcat","NoobMaster"];
+const BOT_COL=["#ff3dcb","#22e6ff","#ffc53d","#3ef08f","#8b5cff","#ff4d6d","#ff9a1f","#4b8bff"];
+const avatar=(name,i)=>`<span class="ava" style="background:${name==="Ты"?"var(--cyan)":BOT_COL[(i??name.length)%BOT_COL.length]}">${esc(name[0].toUpperCase())}</span>`;
+const LIVE=[];
+function botDrop(){const cw=[7,6,4,2.5,1.4,.8,.4,.2];let r=rnd()*cw.reduce((a,b)=>a+b,0),rf=RIFTS[0];for(let i=0;i<RIFTS.length;i++){r-=cw[i];if(r<0){rf=RIFTS[i];break}}return {id:pickWeighted(rf.drops).id,who:pick(BOTS)}}
+function pushLive(d){LIVE.unshift(d);LIVE.length=Math.min(LIVE.length,20);renderFeed(true)}
+function addFeed(inst){pushLive({id:inst.id,who:"Ты",mine:true});collect(inst.id);if(inst.value>S.stats.best)S.stats.best=inst.value}
+for(let i=0;i<12;i++) LIVE.push(botDrop());
+(function loop(){setTimeout(()=>{if(!document.hidden)pushLive(botDrop());loop()},2200+rnd()*4000)})();
+function renderFeed(fresh){
+  $("#feed").innerHTML=`<div class="feed-label"><i></i>Лайв</div>`+LIVE.map((d,i)=>{const a=BY_ID[d.id];
+    return `<div class="fi t-${a.tier}${d.mine?" mine":""}${fresh&&i===0?" new":""}" title="${esc(d.who+": "+a.name)}">${art(a.id)}<span class="fw">${esc(d.who)}</span><span class="fp num">${fmt(a.price)}</span></div>`}).join("");
+}
+
+// ================= AFK farm =================
+const AFK_EVERY=10, AFK_GAIN=5; let afkLeft=AFK_EVERY;
+setInterval(()=>{
+  if(document.hidden) return;
+  afkLeft--;
+  if(afkLeft<=0){afkLeft=AFK_EVERY;S.balance+=AFK_GAIN;S.stats.afk+=AFK_GAIN;save();renderTop();
+    const r=$("#balance").getBoundingClientRect(),p=document.createElement("div");p.className="afk-pop";p.textContent="+"+AFK_GAIN;p.style.left=(r.left+10)+"px";p.style.top=(r.bottom+2)+"px";document.body.appendChild(p);setTimeout(()=>p.remove(),1400)}
+  $("#afkRing").style.setProperty("--p",(AFK_EVERY-afkLeft)/AFK_EVERY*100);
+},1000);
+$("#afkTxt").textContent=`+${AFK_GAIN} / ${AFK_EVERY} с`;
+
+// ================= header =================
+function luckActive(){return (S.luckUntil||0)>Date.now()}
+function renderTop(){
+  $("#balance").textContent=fmt(S.balance);
+  $("#invCount").textContent=S.inv.length;
+  const lc=$("#luckChip"); lc.hidden=!luckActive(); if(luckActive()) $("#luckTxt").textContent=Math.ceil((S.luckUntil-Date.now())/60000)+" мин";
+  renderWheelBtn();
+}
+setInterval(renderTop,30000);
+
+// ================= tabs =================
+let tab="rifts", busy=false;
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+function setTab(t){
+  if(busy){toast("Дождись окончания");return}
+  tab=t;
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  document.querySelectorAll(".view").forEach(v=>v.hidden=v.id!=="view-"+t);
+  renderView();
+}
+
+// ================= rifts =================
+let current=null, openCount=1;
+function renderRifts(){
+  $("#rifts").innerHTML=RIFTS.map(rf=>`<button class="rift" type="button" data-rift="${rf.id}" style="--c1:${rf.c1};--c2:${rf.c2}">
+    ${S.tickets[rf.id]?`<span class="tkt">🎟 ×${S.tickets[rf.id]}</span>`:""}
+    <span class="rift-art anim">${riftSVG(rf)}</span><div class="rift-name">${esc(rf.name)}</div><div class="rift-tag">${esc(rf.tag)}</div>
+    <span class="price-btn">${coin(rf.price)}</span></button>`).join("");
+}
+$("#rifts").addEventListener("click",e=>{const b=e.target.closest("[data-rift]");if(b)showRift(b.dataset.rift)});
+$("#backBtn").addEventListener("click",()=>{if(!busy){current=null;$("#riftOpen").hidden=true;$("#riftList").hidden=false;renderRifts()}});
+function showRift(id){
+  current=RIFT_BY[id];
+  $("#riftList").hidden=true;$("#riftOpen").hidden=false;
+  $("#openArt").innerHTML=`<span class="rift-art anim">${riftSVG(current)}</span>`;
+  $("#openName").textContent=current.name;
+  $("#openSub").textContent=`${current.tag} · ${current.items.length} аур · окупается в ${Math.round(current.profit*100)}% открытий`;
+  $("#odds").innerHTML=current.tiers.map(x=>`<span class="odd t-${x.k}"><b></b>${TIERS[TIER_IDX[x.k]].name} ${x.pct<1?x.pct.toFixed(2):x.pct.toFixed(1)}%</span>`).join("");
+  $("#riftItems").innerHTML=current.drops.slice().sort((a,b)=>BY_ID[b.id].price-BY_ID[a.id].price).map(d=>card(BY_ID[d.id],{note:(d.w*100<1?(d.w*100).toFixed(2):(d.w*100).toFixed(1))+"%"})).join("");
+  renderRoulettes(); prefill(); updateOpenBtn(); scrollTo({top:0});
+}
+$("#counts").innerHTML=[1,2,3,4,5].map(n=>`<button class="cnt-btn" type="button" data-n="${n}">x${n}</button>`).join("");
+$("#counts").addEventListener("click",e=>{const b=e.target.closest("[data-n]");if(!b||busy)return;openCount=+b.dataset.n;renderRoulettes();prefill();updateOpenBtn()});
+function renderRoulettes(){
+  const box=$("#roulettes"); box.classList.toggle("multi",openCount>1);
+  box.innerHTML=Array.from({length:openCount},()=>`<div class="roulette"><div class="marker"></div><div class="strip"></div></div>`).join("");
+  document.querySelectorAll("#counts .cnt-btn").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.n===openCount));
+}
+const CARD_W=st=>(st.querySelector(".item")?.getBoundingClientRect().width||124)+8;
+function fillStrip(st,ids,reset=true){st.style.transition="none";st.innerHTML=ids.map(id=>card(BY_ID[id])).join("");st.style.transform=`translateX(${reset?0:-(CARD_W(st)*2)}px)`}
+function prefill(){document.querySelectorAll("#roulettes .strip").forEach(st=>fillStrip(st,Array.from({length:12},()=>pickWeighted(current.drops).id),false))}
+function updateOpenBtn(){
+  if(!current) return;
+  const cost=current.price*openCount, b=$("#openBtn");
+  b.disabled=busy||S.balance<cost;
+  b.innerHTML=S.balance>=cost?`Открыть ${openCount>1?openCount+" шт. ":""}за ${coin(cost)}`:`Не хватает ${coin(cost-S.balance)}`;
+  const t=S.tickets[current.id]||0, tb=$("#ticketBtn"); tb.hidden=!t; tb.disabled=busy; tb.textContent=`🎟 Открыть по билету (${t})`;
+}
+function rollRift(rf){
+  let id=pickWeighted(rf.drops).id;
+  if(luckActive()&&rnd()<.15){const id2=pickWeighted(rf.drops).id;if(BY_ID[id2].price>BY_ID[id].price)id=id2}
+  return id;
+}
+const stripPos=(st,axis="x")=>{const m=getComputedStyle(st).transform;if(!m||m==="none")return 0;const d=new DOMMatrixReadOnly(m);return axis==="x"?d.m41:d.m42};
+$("#openBtn").addEventListener("click",()=>openRift(false));
+$("#ticketBtn").addEventListener("click",()=>openRift(true));
+async function openRift(byTicket){
+  if(busy||!current) return;
+  const n=byTicket?1:openCount, cost=byTicket?0:current.price*n;
+  if(byTicket){if(!(S.tickets[current.id]>0))return;S.tickets[current.id]--;if(openCount!==1){openCount=1;renderRoulettes()}}
+  else if(S.balance<cost) return;
+  ac();
+  S.balance-=cost; S.stats.opened+=n;
+  const fast=$("#fastChk").checked, WIN_AT=fast?30:110;
+  const expensive=current.items.filter(id=>BY_ID[id].price>=current.price*5);
+  const strips=[...document.querySelectorAll("#roulettes .strip")].slice(0,n);
+  const runs=strips.map((st,i)=>{
+    const inst=makeInst(rollRift(current),current.id);
+    const ids=Array.from({length:WIN_AT+6},(_,j)=>j===WIN_AT?inst.id:pickWeighted(current.drops).id);
+    let tease=false;
+    if(!fast&&expensive.length&&rnd()<.35&&!expensive.includes(inst.id)){ids[WIN_AT+1]=pick(expensive);tease=true}
+    return {st,inst,ids,tease,dur:fast?1:9+i*.35};
+  });
+  runs.forEach(r=>S.inv.unshift(r.inst)); save(); // результат сохраняется сразу
+  $("#balance").textContent=fmt(S.balance);
+  busy=true; updateOpenBtn();
+  runs.forEach(r=>{
+    fillStrip(r.st,r.ids);
+    const w=CARD_W(r.st), box=r.st.parentNode.getBoundingClientRect().width, cw=w-8;
+    const inCard=r.tease?cw-6-rnd()*Math.min(14,cw*.12):12+rnd()*(cw-24);
+    Object.assign(r,{w,box,x:-(WIN_AT*w+inCard)+box/2,center:-(WIN_AT*w+cw/2)+box/2});
+    r.st.getBoundingClientRect();
+    r.st.style.transition=`transform ${r.dur}s cubic-bezier(.1,.62,.08,1)`; r.st.style.transform=`translateX(${r.x}px)`;
+  });
+  const lead=runs[0]; let last=-1, on=true;
+  (function follow(){if(!on)return;const idx=Math.floor((lead.box/2-stripPos(lead.st))/lead.w);if(idx!==last){if(last>=0)tick();last=idx}requestAnimationFrame(follow)})();
+  await wait(Math.max(...runs.map(r=>r.dur))*1000+120); on=false;
+  runs.forEach(r=>{r.st.style.transition="transform .45s cubic-bezier(.3,0,.2,1)";r.st.style.transform=`translateX(${r.center}px)`;r.st.children[WIN_AT].classList.add("won")});
+  await wait(fast?350:750);
+  busy=false; runs.forEach(r=>addFeed(r.inst)); save(); renderAll();
+  const list=runs.map(r=>r.inst), total=list.reduce((s,x)=>s+x.value,0), bt=bestTier(list);
+  if(list.length===1){const a=BY_ID[list[0].id];
+    modal(`<div class="modal-title">${TIER_IDX[a.tier]>=4?"Невероятно!":"Новая аура"}</div>${instCard(list[0])}${prizeActions(list,total)}`,a.tier);
+  } else {
+    modal(`<div class="modal-title">Твой дроп</div><div class="sub" style="margin:4px 0 0">Потрачено ${fmt(cost)} · выпало на <b class="${total>=cost?"pos":"neg"}">${fmt(total)}</b></div>
+      <div class="prize-grid">${list.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x)).join("")}</div>${prizeActions(list,total)}`,bt,true);
+  }
+  celebrate(bt); bindPrize(list,total);
+}
+
+// ================= inventory =================
+function sell(uid,quiet){
+  const i=S.inv.findIndex(x=>x.uid===uid); if(i<0) return;
+  const [x]=S.inv.splice(i,1); S.balance+=x.value; if(upSrc===uid) upSrc=null; ctSel.delete(uid);
+  save(); renderAll(); if(!quiet) toast(`Продано за ${fmt(x.value)}`);
+}
+let sellArmed=false;
+function renderInventory(){
+  const v=invValue();
+  $("#invSub").innerHTML=S.inv.length?`${S.inv.length} аур на ${coin(v)}`:"Пусто";
+  const sb=$("#sellAllBtn"); sb.hidden=!S.inv.length; sb.innerHTML=sellArmed?`Точно? Продать на ${coin(v)}`:"Продать всё";
+  $("#invGrid").innerHTML=S.inv.length?S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>`<div class="inv-item">${instCard(x)}<button class="sell" type="button" data-sell="${x.uid}">Продать ${coin(x.value)}</button></div>`).join("")
+    :`<div class="empty" style="grid-column:1/-1">Аур пока нет. Открой разлом.</div>`;
+  const st=S.stats;
+  $("#stats").innerHTML=[[fmt(st.opened),"разломов открыто"],[`${st.upWin} / ${st.upWin+st.upLose}`,"апгрейдов удачных"],[fmt(st.contracts),"контрактов"],[`${st.battlesWon} / ${st.battles}`,"битв выиграно"],[(st.crashBest||0).toFixed(2)+"×","лучший вывод в краше"],[fmt(st.best),"лучший дроп"],[fmt(st.afk),"намайнено AFK"]].map(([b,t])=>`<div class="stat"><b>${b}</b>${t}</div>`).join("");
+}
+$("#invGrid").addEventListener("click",e=>{const b=e.target.closest("[data-sell]");if(b)sell(+b.dataset.sell)});
+$("#sellAllBtn").addEventListener("click",()=>{
+  if(!sellArmed){sellArmed=true;renderInventory();setTimeout(()=>{sellArmed=false;if(tab==="inventory")renderInventory()},3500);return}
+  const v=invValue();S.balance+=v;S.inv=[];upSrc=null;ctSel.clear();sellArmed=false;save();renderAll();toast(`Продано всё за ${fmt(v)}`);
+});
+
+// ================= battles (1v1) =================
+let bSel=[], lobbies=[];
+const B_MAX=6;
+function rchip(rf,cls="",extra=""){return `<span class="rchip ${cls}" style="--c1:${rf.c1};--c2:${rf.c2}" title="${esc(rf.name)} · ${fmt(rf.price)}" ${extra}>${esc(rf.short)}</span>`}
+const bCost=list=>list.reduce((s,id)=>s+RIFT_BY[id].price,0);
+function newLobby(){
+  const maxI=Math.min(RIFTS.length-1,2+Math.floor(rnd()*5)), n=1+Math.floor(rnd()*4);
+  const rifts=Array.from({length:n},()=>RIFTS[Math.floor(rnd()*(maxI+1))].id);
+  return {id:Math.floor(rnd()*1e9),bot:pick(BOTS),rifts};
+}
+function refreshLobbies(){while(lobbies.length<5)lobbies.push(newLobby());if(tab==="battles"&&!busy)renderLobbies()}
+setInterval(()=>{if(lobbies.length&&rnd()<.5)lobbies.shift();refreshLobbies()},9000);
+function renderLobbies(){
+  $("#lobbies").innerHTML=lobbies.map((l,i)=>{const c=bCost(l.rifts);return `<div class="lobby">${avatar(l.bot,i)}<div class="who"><b>${esc(l.bot)}</b><div class="rchips">${l.rifts.map(id=>rchip(RIFT_BY[id])).join("")}</div></div>
+    <span class="cost">${coin(c)}</span><button class="btn btn-main btn-sm" type="button" data-join="${l.id}" ${S.balance<c||busy?"disabled":""}>Войти</button></div>`}).join("");
+}
+function renderBattles(){
+  refreshLobbies(); renderLobbies();
+  $("#bSelCnt").textContent=`${bSel.length} / ${B_MAX}`;
+  $("#bSel").innerHTML=bSel.length?bSel.map((id,i)=>rchip(RIFT_BY[id],"",`data-rm="${i}" role="button" tabindex="0"`)).join(""):`<span class="empty">Выбери разломы ниже</span>`;
+  $("#bPick").innerHTML=RIFTS.map(rf=>`<button type="button" data-add="${rf.id}" ${bSel.length>=B_MAX?"disabled":""}><span class="rift-art">${riftSVG(rf)}</span>${esc(rf.name.split(" ")[0])}<span class="p">${coin(rf.price)}</span></button>`).join("");
+  const c=bCost(bSel), b=$("#bCreate");
+  b.disabled=busy||!bSel.length||S.balance<c;
+  b.innerHTML=!bSel.length?"Создать заявку":S.balance<c?`Не хватает ${coin(c-S.balance)}`:`Создать за ${coin(c)}`;
+}
+$("#bPick").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(!b||bSel.length>=B_MAX)return;bSel.push(b.dataset.add);renderBattles()});
+$("#bSel").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;bSel.splice(+b.dataset.rm,1);renderBattles()});
+$("#lobbies").addEventListener("click",e=>{const b=e.target.closest("[data-join]");if(!b)return;const l=lobbies.find(x=>x.id==b.dataset.join);if(!l)return;lobbies=lobbies.filter(x=>x!==l);runBattle(l.rifts,l.bot)});
+$("#bCreate").addEventListener("click",async()=>{
+  const c=bCost(bSel); if(busy||!bSel.length||S.balance<c) return;
+  const b=$("#bCreate"); b.disabled=true; b.textContent="Ищем соперника…";
+  await wait(1500+rnd()*2000);
+  runBattle(bSel.slice(),pick(BOTS));
+});
+async function runBattle(rifts,botName){
+  const cost=bCost(rifts); if(busy||S.balance<cost) return;
+  ac();
+  const fast=$("#bFast").checked;
+  // все раунды считаются заранее; при ничьей — доп. раунды
+  const rounds=rifts.map(id=>({rf:id,a:rollRift(RIFT_BY[id]),b:pickWeighted(RIFT_BY[id].drops).id}));
+  const sum=(k)=>rounds.reduce((s,r)=>s+BY_ID[r[k]].price,0);
+  let guard=0;
+  while(sum("a")===sum("b")&&guard++<20){const id=pick(rifts);rounds.push({rf:id,a:rollRift(RIFT_BY[id]),b:pickWeighted(RIFT_BY[id].drops).id,extra:true})}
+  const A=sum("a"), B=sum("b"), won=A>B;
+  S.balance-=cost; S.stats.battles++;
+  const allIds=rounds.flatMap(r=>[r.a,r.b]);
+  let prize=[];
+  if(won){S.stats.battlesWon++;prize=allIds.map(id=>makeInst(id,null));prize.forEach(x=>S.inv.unshift(x))}
+  save(); renderTop();
+  busy=true; $("#bLobby").hidden=true; $("#bArena").hidden=false; scrollTo({top:0});
+  const side=(el,name,i)=>{el.className="side";el.innerHTML=`<div class="side-head">${avatar(name,i)}<b>${esc(name)}</b></div><div class="side-total num"><span class="coin"></span><span class="st">0</span></div><div class="vroul"><div class="vstrip"></div></div><div class="won-list"></div>`};
+  side($("#sideA"),"Ты"); side($("#sideB"),botName,3);
+  const runT=[0,0];
+  for(let r=0;r<rounds.length;r++){
+    const R=rounds[r], rf=RIFT_BY[R.rf];
+    $("#bRound").textContent=R.extra?"Доп. раунд":`Раунд ${r+1} / ${rifts.length}`;
+    $("#bExtra").hidden=!R.extra;
+    $("#bTrack").innerHTML=rounds.map((x,i)=>rchip(RIFT_BY[x.rf],i===r?"cur":i<r?"done":"")).join("");
+    const WIN=fast?14:34, dur=fast?.9:3.8;
+    const strips=[$("#sideA .vstrip"),$("#sideB .vstrip")], res=[R.a,R.b];
+    strips.forEach((st,p)=>{const seq=Array.from({length:WIN+4},(_,j)=>j===WIN?res[p]:pickWeighted(rf.drops).id);st.style.transition="none";st.style.transform="translateY(0)";st.innerHTML=seq.map(mini).join("")});
+    const H=strips[0].children[0].getBoundingClientRect().height+6, boxH=strips[0].parentNode.getBoundingClientRect().height;
+    strips.forEach(st=>{st.getBoundingClientRect();const inCard=10+rnd()*(H-26);st.style.transition=`transform ${dur}s cubic-bezier(.1,.62,.08,1)`;st.style.transform=`translateY(${-(WIN*H+inCard)+boxH/2}px)`});
+    let last=-1,on=true;(function follow(){if(!on)return;const idx=Math.floor((boxH/2-stripPos(strips[0],"y"))/H);if(idx!==last){if(last>=0)tick();last=idx}requestAnimationFrame(follow)})();
+    await wait(dur*1000+80); on=false;
+    strips.forEach(st=>{st.style.transition="transform .35s cubic-bezier(.3,0,.2,1)";st.style.transform=`translateY(${-(WIN*H+(H-6)/2)+boxH/2}px)`});
+    await wait(380);
+    [["#sideA",R.a],["#sideB",R.b]].forEach(([s,id],p)=>{runT[p]+=BY_ID[id].price;$(s+" .st").textContent=fmt(runT[p]);$(s+" .won-list").insertAdjacentHTML("afterbegin",mini(id))});
+    $("#sideA").classList.toggle("lead",runT[0]>runT[1]); $("#sideB").classList.toggle("lead",runT[1]>runT[0]);
+    const bt=BY_ID[[R.a,R.b].sort((x,y)=>BY_ID[y].price-BY_ID[x].price)[0]].tier; if(TIER_IDX[bt]>=3) winSound(bt);
+    await wait(fast?350:900);
+  }
+  $("#sideA").classList.add(won?"win":"lose"); $("#sideB").classList.add(won?"lose":"win");
+  busy=false; $("#bExtra").hidden=true;
+  if(won){prize.forEach(addFeed);save();renderAll()}
+  await wait(700);
+  const pot=A+B;
+  if(won){
+    const bt=bestTier(prize);
+    modal(`<div class="modal-title win">Победа!</div><div class="sub" style="margin:4px 0 0">Потрачено ${fmt(cost)} · пул ${fmt(pot)} · итог <b class="${pot>=cost?"pos":"neg"}">${pot>=cost?"+":"−"}${fmt(Math.abs(pot-cost))}</b></div>
+      <div class="prize-grid">${prize.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x)).join("")}</div>${prizeActions(prize,pot)}`,bt,true);
+    celebrate(bt); bindPrize(prize,pot);
+  } else {
+    loseSound();
+    modal(`<div class="modal-title lose">Победил ${esc(botName)}</div><div class="sub" style="margin:8px 0 16px">Его дроп ${fmt(B)}, твой ${fmt(A)}. Весь пул ушёл сопернику.</div>
+      <div class="modal-actions"><button class="btn btn-main" id="mKeep" type="button">Ещё битва</button></div>`);
+    $("#mKeep").onclick=closeModal;
+  }
+  const back=()=>{$("#bArena").hidden=true;$("#bLobby").hidden=false;bSel=[];renderBattles()};
+  const obs=new MutationObserver(()=>{if($("#modal").hidden){obs.disconnect();back()}});obs.observe($("#modal"),{attributes:true,attributeFilter:["hidden"]});
+}
+
+// ================= upgrade =================
+let upSrc=null, upDst=null, needleAngle=0, boost=0;
+const MAX_CHANCE=.8;
+(function ticks(){let s="";for(let i=0;i<40;i++)s+=`<line x1="115" y1="${i%5?11:8}" x2="115" y2="17" transform="rotate(${i*9} 115 115)" stroke="${i%5?"#4a4390":"#fff"}" stroke-width="${i%5?1.2:2}" stroke-linecap="round"/>`;$("#dialTicks").innerHTML=s})();
+const srcInst=()=>S.inv.find(x=>x.uid===upSrc);
+function maxBoost(){const s=srcInst();if(!s||!upDst)return 0;return Math.max(0,Math.min(S.balance,Math.floor(MAX_CHANCE*BY_ID[upDst].price-s.value)))}
+function chance(){const s=srcInst();if(!s||!upDst)return 0;return Math.min(MAX_CHANCE,(s.value+boost)/BY_ID[upDst].price)}
+function renderUpgrade(){
+  const s=srcInst(); if(!s) upSrc=null;
+  if(s&&upDst&&BY_ID[upDst].price<=s.value) upDst=null;
+  const mb=maxBoost(); if(boost>mb) boost=mb;
+  $("#boostRange").max=mb; $("#boostRange").value=boost; $("#boostRange").disabled=!mb||busy; $("#boostVal").textContent=fmt(boost);
+  $("#upSrc").innerHTML=s?instCard(s):"Выбери ауру из инвентаря";
+  $("#upDst").innerHTML=upDst?card(BY_ID[upDst]):"Выбери ауру, которую хочешь";
+  const c=chance();
+  $("#chance").textContent=(c*100).toFixed(c&&c<.1?2:1).replace(/\.0+$/,"")+"%";
+  $("#dialArc").setAttribute("stroke-dasharray",`${(c*552.92).toFixed(2)} 553`);
+  $("#upBtn").disabled=busy||!s||!upDst;
+  $("#upBtn").innerHTML=boost?`Апгрейд · буст ${coin(boost)}`:"Апгрейд";
+  $("#upInv").innerHTML=S.inv.length?S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x,{cls:"pick"+(x.uid===upSrc?" sel":""),extra:`data-src="${x.uid}"`})).join("")
+    :`<div class="empty" style="grid-column:1/-1">Инвентарь пуст — открой разлом.</div>`;
+  const q=$("#upSearch").value.trim().toLowerCase(), min=s?s.value:0;
+  const list=AURAS.filter(a=>a.tier!=="unique"&&a.price>min&&(!q||a.name.toLowerCase().includes(q)));
+  $("#upTargets").innerHTML=list.length?list.map(a=>card(a,{note:s?Math.round(Math.min(MAX_CHANCE,s.value/a.price)*100)+"%":"",cls:"pick"+(a.id===upDst?" sel":""),extra:`data-dst="${a.id}"`})).join("")
+    :`<div class="empty" style="grid-column:1/-1">Ничего не нашлось.</div>`;
+}
+$("#upInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-src]");if(b){upSrc=+b.dataset.src;boost=0;renderUpgrade()}});
+$("#upTargets").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-dst]");if(b){upDst=b.dataset.dst;boost=0;renderUpgrade()}});
+$("#upSearch").addEventListener("input",renderUpgrade);
+$("#boostRange").addEventListener("input",e=>{boost=+e.target.value;renderUpgrade()});
+let arrowStyle="arrow"; try{arrowStyle=localStorage.getItem("aura-rift-arrow")||"arrow"}catch(e){}
+function renderArrow(){$("#dial").dataset.arrow=arrowStyle;document.querySelectorAll("#arrowPick button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.arrow===arrowStyle))}
+$("#arrowPick").addEventListener("click",e=>{const b=e.target.closest("[data-arrow]");if(!b)return;arrowStyle=b.dataset.arrow;try{localStorage.setItem("aura-rift-arrow",arrowStyle)}catch(e){}renderArrow()});
+$("#upBtn").addEventListener("click",async()=>{
+  const s=srcInst(); if(!s||!upDst||busy) return;
+  if(boost>S.balance) return;
+  ac();
+  const c=chance(), r=rnd(), win=r<c, paid=boost;
+  S.balance-=paid; S.inv=S.inv.filter(x=>x.uid!==s.uid);
+  let inst=null; if(win){inst=makeInst(upDst,null);S.inv.unshift(inst);S.stats.upWin++}else S.stats.upLose++;
+  save(); renderTop();
+  busy=true; renderUpgrade(); $("#upSrc").innerHTML=instCard(s);
+  const target=needleAngle-(needleAngle%360)+360*5+r*360; needleAngle=target;
+  const nd=$("#needle"); nd.style.transform=`rotate(${target}deg)`;
+  let prev=null,acc=0,on=true;
+  (function follow(){if(!on)return;const m=getComputedStyle(nd).transform;if(m&&m!=="none"){const d=new DOMMatrixReadOnly(m),a=Math.atan2(d.b,d.a)*180/Math.PI;if(prev!==null){let da=a-prev;if(da<-180)da+=360;if(da>180)da-=360;acc+=Math.abs(da);if(acc>=18){acc=0;tick()}}prev=a}requestAnimationFrame(follow)})();
+  await wait(4500); on=false;
+  const dl=$("#dial"); dl.classList.add(win?"hit":"miss"); setTimeout(()=>dl.classList.remove("hit","miss"),1100);
+  busy=false; upSrc=null; boost=0;
+  if(win){addFeed(inst);save();renderAll();const a=BY_ID[inst.id];
+    modal(`<div class="modal-title win">Апгрейд удался!</div>${instCard(inst)}${prizeActions([inst],inst.value)}`,a.tier);celebrate(a.tier);bindPrize([inst],inst.value);
+  } else {renderAll();loseSound();
+    modal(`<div class="modal-title lose">Мимо</div>${instCard(s)}<div class="sub" style="margin:-6px 0 16px">Аура сгорела. Шанс был ${(c*100).toFixed(1)}%${paid?`, буст ${fmt(paid)}`:""}.</div>
+      <div class="modal-actions"><button class="btn btn-main" id="mKeep" type="button">Ещё раз</button></div>`);$("#mKeep").onclick=closeModal;
+  }
+});
+
+// ================= contract (10 → next tier) =================
+const ctSel=new Set(); let ctTier="common";
+const CT_N=10;
+function nextTier(k){return TIERS[TIER_IDX[k]+1]?.k}
+function ctPool(){
+  // вероятность результата: каждая вложенная аура «голосует» за следующий тир своего разлома
+  const out={}, sel=S.inv.filter(x=>ctSel.has(x.uid)), nt=nextTier(ctTier); if(!sel.length||!nt||nt==="unique") return [];
+  const fallback=AURAS.filter(a=>a.tier===nt);
+  for(const x of sel){
+    const rf=x.src&&RIFT_BY[x.src]; let cands=rf?rf.items.map(id=>BY_ID[id]).filter(a=>a.tier===nt):[];
+    if(!cands.length) cands=fallback;
+    cands.forEach(a=>out[a.id]=(out[a.id]||0)+1/cands.length/sel.length);
+  }
+  return Object.entries(out).map(([id,w])=>({id,w})).sort((a,b)=>b.w-a.w);
+}
+function renderContract(){
+  for(const u of [...ctSel]) if(!S.inv.some(x=>x.uid===u)) ctSel.delete(u);
+  $("#ctTiers").innerHTML=TIERS.filter(t=>t.k!=="mythic"&&t.k!=="unique").map(t=>{const n=S.inv.filter(x=>BY_ID[x.id].tier===t.k).length;
+    return `<button type="button" class="t-${t.k}" data-tier="${t.k}" aria-pressed="${t.k===ctTier}">${t.name} · ${n}</button>`}).join("");
+  const sel=S.inv.filter(x=>ctSel.has(x.uid)), nt=nextTier(ctTier);
+  $("#ctSlots").innerHTML=Array.from({length:CT_N},(_,i)=>{const x=sel[i];return x?`<div class="ct-slot on t-${BY_ID[x.id].tier}">${art(x.id)}</div>`:`<div class="ct-slot"></div>`}).join("");
+  $("#ctOut").className="ct-out t-"+nt; $("#ctOut").innerHTML=`<span>1 × ${TIERS[TIER_IDX[nt]].name}</span>`;
+  const pool=ctPool();
+  $("#ctPool").innerHTML=pool.length?pool.map(p=>`<span class="t-${BY_ID[p.id].tier}">${esc(BY_ID[p.id].name)} ${(p.w*100).toFixed(0)}%</span>`).join(""):"";
+  const b=$("#ctBtn"); b.disabled=busy||ctSel.size!==CT_N; b.textContent=ctSel.size===CT_N?"Синтез":`Ещё ${CT_N-ctSel.size}`;
+  const inv=S.inv.filter(x=>BY_ID[x.id].tier===ctTier).sort((a,b)=>a.value-b.value);
+  $("#ctInv").innerHTML=inv.length?inv.map(x=>{const on=ctSel.has(x.uid);return instCard(x,{note:x.src?RIFT_BY[x.src]?.name.split(" ")[0]||"":"",cls:"pick"+(on?" sel":"")+(!on&&ctSel.size>=CT_N?" off":""),extra:`data-ct="${x.uid}"`})}).join("")
+    :`<div class="empty" style="grid-column:1/-1">Нет аур тира ${TIERS[TIER_IDX[ctTier]].name}.</div>`;
+}
+$("#ctTiers").addEventListener("click",e=>{const b=e.target.closest("[data-tier]");if(!b||busy)return;ctTier=b.dataset.tier;ctSel.clear();renderContract()});
+$("#ctInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-ct]");if(!b)return;const u=+b.dataset.ct;if(ctSel.has(u))ctSel.delete(u);else if(ctSel.size<CT_N)ctSel.add(u);renderContract()});
+$("#ctBtn").addEventListener("click",async()=>{
+  if(busy||ctSel.size!==CT_N) return;
+  ac();
+  const pool=ctPool(), id=pickWeighted(pool).id, sum=S.inv.filter(x=>ctSel.has(x.uid)).reduce((s,x)=>s+x.value,0);
+  S.inv=S.inv.filter(x=>!ctSel.has(x.uid)); ctSel.clear();
+  const inst=makeInst(id,null); S.inv.unshift(inst); S.stats.contracts++; save(); renderTop();
+  busy=true;
+  modal(`<div class="modal-title">Синтез…</div><div class="anim" id="reveal" style="height:230px;display:grid;place-items:center"></div>`,BY_ID[id].tier);
+  for(let k=0;k<16;k++){$("#reveal").innerHTML=card(BY_ID[pickWeighted(pool).id]);tick();await wait(90+k*10)}
+  busy=false; addFeed(inst); save(); renderAll();
+  const a=BY_ID[id], diff=inst.value-sum;
+  modal(`<div class="modal-title ${diff>=0?"win":""}">${TIERS[TIER_IDX[a.tier]].name}!</div>${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${fmt(sum)} · ${diff>=0?"+":"−"}${fmt(Math.abs(diff))}</div>${prizeActions([inst],inst.value)}`,a.tier);
+  celebrate(a.tier); bindPrize([inst],inst.value);
+});
+
+// ================= crash (continuous rounds + players) =================
+const CR_K=0.00012, BET_TIME=7000, AFTER_TIME=3200;
+const cr={phase:"bet",start:performance.now(),crashAt:1,hist:[],players:[],me:null,t:0};
+function crashPoint(){return Math.max(1,Math.floor(0.97/(1-rnd())*100)/100)}
+function newRound(){
+  cr.phase="bet"; cr.start=performance.now(); cr.crashAt=crashPoint(); cr.t=0; cr.me=null;
+  const n=5+Math.floor(rnd()*6), names=BOTS.slice().sort(()=>rnd()-.5).slice(0,n);
+  cr.players=names.map((name,i)=>({name,i,bet:Math.round(Math.pow(10,1.5+rnd()*2.3)),target:Math.max(1.05,Math.round(Math.exp(.15+rnd()*1.8)*100)/100),cashed:0}));
+  $("#crMult").className="cr-mult num"; renderCrashCtl(); renderCrTable();
+}
+function crM(){return Math.exp(CR_K*cr.t)}
+function crStep(){
+  const now=performance.now();
+  if(cr.phase==="bet"){
+    const left=BET_TIME-(now-cr.start);
+    $("#crStatus").textContent=`Приём ставок · ${Math.ceil(left/1000)} с`; $("#crMult").textContent="1.00×"; $("#crBar").style.width=(left/BET_TIME*100)+"%";
+    if(left<=0){cr.phase="fly";cr.start=now;$("#crBar").style.width="0";renderCrashCtl()}
+  } else if(cr.phase==="fly"){
+    cr.t=now-cr.start; let m=crM();
+    if(m>=cr.crashAt){m=cr.crashAt;cr.t=Math.log(m)/CR_K;crBoom();return}
+    cr.players.forEach(p=>{if(!p.cashed&&m>=p.target){p.cashed=p.target}});
+    if(cr.me&&!cr.me.cashed&&cr.me.auto&&m>=cr.me.auto) crCash(cr.me.auto);
+    $("#crMult").textContent=m.toFixed(2)+"×";
+    if(cr.me&&!cr.me.cashed) $("#crBtn").innerHTML=`Вывести ${coin(cr.me.bet*m)}`;
+    $("#crStatus").textContent=cr.me?(cr.me.cashed?`Выведено ${fmt(cr.me.bet*cr.me.cashed)} на ${cr.me.cashed.toFixed(2)}×`:`Твоя ставка ${fmt(cr.me.bet)}`):"Комета летит…";
+    if(Math.floor(m*4)!==cr.lastQ){cr.lastQ=Math.floor(m*4);if(tab==="crash"&&cr.me&&!cr.me.cashed)tick();renderCrTable()}
+  } else if(cr.phase==="after"){
+    if(now-cr.start>AFTER_TIME) newRound();
+  }
+  if(tab==="crash") crDraw();
+}
+setInterval(crStep,50);
+function crBoom(){
+  cr.phase="after"; cr.start=performance.now(); boomT=performance.now();
+  $("#crMult").textContent=cr.crashAt.toFixed(2)+"×"; $("#crMult").classList.add("boom");
+  if(cr.me&&!cr.me.cashed){$("#crStatus").textContent=`Взрыв на ${cr.crashAt.toFixed(2)}× — ставка сгорела`;if(tab==="crash")loseSound()}
+  else if(!cr.me) $("#crStatus").textContent=`Взрыв на ${cr.crashAt.toFixed(2)}×`;
+  cr.hist.unshift(cr.crashAt); cr.hist.length=Math.min(cr.hist.length,16);
+  renderCrashCtl(); renderCrTable(); renderCrHist();
+}
+function crCash(m){
+  if(!cr.me||cr.me.cashed) return;
+  cr.me.cashed=m; const win=Math.floor(cr.me.bet*m); S.balance+=win; if(m>S.stats.crashBest)S.stats.crashBest=m; save(); renderTop();
+  $("#crMult").classList.add("cashed"); winSound(m>=10?"legendary":m>=3?"epic":"rare"); renderCrashCtl(); renderCrTable();
+}
+function renderCrashCtl(){
+  const b=$("#crBtn");
+  if(cr.phase==="bet"){b.classList.remove("cash");b.disabled=!!cr.me;b.textContent=cr.me?`Ставка ${fmt(cr.me.bet)} принята`:"Поставить"}
+  else if(cr.phase==="fly"&&cr.me&&!cr.me.cashed){b.classList.add("cash");b.disabled=false}
+  else {b.classList.remove("cash");b.disabled=true;b.textContent=cr.me&&cr.me.cashed?`Выведено ${fmt(cr.me.bet*cr.me.cashed)} ✓`:cr.phase==="fly"?"Раунд идёт — ставка в следующем":"Новый раунд скоро"}
+}
+function renderCrTable(){
+  if(tab!=="crash") return;
+  const m=cr.phase==="fly"?crM():cr.crashAt, done=cr.phase==="after";
+  const rows=[...(cr.me?[{name:"Ты",bet:cr.me.bet,cashed:cr.me.cashed,me:true}]:[]),...cr.players];
+  $("#crPot").innerHTML=coin(rows.reduce((s,p)=>s+p.bet,0));
+  $("#crTable").innerHTML=rows.map(p=>{const st=p.cashed?"ok":done?"bust":"";
+    return `<div class="cp ${st}${p.me?" me":""}">${avatar(p.name,p.i)}<span class="n">${esc(p.name)}</span><span class="b">${coin(p.bet)}</span><span class="s">${p.cashed?p.cashed.toFixed(2)+"×":done?"сгорел":cr.phase==="fly"?"…":"ждёт"}</span></div>`}).join("");
+}
+function renderCrHist(){$("#crHist").innerHTML=cr.hist.map(v=>`<span class="${v<1.5?"lo":v<3?"mid":v<10?"hi":"top"}">${v.toFixed(2)}×</span>`).join("")}
+$("#crQuickBet").addEventListener("click",e=>{const q=e.target.dataset.q;if(!q)return;const i=$("#crBet");let v=+i.value||0;i.value=q==="half"?Math.max(1,Math.floor(v/2)):q==="double"?Math.max(1,Math.floor(Math.min(S.balance,v*2))):Math.floor(S.balance)});
+$("#crQuickAuto").addEventListener("click",e=>{const a=e.target.dataset.a;if(a)$("#crAuto").value=a});
+$("#crBtn").addEventListener("click",()=>{
+  if(cr.phase==="fly"&&cr.me&&!cr.me.cashed){crCash(crM());return}
+  if(cr.phase!=="bet"||cr.me) return;
+  const bet=Math.floor(+$("#crBet").value||0), auto=parseFloat($("#crAuto").value)||0;
+  if(bet<1){toast("Введи ставку");return} if(bet>S.balance){toast("Не хватает монет");return}
+  ac(); S.balance-=bet; save(); renderTop();
+  cr.me={bet,auto:auto>1?auto:0,cashed:0}; renderCrashCtl(); renderCrTable();
+});
+const crCv=$("#crCanvas"), crCtx=crCv.getContext("2d"); let boomT=0;
+function crDraw(){
+  const r=crCv.getBoundingClientRect(),d=devicePixelRatio||1; if(!r.width) return;
+  if(crCv.width!==Math.round(r.width*d)){crCv.width=Math.round(r.width*d);crCv.height=Math.round(r.height*d)}
+  const W=crCv.width,H=crCv.height; crCtx.clearRect(0,0,W,H);
+  crCtx.strokeStyle="rgba(255,255,255,.05)";crCtx.lineWidth=d;for(let i=1;i<5;i++){const y=H*i/5;crCtx.beginPath();crCtx.moveTo(0,y);crCtx.lineTo(W,y);crCtx.stroke()}
+  if(cr.phase==="bet") return;
+  const t=cr.t, m=Math.exp(CR_K*t), maxT=Math.max(8000,t*1.15), maxM=Math.max(2,m*1.25);
+  const X=tt=>tt/maxT*W*.9+W*.05, Y=mm=>H-(mm-1)/(maxM-1)*H*.82-H*.08;
+  const boom=cr.phase==="after", col=boom?"#ff4d6d":"#22e6ff";
+  crCtx.beginPath();crCtx.moveTo(X(0),Y(1));for(let i=1;i<=60;i++){const tt=t*i/60;crCtx.lineTo(X(tt),Y(Math.exp(CR_K*tt)))}
+  const g=crCtx.createLinearGradient(X(0),0,X(t),0);g.addColorStop(0,"rgba(139,92,255,0)");g.addColorStop(1,col);
+  crCtx.strokeStyle=g;crCtx.lineWidth=5*d;crCtx.lineCap="round";crCtx.shadowColor=col;crCtx.shadowBlur=16*d;crCtx.stroke();crCtx.shadowBlur=0;
+  const hx=X(t),hy=Y(m);
+  if(!boom){ // комета
+    const rg=crCtx.createRadialGradient(hx,hy,0,hx,hy,26*d);rg.addColorStop(0,"#fff");rg.addColorStop(.3,"#9ff3ff");rg.addColorStop(1,"rgba(34,230,255,0)");
+    crCtx.fillStyle=rg;crCtx.beginPath();crCtx.arc(hx,hy,26*d,0,Math.PI*2);crCtx.fill();
+  } else { // взрыв
+    const k=Math.min(1,(performance.now()-boomT)/600);
+    for(let i=0;i<18;i++){const an=i/18*Math.PI*2,rr=(10+k*50)*d;crCtx.fillStyle=`rgba(255,${80+i*8},109,${1-k})`;crCtx.beginPath();crCtx.arc(hx+Math.cos(an)*rr,hy+Math.sin(an)*rr,3*d,0,Math.PI*2);crCtx.fill()}
+  }
+}
+function renderCrash(){renderCrashCtl();renderCrTable();renderCrHist();crDraw()}
+
+// ================= daily wheel =================
+const DAY=864e5;
+const WHEEL=[
+  {t:"coins",v:100,w:25,c:"#4b8bff"},{t:"coins",v:250,w:20,c:"#8b5cff"},{t:"luck",w:12,c:"#3ef08f",label:"Удача +15%"},
+  {t:"coins",v:500,w:14,c:"#22e6ff"},{t:"ticket",rift:"neon",w:9,c:"#ff3dcb",label:"Билет"},{t:"coins",v:1000,w:9,c:"#ff9a1f"},
+  {t:"coins",v:2500,w:5,c:"#ffc53d"},{t:"ticket",rift:"abyss",w:4,c:"#b04dff",label:"Билет+"},{t:"coins",v:10000,w:1.9,c:"#ff4d6d"},
+  {t:"fortune",w:.1,c:"url(#rainbow)",label:"FORTUNE"}
+];
+const wheelLeft=()=>Math.max(0,(S.lastWheel||0)+DAY-Date.now());
+function hms(ms){const t=Math.ceil(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60);return h?`${h} ч ${m} мин`:`${m} мин`}
+function renderWheelBtn(){const b=$("#wheelBtn"),l=wheelLeft();b.classList.toggle("wait",l>0);b.classList.toggle("ready",!l);$("#wheelTxt").textContent=l?hms(l):"Колесо"}
+function wheelSVG(){
+  const n=WHEEL.length,R=150,c=160;let out="";
+  WHEEL.forEach((s,i)=>{
+    const a0=i/n*2*Math.PI-Math.PI/2,a1=(i+1)/n*2*Math.PI-Math.PI/2;
+    out+=`<path d="M${c} ${c}L${(c+R*Math.cos(a0)).toFixed(1)} ${(c+R*Math.sin(a0)).toFixed(1)}A${R} ${R} 0 0 1 ${(c+R*Math.cos(a1)).toFixed(1)} ${(c+R*Math.sin(a1)).toFixed(1)}Z" fill="${s.c}" stroke="#07061a" stroke-width="3"/>`;
+    const lab=s.t==="coins"?fmt(s.v):s.label, am=(i+.5)/n*360;
+    out+=`<text x="${c}" y="${c-R+36}" transform="rotate(${am} ${c} ${c})" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="${lab.length>6?12:16}" fill="#fff" stroke="rgba(0,0,0,.45)" stroke-width="3" paint-order="stroke">${lab}</text>`;
+    if(s.t==="ticket") out+=`<text x="${c}" y="${c-R+54}" transform="rotate(${am} ${c} ${c})" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">${esc(RIFT_BY[s.rift].name.split(" ").slice(-1)[0])}</text>`;
+  });
+  return `<svg viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="158" fill="#07061a" stroke="url(#rainbow)" stroke-width="3"/><g class="wheel-rot" id="wheelRot">${out}</g>
+    <circle cx="160" cy="160" r="30" fill="#15123a" stroke="#fff" stroke-width="3"/><circle cx="160" cy="160" r="10" fill="url(#rainbow)"/></svg>`;
+}
+$("#wheelBtn").addEventListener("click",()=>{
+  if(busy) return; const l=wheelLeft();
+  modal(`<div class="modal-title">Колесо Фортуны</div><div class="sub" style="margin:4px 0 0">${l?`Следующая прокрутка через ${hms(l)}`:"Бесплатная прокрутка раз в 24 часа"}</div>
+    <div class="wheel-wrap"><div class="wheel-ptr"></div>${wheelSVG()}</div>
+    <div class="modal-actions"><button class="btn btn-main" id="wSpin" type="button" ${l?"disabled":""}>${l?"Уже крутил сегодня":"Крутить!"}</button></div>
+    <div class="wheel-note">Сектор FORTUNE (0.1%) — уникальная аура, которую больше нигде не получить. В Roblox-версии доп. прокрутки за Robux и за приглашённых друзей.</div>`);
+  $("#wSpin").onclick=spinWheel;
+});
+async function spinWheel(){
+  if(wheelLeft()||busy) return; ac();
+  const s=pickWeighted(WHEEL.map(x=>({...x,w:x.w/100}))), idx=WHEEL.findIndex(x=>x.t===s.t&&x.v===s.v&&x.rift===s.rift), seg=360/WHEEL.length;
+  S.lastWheel=Date.now(); let msg="", tier="rare", inst=null;
+  if(s.t==="coins"){S.balance+=s.v;msg=`+${fmt(s.v)} монет`;tier=s.v>=2500?"legendary":s.v>=1000?"epic":"rare"}
+  if(s.t==="luck"){S.luckUntil=Math.max(Date.now(),S.luckUntil||0)+36e5;msg="Удача +15% на 1 час";tier="epic"}
+  if(s.t==="ticket"){S.tickets[s.rift]=(S.tickets[s.rift]||0)+1;msg=`Билет: ${RIFT_BY[s.rift].name}`;tier="epic"}
+  if(s.t==="fortune"){inst=makeInst("fortune",null);S.inv.unshift(inst);msg="Аура FORTUNE!";tier="unique"}
+  save(); busy=true; $("#wSpin").disabled=true; $("#wSpin").textContent="Крутится…";
+  const rot=$("#wheelRot"), target=360*6-(idx*seg+seg/2)+(rnd()-.5)*seg*.7;
+  rot.getBoundingClientRect(); rot.style.transform=`rotate(${target}deg)`;
+  let prev=null,acc=0,on=true;
+  (function follow(){if(!on)return;const m=getComputedStyle(rot).transform;if(m&&m!=="none"){const d=new DOMMatrixReadOnly(m),a=Math.atan2(d.b,d.a)*180/Math.PI;if(prev!==null){let da=a-prev;if(da<-180)da+=360;if(da>180)da-=360;acc+=Math.abs(da);if(acc>=seg){acc-=seg;tick()}}prev=a}requestAnimationFrame(follow)})();
+  await wait(5500); on=false; busy=false;
+  if(inst) addFeed(inst);
+  save(); renderAll(); $("#wSpin").textContent=msg; celebrate(tier); toast(msg);
+}
+
+// ================= collection =================
+function renderCollection(){
+  const have=new Set(S.collected), n=AURAS.filter(a=>have.has(a.id)).length;
+  $("#colSub").textContent=`Собрано ${n} из ${AURAS.length} аур.`;
+  $("#colFill").style.width=(n/AURAS.length*100).toFixed(1)+"%";
+  $("#colGrid").innerHTML=AURAS.slice().reverse().map(a=>have.has(a.id)?card(a).replace(/(<div class="item[^>]*>)/,'$1<span class="got">✓</span>'):card(a,{cls:"miss"})).join("");
+}
+
+// ================= promo & reset =================
+const PROMOS={VANYA1M:1000000};
+$("#promoForm").addEventListener("submit",e=>{
+  e.preventDefault(); const code=$("#promoInput").value.trim().toUpperCase(); if(!code) return;
+  if(!PROMOS[code]){toast("Такого промокода нет");return} if(S.promos.includes(code)){toast("Промокод уже активирован");return}
+  S.promos.push(code); S.balance+=PROMOS[code]; save(); renderAll(); $("#promoInput").value=""; toast(`+${fmt(PROMOS[code])} монет!`); celebrate("legendary");
+});
+let resetArmed=false;
+$("#resetBtn").addEventListener("click",()=>{
+  if(busy) return;
+  if(!resetArmed){resetArmed=true;$("#resetBtn").textContent="Точно? Всё обнулится — нажми ещё раз";setTimeout(()=>{resetArmed=false;$("#resetBtn").textContent="Начать заново"},3500);return}
+  resetArmed=false;$("#resetBtn").textContent="Начать заново";
+  S=fresh();upSrc=null;upDst=null;ctSel.clear();bSel=[];save();renderAll();toast("Прогресс сброшен");
+});
+
+// ================= render =================
+function renderView(){
+  if(tab==="rifts"){ if(current) updateOpenBtn(); else renderRifts(); }
+  if(tab==="battles"&&!busy) renderBattles();
+  if(tab==="upgrade") renderUpgrade();
+  if(tab==="contract") renderContract();
+  if(tab==="crash") renderCrash();
+  if(tab==="collection") renderCollection();
+  if(tab==="inventory") renderInventory();
+}
+function renderAll(){renderTop();renderView()}
+buildDefs(); renderSnd(); renderArrow(); S.inv.forEach(x=>collect(x.id));
+newRound(); renderFeed(false); renderRifts(); renderAll();
+})();
+
+</script>
+
+</body></html>
