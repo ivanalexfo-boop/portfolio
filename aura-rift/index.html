@@ -330,6 +330,7 @@ h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted
 footer{max-width:1100px;margin:0 auto;padding:0 16px 32px;color:var(--dim);font-size:12.5px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 footer .reset{color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:12.5px}
 .promo{display:flex;gap:8px;width:100%}
+.inv-promo{max-width:420px;margin:0 0 14px}
 .promo input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--text);font:inherit;text-transform:uppercase}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14px;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:calc(100% - 32px)}
 .afk-pop{position:fixed;z-index:30;pointer-events:none;font-family:var(--mono);font-weight:700;color:var(--cyan);text-shadow:0 0 10px var(--cyan);animation:floatUp 1.4s ease forwards}
@@ -597,13 +598,13 @@ main .sub{color:#d2d0f5}
       <div class="grow"><h2><span data-ru="Инвентарь">Inventory</span></h2><div class="sub" id="invSub" style="margin-bottom:0"></div></div>
       <button class="btn btn-ghost btn-sm" id="sellAllBtn" type="button"><span data-ru="Продать всё">Sell all</span></button>
     </div>
+    <form class="promo inv-promo" id="promoForm" autocomplete="off"><input id="promoInput" type="text" placeholder="Promo code" data-ru-placeholder="Промокод" aria-label="Promo code" data-ru-aria-label="Промокод" maxlength="24"><button class="btn btn-ghost btn-sm" type="submit"><span data-ru="Активировать">Redeem</span></button></form>
     <div class="grid anim" id="invGrid"></div>
     <div class="stats" id="stats"></div>
   </section>
 </main>
 
 <footer>
-  <form class="promo" id="promoForm" autocomplete="off"><input id="promoInput" type="text" placeholder="Promo code" data-ru-placeholder="Промокод" aria-label="Promo code" data-ru-aria-label="Промокод" maxlength="24"><button class="btn btn-ghost btn-sm" type="submit"><span data-ru="Активировать">Redeem</span></button></form>
   <span><span data-ru="Прототип режима на виртуальных монетах. Реальных денег нет.">Game-mode prototype with virtual coins. No real money.</span></span>
   <button class="reset" id="resetBtn" type="button"><span data-ru="Начать заново">Start over</span></button>
 </footer>
