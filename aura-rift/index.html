@@ -1248,7 +1248,7 @@ $("#ctInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest
 $("#ctBtn").addEventListener("click",async()=>{
   const n=ctSel.size; if(busy||n<CT_MIN) return;
   ac();
-  const upPool=ctPool(true), samePool=ctPool(false), isUp=rnd()<ctUpChance(n);
+  const base=ctBase(), upPool=ctPool(true), samePool=ctPool(false), isUp=rnd()<ctUpChance(n);
   const id=pickWeighted(isUp?upPool:samePool).id, sum=S.inv.filter(x=>ctSel.has(x.uid)).reduce((s,x)=>s+x.value,0);
   const show=[...upPool,...samePool];
   S.inv=S.inv.filter(x=>!ctSel.has(x.uid)); ctSel.clear();
@@ -1258,8 +1258,9 @@ $("#ctBtn").addEventListener("click",async()=>{
   for(let k=0;k<16;k++){$("#reveal").innerHTML=card(BY_ID[pick(show).id]);tick();await wait(90+k*10)}
   busy=false; addFeed(inst); save(); renderAll();
   const a=BY_ID[id], diff=inst.value-sum;
-  modal(`<div class="modal-title ${isUp?"win":""}">${isUp?`Тир выше: ${TIERS[TIER_IDX[a.tier]].name}!`:"Тир не повысился"}</div>${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${n} аур на ${fmt(sum)} · ${diff>=0?"+":"−"}${fmt(Math.abs(diff))}</div>${prizeActions([inst],inst.value)}`,a.tier);
-  if(isUp) celebrate(a.tier); else loseSound(); bindPrize([inst],inst.value);
+  const gotUp=TIER_IDX[a.tier]>TIER_IDX[base];
+  modal(`<div class="modal-title ${gotUp?"win":""}">${gotUp?`Редче: ${TIERS[TIER_IDX[a.tier]].name}!`:"Новая аура"}</div>${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${n} аур на ${fmt(sum)} · ${diff>=0?"+":"−"}${fmt(Math.abs(diff))}</div>${prizeActions([inst],inst.value)}`,a.tier);
+  if(gotUp) celebrate(a.tier); else if(diff<0) loseSound(); bindPrize([inst],inst.value);
 });
 
 // ================= crash (continuous rounds + players) =================
