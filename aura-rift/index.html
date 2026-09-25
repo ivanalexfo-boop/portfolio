@@ -411,6 +411,9 @@ main .sub{color:#d2d0f5}
 
 .ct-slot.need{border-color:rgba(255,197,61,.55)}
 .ct-out b{font-family:var(--mono);font-size:18px;color:var(--text)}
+
+.cr-hint{font-size:11px;color:var(--muted);margin-top:6px}
+.mult.m60{border-color:var(--win);color:var(--win)}
 </style>
 
 <div class="sky" aria-hidden="true"></div>
@@ -467,7 +470,7 @@ main .sub{color:#d2d0f5}
   <section class="view" id="view-battles" hidden>
     <div id="bLobby">
       <h2>Битва аур</h2>
-      <p class="sub">Оба игрока открывают одни и те же разломы. Чей дроп дороже — забирает всё. Ничья — дополнительный раунд.</p>
+      <p class="sub">Оба игрока открывают одни и те же разломы. Чей дроп дороже — забирает всё. Ничья — дополнительный раунд. Ты побеждаешь примерно в 6 битвах из 10.</p>
       <div class="b-grid">
         <div class="panel">
           <h3>Открытые заявки</h3>
@@ -496,7 +499,7 @@ main .sub{color:#d2d0f5}
 
   <section class="view" id="view-upgrade" hidden>
     <h2>Апгрейд</h2>
-    <p class="sub">Шанс = цена твоей ауры / цена цели. Доплати монетами, чтобы расширить зелёный сектор — до 80%. Проиграл — аура сгорает.</p>
+    <p class="sub">Шанс = цена твоей ауры / цена цели. Цель сама подбирается под шанс 60%, кнопки ниже меняют её. Доплати монетами, чтобы расширить зелёный сектор — до 80%.</p>
     <div class="up-stage">
       <div><div class="slot-label">Твоя аура</div><div class="slot anim" id="upSrc">Выбери ауру из инвентаря</div></div>
       <div class="dial-wrap">
@@ -533,7 +536,7 @@ main .sub{color:#d2d0f5}
 
   <section class="view" id="view-contract" hidden>
     <h2>Контракт</h2>
-    <p class="sub">Положи от 3 до 10 аур одного тира. Чем больше вложишь, тем выше шанс получить ауру тиром выше: 3 ауры — 30%, 10 аур — гарантированно. Если не повезёт, выпадет аура того же тира.</p>
+    <p class="sub">Положи от 3 до 10 аур одного тира. 3 ауры — 60% шанс получить ауру тиром выше, 10 аур — гарантированно. Если не повезёт, выпадет аура того же тира.</p>
     <div class="tier-tabs" id="ctTiers"></div>
     <div class="ct-bar">
       <div class="ct-slots" id="ctSlots"></div>
@@ -559,7 +562,7 @@ main .sub{color:#d2d0f5}
           </div>
           <div class="cr-field"><label for="crAuto">Автовывод</label>
             <div class="cr-input"><input id="crAuto" type="number" min="1.01" step="0.01" placeholder="выкл" inputmode="decimal"><span class="cr-x">×</span></div>
-            <div class="cr-quick" id="crQuickAuto"><button type="button" data-a="1.5">1.5×</button><button type="button" data-a="2">2×</button><button type="button" data-a="5">5×</button></div>
+            <div class="cr-quick" id="crQuickAuto"><button type="button" data-a="1.66">1.66×</button><button type="button" data-a="2">2×</button><button type="button" data-a="5">5×</button></div><div class="cr-hint" id="crHint"></div>
           </div>
           <button class="btn btn-main cr-go" id="crBtn" type="button">Поставить</button>
         </div>
@@ -624,7 +627,7 @@ const AURAS=[
   ["neonpulse","Neon Pulse","Неоновый пульс","rare",610],
   ["vampire","Vampire Swarm","Рой вампиров","epic",1100],
   ["hacker","Домен Хакера","Hacker's Domain","epic",2000],
-  ["angelic","Ангельские Кольца","Angelic Rings","mythic",3600],
+  ["angelic","Ангельские Кольца","Angelic Rings","mythic",2800],
   ["timestop","Time Stop","Остановка времени","mythic",6500],
   ["solar","Solar System","Солнечная система","anomaly",11700],
   ["eclipse","Eclipse","Затмение","anomaly",21000],
@@ -690,18 +693,19 @@ const RIFTS=[
 const RIFT_BY=Object.fromEntries(RIFTS.map(r=>[r.id,r]));
 // Пул разлома собирается автоматически: ауры от 1/4 до 3 цен разлома + 2 джекпота (до 40 цен).
 // Баланс «60/40»: 40% шансов на ауры дешевле разлома, 0.6% на джекпоты, остальное — на ауры дороже.
-const RTP=0.97, LOSE_SHARE=0.40, JACKPOT_SHARE=0.006;
+const RTP=1.0, LOSE_SHARE=0.40, JACKPOT_SHARE=0.006;
 for(const rf of RIFTS){
   const pool=AURAS.filter(a=>a.tier!=="unique");
   const main=pool.filter(a=>a.price>=rf.price*.2&&a.price<rf.price*3);
   const jack=pool.filter(a=>a.price>=rf.price*3&&a.price<=rf.price*40).slice(0,2);
   rf.items=[...main,...jack].map(a=>a.id);
   const ps=rf.items.map(id=>BY_ID[id].price);
-  const groups=[{idx:[],mass:LOSE_SHARE,fixed:false},{idx:[],mass:1-LOSE_SHARE-JACKPOT_SHARE,fixed:false},{idx:[],mass:JACKPOT_SHARE,fixed:true}];
+  const groups=[{idx:[],mass:LOSE_SHARE,e:-2},{idx:[],mass:1-LOSE_SHARE-JACKPOT_SHARE,e:null},{idx:[],mass:JACKPOT_SHARE,e:1}];
   ps.forEach((p,i)=>groups[p<rf.price?0:p<3*rf.price?1:2].idx.push(i));
   const live=groups.filter(g=>g.idx.length), tot=live.reduce((s,g)=>s+g.mass,0);
-  const weights=t=>{const w=ps.map(()=>0);for(const g of live){const e=g.fixed?1:t,raw=g.idx.map(i=>Math.pow(ps[i],-e)),sum=raw.reduce((x,y)=>x+y,0);g.idx.forEach((i,k)=>w[i]=g.mass/tot*raw[k]/sum)}return w};
+  const weights=t=>{const w=ps.map(()=>0);for(const g of live){const e=g.e??t,raw=g.idx.map(i=>Math.pow(ps[i],-e)),sum=raw.reduce((x,y)=>x+y,0);g.idx.forEach((i,k)=>w[i]=g.mass/tot*raw[k]/sum)}return w};
   const ev=t=>weights(t).reduce((s,w,i)=>s+w*ps[i],0);
+  for(const le of [-2,-1,0,1,2,4,8]){groups[0].e=le;if(ev(12)<=RTP*rf.price)break}
   let lo=-6,hi=12;for(let i=0;i<60;i++){const m=(lo+hi)/2;if(ev(m)>RTP*rf.price)lo=m;else hi=m}
   const w=weights((lo+hi)/2);
   rf.drops=rf.items.map((id,i)=>({id,w:w[i]}));
@@ -1009,15 +1013,20 @@ $("#bCreate").addEventListener("click",async()=>{
   await wait(1500+rnd()*2000);
   runBattle(bSel.slice(),pick(BOTS));
 });
+const BATTLE_WIN=0.6; // шанс игрока выиграть битву
 async function runBattle(rifts,botName){
   const cost=bCost(rifts); if(busy||S.balance<cost) return;
   ac();
   const fast=$("#bFast").checked;
   // все раунды считаются заранее; при ничьей — доп. раунды
-  const rounds=rifts.map(id=>({rf:id,a:rollRift(RIFT_BY[id]),b:pickWeighted(RIFT_BY[id].drops).id}));
-  const sum=(k)=>rounds.reduce((s,r)=>s+BY_ID[r[k]].price,0);
-  let guard=0;
-  while(sum("a")===sum("b")&&guard++<20){const id=pick(rifts);rounds.push({rf:id,a:rollRift(RIFT_BY[id]),b:pickWeighted(RIFT_BY[id].drops).id,extra:true})}
+  const wantWin=rnd()<BATTLE_WIN;
+  let rounds, sum, tries=0;
+  do{
+    rounds=rifts.map(id=>({rf:id,a:rollRift(RIFT_BY[id]),b:pickWeighted(RIFT_BY[id].drops).id}));
+    sum=(k)=>rounds.reduce((s,r)=>s+BY_ID[r[k]].price,0);
+    let guard=0;
+    while(sum("a")===sum("b")&&guard++<20){const id=pick(rifts);rounds.push({rf:id,a:rollRift(RIFT_BY[id]),b:pickWeighted(RIFT_BY[id].drops).id,extra:true})}
+  }while((sum("a")>sum("b"))!==wantWin&&++tries<200);
   const A=sum("a"), B=sum("b"), won=A>B;
   S.balance-=cost; S.stats.battles++;
   const allIds=rounds.flatMap(r=>[r.a,r.b]);
@@ -1104,6 +1113,12 @@ function renderUpgrade(){
     :`<div class="empty" style="grid-column:1/-1">Ничего не нашлось.</div>`;
 }
 // цель подбирается автоматически: ближайшая аура дороже в mult раз (x2 ≈ шанс 50%)
+function autoTargetChance(p){
+  const s=srcInst(); if(!s) return;
+  const list=AURAS.filter(a=>a.tier!=="unique"&&a.price>s.value);
+  if(!list.length){upDst=null;toast("Эта аура уже самая дорогая — апгрейдить некуда");return}
+  upDst=list.sort((a,b)=>Math.abs(s.value/a.price-p)-Math.abs(s.value/b.price-p))[0].id;
+}
 function autoTarget(mult){
   const s=srcInst(); if(!s) return;
   const want=s.value*mult, list=AURAS.filter(a=>a.tier!=="unique"&&a.price>s.value);
@@ -1111,9 +1126,10 @@ function autoTarget(mult){
   upDst=list.sort((a,b)=>Math.abs(Math.log(a.price/want))-Math.abs(Math.log(b.price/want)))[0].id;
 }
 $("#upInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-src]");if(!b)return;upSrc=+b.dataset.src;boost=0;
-  const s=srcInst(); if(!upDst||BY_ID[upDst].price<=s.value) autoTarget(2); renderUpgrade()});
-$("#mults").innerHTML=[1.5,2,3,5,10].map(m=>`<button class="mult" type="button" data-m="${m}">x${m}</button>`).join("");
-$("#mults").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b||busy)return;if(!srcInst()){toast("Сначала выбери свою ауру");return}autoTarget(+b.dataset.m);boost=0;renderUpgrade()});
+  const s=srcInst(); if(!upDst||BY_ID[upDst].price<=s.value) autoTargetChance(.6); renderUpgrade()});
+$("#mults").innerHTML=`<button class="mult m60" type="button" data-p=".6">60%</button>`+[2,3,5,10].map(m=>`<button class="mult" type="button" data-m="${m}">x${m}</button>`).join("");
+$("#mults").addEventListener("click",e=>{const b=e.target.closest("[data-m],[data-p]");if(!b||busy)return;if(!srcInst()){toast("Сначала выбери свою ауру");return}
+  if(b.dataset.p) autoTargetChance(+b.dataset.p); else autoTarget(+b.dataset.m); boost=0;renderUpgrade()});
 $("#upTargets").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-dst]");if(b){upDst=b.dataset.dst;boost=0;renderUpgrade()}});
 $("#upSearch").addEventListener("input",renderUpgrade);
 $("#boostRange").addEventListener("input",e=>{boost=+e.target.value;renderUpgrade()});
@@ -1150,7 +1166,7 @@ const ctSel=new Set(); let ctTier="common";
 // (10 аур — гарантированно), иначе выпадает аура того же тира.
 const CT_MIN=3, CT_MAX=10;
 function nextTier(k){return TIERS[TIER_IDX[k]+1]?.k}
-const ctUpChance=n=>Math.min(1,n/CT_MAX);
+const ctUpChance=n=>Math.min(1,.6+(n-CT_MIN)/(CT_MAX-CT_MIN)*.4);
 function ctPool(tier){
   // каждая вложенная аура «голосует» за ауры нужного тира из своего разлома
   const out={}, sel=S.inv.filter(x=>ctSel.has(x.uid)); if(!sel.length||!tier||tier==="unique") return [];
@@ -1199,7 +1215,7 @@ $("#ctBtn").addEventListener("click",async()=>{
 // ================= crash (continuous rounds + players) =================
 const CR_K=0.00012, BET_TIME=7000, AFTER_TIME=3200;
 const cr={phase:"bet",start:performance.now(),crashAt:1,hist:[],players:[],me:null,t:0};
-function crashPoint(){return Math.max(1,Math.floor(0.97/(1-rnd())*100)/100)}
+function crashPoint(){return Math.max(1,Math.floor(1/(1-rnd())*100)/100)}
 function newRound(){
   cr.phase="bet"; cr.start=performance.now(); cr.crashAt=crashPoint(); cr.t=0; cr.me=null;
   const n=5+Math.floor(rnd()*6), names=BOTS.slice().sort(()=>rnd()-.5).slice(0,n);
@@ -1257,7 +1273,9 @@ function renderCrTable(){
 }
 function renderCrHist(){$("#crHist").innerHTML=cr.hist.map(v=>`<span class="${v<1.5?"lo":v<3?"mid":v<10?"hi":"top"}">${v.toFixed(2)}×</span>`).join("")}
 $("#crQuickBet").addEventListener("click",e=>{const q=e.target.dataset.q;if(!q)return;const i=$("#crBet");let v=+i.value||0;i.value=q==="half"?Math.max(1,Math.floor(v/2)):q==="double"?Math.max(1,Math.floor(Math.min(S.balance,v*2))):Math.floor(S.balance)});
-$("#crQuickAuto").addEventListener("click",e=>{const a=e.target.dataset.a;if(a)$("#crAuto").value=a});
+$("#crQuickAuto").addEventListener("click",e=>{const a=e.target.dataset.a;if(a){$("#crAuto").value=a;crHint()}});
+function crHint(){const a=parseFloat($("#crAuto").value)||0;$("#crHint").textContent=a>1?`Шанс вывода на ${a.toFixed(2)}×: ${Math.round(100/a)}%`:"Без автовывода — жми «Вывести» сам";}
+$("#crAuto").addEventListener("input",crHint);
 $("#crBtn").addEventListener("click",()=>{
   if(cr.phase==="fly"&&cr.me&&!cr.me.cashed){crCash(crM());return}
   if(cr.phase!=="bet"||cr.me) return;
@@ -1288,7 +1306,7 @@ function crDraw(){
     for(let i=0;i<18;i++){const an=i/18*Math.PI*2,rr=(10+k*50)*d;crCtx.fillStyle=`rgba(255,${80+i*8},109,${1-k})`;crCtx.beginPath();crCtx.arc(hx+Math.cos(an)*rr,hy+Math.sin(an)*rr,3*d,0,Math.PI*2);crCtx.fill()}
   }
 }
-function renderCrash(){renderCrashCtl();renderCrTable();renderCrHist();crDraw()}
+function renderCrash(){crHint();renderCrashCtl();renderCrTable();renderCrHist();crDraw()}
 
 // ================= daily wheel =================
 const DAY=864e5;
