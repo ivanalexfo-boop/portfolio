@@ -751,7 +751,7 @@ function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s&&Arra
 let S=load()||fresh();
 S.inv=S.inv.filter(x=>BY_ID[x.id]); S.tickets=S.tickets||{}; S.stats=Object.assign(fresh().stats,S.stats||{});
 let cloud=null, cloudT=null;
-const INF=1e9;
+const INF=1e15; // «бесконечность»: квадриллион — хватит даже на 5 Квантовых Парадоксов за раз
 function save(){
   if(S.infinite&&S.balance<INF) S.balance=INF;
   S.savedAt=Date.now();
