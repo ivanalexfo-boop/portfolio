@@ -732,11 +732,36 @@ const RIFTS=[
   ["quantum","Квантовый Парадокс","Quantum Paradox",1e10,"#b69cff","#6d28d9","Q","gold",["halo","quantumflux","singularity","eclipse"]]
 ].map(([id,name,tag,price,c1,c2,short,btn,b])=>({id,name,tag,price,c1,c2,short,btn,b}));
 const RIFT_BY=Object.fromEntries(RIFTS.map(r=>[r.id,r]));
+// Состав кейса собирается из каталога по цене (плюс ауры из таблицы — они всегда внутри):
+//  убыток (40%)  — до 4 аур дешевле кейса (от 5% его цены), чаще — те, что ближе к цене;
+//  окуп   (50%)  — до 3 аур от 1x до 2x цены;
+//  профит (~10%) — до 3 аур от 2x до 20x;
+//  джекпот (<1%) — до 3 аур от 20x до 300x.
+// Шанс джекпота подбирается так, чтобы в среднем возвращалось ~97% цены кейса.
+function riftBuckets(rf){
+  const pool=AURAS.filter(a=>a.tier!=="unique"), P=rf.price, near=(a,b)=>Math.abs(Math.log(a.price/P))-Math.abs(Math.log(b.price/P));
+  const take=(lo,hi,n,must)=>{const c=pool.filter(a=>a.price>=lo*P&&a.price<hi*P).sort(near);const out=c.slice(0,n);if(must&&!out.includes(BY_ID[must])&&BY_ID[must].price>=lo*P&&BY_ID[must].price<hi*P)out[out.length-1]=BY_ID[must];return out};
+  const spread=(lo,hi,n,must)=>{const c=pool.filter(a=>a.price>=lo*P&&a.price<=hi*P).sort((a,b)=>a.price-b.price);if(c.length<=n)return c;
+    const out=[...new Set([c[0],c[Math.floor(c.length/2)],c[c.length-1]])];if(must&&!out.includes(BY_ID[must])&&c.includes(BY_ID[must]))out[0]=BY_ID[must];return out};
+  return [take(.05,1,4,rf.b[0]),take(1,2,3,rf.b[1]),take(2,20,3,rf.b[2]),spread(20,300,3,rf.b[3])];
+}
 for(const rf of RIFTS){
-  const [L,O,P,J]=rf.b.map(id=>BY_ID[id].price);
-  rf.jack=Math.max(0,Math.min(.01,(RTP*rf.price-.4*L-.5*O-.1*P)/(J-P)));
-  rf.drops=[{id:rf.b[0],w:.4},{id:rf.b[1],w:.5},{id:rf.b[2],w:.1-rf.jack},{id:rf.b[3],w:rf.jack}];
-  rf.items=rf.b.slice();
+  const [L,O,Pr,J]=riftBuckets(rf);
+  const split=(list,mass,e)=>{const raw=list.map(a=>Math.pow(a.price,e)),t=raw.reduce((x,y)=>x+y,0)||1;return list.map((a,i)=>({id:a.id,w:mass*raw[i]/t}))};
+  const avg=(list,e)=>list.length?split(list,1,e).reduce((s,x)=>s+x.w*BY_ID[x.id].price,0):0;
+  // Подбор весов от мягкого к жёсткому: первый вариант, где шанс джекпота получается 0.05–1%
+  let pick=null;
+  for(const [eL,t] of [[1,1],[1,2],[1,3],[0,3],[0,5],[-1,6],[-2,8],[-4,12]]){
+    const aL=avg(L,eL),aO=avg(O,-t),aP=avg(Pr,-t),aJ=avg(J,-1), base=.4*aL+.5*aO+.1*aP;
+    const j=J.length?(RTP*rf.price-base)/(aJ-aP):0;
+    pick={eL,t,j:Math.max(0,Math.min(.01,j))};
+    if(j>=.0005&&j<=.01) break;
+  }
+  rf.jack=pick.j; rf.buckets=[L,O,Pr,J];
+  rf.drops=[...split(L,.4,pick.eL),...split(O,.5,-pick.t),...split(Pr,.1-pick.j,-pick.t),...split(J,pick.j,-1)].filter(d=>d.w>1e-9);
+  rf.items=rf.drops.map(d=>d.id);
+  // витрина ленты: все ауры кейса мелькают, дорогие — реже
+  rf.show=[...split(L,.32,0),...split(O,.3,0),...split(Pr,.24,0),...split(J,.14,0)];
   rf.profit=rf.drops.reduce((s,d)=>s+(BY_ID[d.id].price>=rf.price?d.w:0),0);
   const byT={};rf.drops.forEach(d=>{const k=BY_ID[d.id].tier;byT[k]=(byT[k]||0)+d.w});
   rf.tiers=TIERS.filter(t=>byT[t.k]).map(t=>({k:t.k,pct:byT[t.k]*100}));
@@ -926,9 +951,8 @@ function renderRoulettes(){
 const CARD_W=st=>(st.querySelector(".item")?.getBoundingClientRect().width||124)+8;
 function fillStrip(st,ids,reset=true){st.style.transition="none";st.innerHTML=ids.map(id=>card(BY_ID[id])).join("");st.style.transform=`translateX(${reset?0:-(CARD_W(st)*2)}px)`}
 // Лента прокрутки: соседние ауры не повторяются; «витринные» веса — чтобы мелькали все ауры кейса
-const SHOW_W=[.32,.3,.24,.14];
 function stripIds(rf,len,fixed={}){
-  const opts=rf.b.map((id,i)=>({id,w:SHOW_W[i]})), out=[];
+  const opts=rf.show, out=[];
   for(let i=0;i<len;i++){
     if(fixed[i]){out.push(fixed[i]);continue}
     const bad=new Set([out[i-1],fixed[i+1]]), c=opts.filter(o=>!bad.has(o.id)), t=c.reduce((s,o)=>s+o.w,0);
