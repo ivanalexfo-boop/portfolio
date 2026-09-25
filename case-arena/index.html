@@ -206,6 +206,8 @@ h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted
 .stat:nth-child(4){background:linear-gradient(135deg,rgba(157,92,255,.3),rgba(157,92,255,.06))}
 .stat b{display:block;color:#fff;font-family:var(--mono);font-size:18px}
 
+.promo{display:flex;gap:8px;width:100%}
+.promo input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--text);font:inherit;text-transform:uppercase}
 footer{max-width:1100px;margin:0 auto;padding:0 16px 32px;color:var(--dim);font-size:12.5px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 footer button{color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:12.5px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel2);
@@ -399,6 +401,10 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
 </main>
 
 <footer>
+  <form class="promo" id="promoForm" autocomplete="off">
+    <input id="promoInput" type="text" placeholder="Промокод" aria-label="Промокод" maxlength="24">
+    <button class="btn btn-ghost btn-sm" type="submit">Активировать</button>
+  </form>
   <span>Симулятор на виртуальных монетах. Реальных денег и вывода скинов нет.</span>
   <button id="resetBtn" type="button">Начать заново</button>
 </footer>
@@ -1081,6 +1087,18 @@ $("#ctBtn").addEventListener("click",()=>{
       $("#mKeep").onclick=closeModal;
     }
   },90+k*8);
+});
+
+// ---------- promo codes ----------
+const PROMOS={VANYA1M:1000000};
+$("#promoForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const code=$("#promoInput").value.trim().toUpperCase(); if(!code) return;
+  S.promos=S.promos||[];
+  if(!PROMOS[code]){toast("Такого промокода нет");return}
+  if(S.promos.includes(code)){toast("Этот промокод уже активирован");return}
+  S.promos.push(code); S.balance+=PROMOS[code]; save(); renderAll();
+  $("#promoInput").value=""; toast(`+${fmt(PROMOS[code])} монет!`); winSound("gold"); confetti("gold");
 });
 
 // ---------- reset ----------
