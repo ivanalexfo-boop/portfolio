@@ -291,7 +291,7 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
 }
 
 /* ---------- v9: level, wheel, battles, crash, collection ---------- */
-.pbar{max-width:1100px;margin:0 auto;padding:0 16px 10px;display:flex;gap:10px;align-items:center}
+.pbar{max-width:1100px;margin:0 auto;padding:0 16px 10px;display:flex;gap:10px;align-items:center;justify-content:flex-end}
 .lvl{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
 .lvl b{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-family:var(--display);font-size:13px;background:linear-gradient(135deg,#22d3ee,#9d5cff);box-shadow:0 0 12px rgba(34,211,238,.4)}
 .lvl-bar{flex:1;height:8px;border-radius:99px;background:var(--panel2);overflow:hidden;min-width:40px}
@@ -424,7 +424,6 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
     </div>
   </div>
   <div class="pbar">
-    <div class="lvl" id="lvlBox" title="Уровень: опыт начисляется за потраченные монеты"><b id="lvlNum">1</b><span class="lvl-bar"><i id="lvlFill"></i></span><small class="num" id="lvlTxt"></small></div>
     <button class="wheel-btn" id="wheelBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" stroke="currentColor" stroke-width="1.4"/></svg><span id="wheelTxt">Колесо</span></button>
   </div>
   <nav class="tabs" role="tablist">
@@ -778,13 +777,13 @@ const CASES = [
    items:["tatasahur","frigo","boneca","trippi","lirili","brrbrr","chimp","cappuccina","bombombini"]},
   {id:"coffee", name:"Кофейный", tag:"Капучино и компания", c1:"#c98a4e", c2:"#ff3d9a", price:100, lvl:1,
    items:["lirili","brrbrr","chimp","cappuccina","cappassassino","burbaloni","glorbo","bombombini","orangutini","tungtung"]},
-  {id:"sea", name:"Морской", tag:"Шанс на Tralalero", c1:"#22d3ee", c2:"#2e6cff", price:250, lvl:2,
+  {id:"sea", name:"Морской", tag:"Шанс на Tralalero", c1:"#22d3ee", c2:"#2e6cff", price:250, lvl:1,
    items:["cappuccina","cappassassino","burbaloni","glorbo","bombombini","orangutini","trulimero","tralalero","graipussi"]},
-  {id:"sky", name:"Небесный", tag:"Летают и бомбят", c1:"#3ef08f", c2:"#22d3ee", price:500, lvl:3,
+  {id:"sky", name:"Небесный", tag:"Летают и бомбят", c1:"#3ef08f", c2:"#22d3ee", price:500, lvl:1,
    items:["glorbo","bombombini","orangutini","trulimero","svinino","tungtung","bombardiro","girafa"]},
-  {id:"legend", name:"Легендарный", tag:"Только топ", c1:"#f040ff", c2:"#9d5cff", price:1500, lvl:5,
+  {id:"legend", name:"Легендарный", tag:"Только топ", c1:"#f040ff", c2:"#9d5cff", price:1500, lvl:1,
    items:["trulimero","svinino","tungtung","tralalero","bombardiro","graipussi","vaca","garama"]},
-  {id:"myth", name:"Мифический", tag:"Los Tralaleritos внутри", c1:"#ffc53d", c2:"#ff7a1a", price:5000, lvl:7,
+  {id:"myth", name:"Мифический", tag:"Los Tralaleritos внутри", c1:"#ffc53d", c2:"#ff7a1a", price:5000, lvl:1,
    items:["tralalero","bombardiro","graipussi","vaca","girafa","garama","lostral"]}
 ];
 // шанс каждого предмета: шанс его редкости делится поровну между предметами этой редкости в кейсе
@@ -928,14 +927,9 @@ function botDrop(){
 function pushLive(d){LIVE.unshift(d);LIVE.length=Math.min(LIVE.length,20);renderFeed(true)}
 function addFeed(inst){pushLive({id:inst.id,st:!!inst.st,value:inst.value,who:"Ты",mine:true});collect(inst.id);if(inst.value>S.stats.best)S.stats.best=inst.value}
 function collect(id){S.collected=S.collected||[];if(!S.collected.includes(id))S.collected.push(id)}
-// ---------- levels ----------
-const lvlNeed=L=>Math.round(250*Math.pow(L,1.5));
-function levelInfo(){let L=1,x=S.xp||0;while(x>=lvlNeed(L)){x-=lvlNeed(L);L++}return {L,x,need:lvlNeed(L)}}
-function gainXP(n){
-  const before=levelInfo().L; S.xp=(S.xp||0)+Math.max(0,Math.round(n)); const after=levelInfo().L;
-  if(after>before){let reward=0;for(let l=before+1;l<=after;l++)reward+=l*100;S.balance+=reward;
-    setTimeout(()=>{toast(`Новый уровень ${after}! +${fmt(reward)} монет`);winSound("red")},400)}
-}
+// уровней нет: все кейсы открыты сразу
+function levelInfo(){return {L:99}}
+function gainXP(){}
 for(let i=0;i<12;i++) LIVE.push(botDrop());
 (function loop(){setTimeout(()=>{if(!document.hidden)pushLive(botDrop());loop()},2200+rnd()*4200)})();
 function renderFeed(fresh){
@@ -947,8 +941,6 @@ function renderFeed(fresh){
 function invValue(){return S.inv.reduce((s,x)=>s+x.value,0)}
 function renderTop(){
   $("#balance").textContent=fmt(S.balance);
-  const li=levelInfo();
-  $("#lvlNum").textContent=li.L; $("#lvlFill").style.width=(li.x/li.need*100).toFixed(1)+"%"; $("#lvlTxt").textContent=`${fmt(li.x)} / ${fmt(li.need)} XP`;
   renderWheelBtn();
   $("#invCount").textContent=S.inv.length;
   const can = S.balance+invValue()<MIN_CASE;
