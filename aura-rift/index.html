@@ -402,6 +402,11 @@ body{background:#07061a url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
 h2,.sub,#colSub{text-shadow:0 2px 8px rgba(0,0,0,.9),0 0 2px #000}
 main .sub{color:#d2d0f5}
 @media (max-width:760px){.rift-art{width:112px;height:112px}.open-btn{min-width:0;width:100%}}
+
+.mults{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.mult{font-family:var(--mono);font-weight:700;font-size:14px;padding:8px 16px;border-radius:10px;background:rgba(15,12,46,.85);border:1.5px solid rgba(139,92,255,.5)}
+.mult:hover:not([disabled]){border-color:var(--win);color:var(--win)}
+.mult[disabled]{opacity:.4;cursor:not-allowed}
 </style>
 
 <div class="sky" aria-hidden="true"></div>
@@ -511,6 +516,7 @@ main .sub{color:#d2d0f5}
       </div>
       <div><div class="slot-label">Цель</div><div class="slot anim" id="upDst">Выбери ауру, которую хочешь</div></div>
     </div>
+    <div class="mults" id="mults" role="group" aria-label="Цель дороже в N раз"></div>
     <div class="boost">
       <label for="boostRange">⚡ Буст шанса</label>
       <input type="range" id="boostRange" min="0" max="0" step="1" value="0">
@@ -838,6 +844,10 @@ function renderTop(){
 }
 setInterval(renderTop,30000);
 
+// если где-то вылетит ошибка, игра не должна «зависнуть» с заблокированными кнопками
+addEventListener("error",()=>{busy=false});
+addEventListener("unhandledrejection",()=>{busy=false});
+
 // ================= tabs =================
 let tab="rifts", busy=false;
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
@@ -1064,12 +1074,13 @@ function renderUpgrade(){
   if(s&&upDst&&BY_ID[upDst].price<=s.value) upDst=null;
   const mb=maxBoost(); if(boost>mb) boost=mb;
   $("#boostRange").max=mb; $("#boostRange").value=boost; $("#boostRange").disabled=!mb||busy; $("#boostVal").textContent=fmt(boost);
-  $("#upSrc").innerHTML=s?instCard(s):"Выбери ауру из инвентаря";
+  $("#upSrc").innerHTML=s?instCard(s):"Выбери ауру из списка «Твои ауры» ниже";
   $("#upDst").innerHTML=upDst?card(BY_ID[upDst]):"Выбери ауру, которую хочешь";
   const c=chance();
   $("#chance").textContent=(c*100).toFixed(c&&c<.1?2:1).replace(/\.0+$/,"")+"%";
   $("#dialArc").setAttribute("stroke-dasharray",`${(c*552.92).toFixed(2)} 553`);
   $("#upBtn").disabled=busy||!s||!upDst;
+  document.querySelectorAll("#mults .mult").forEach(b=>b.disabled=!s||busy);
   $("#upBtn").innerHTML=boost?`Апгрейд · буст ${coin(boost)}`:"Апгрейд";
   $("#upInv").innerHTML=S.inv.length?S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x,{cls:"pick"+(x.uid===upSrc?" sel":""),extra:`data-src="${x.uid}"`})).join("")
     :`<div class="empty" style="grid-column:1/-1">Инвентарь пуст — открой разлом.</div>`;
@@ -1078,7 +1089,17 @@ function renderUpgrade(){
   $("#upTargets").innerHTML=list.length?list.map(a=>card(a,{note:s?Math.round(Math.min(MAX_CHANCE,s.value/a.price)*100)+"%":"",cls:"pick"+(a.id===upDst?" sel":""),extra:`data-dst="${a.id}"`})).join("")
     :`<div class="empty" style="grid-column:1/-1">Ничего не нашлось.</div>`;
 }
-$("#upInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-src]");if(b){upSrc=+b.dataset.src;boost=0;renderUpgrade()}});
+// цель подбирается автоматически: ближайшая аура дороже в mult раз (x2 ≈ шанс 50%)
+function autoTarget(mult){
+  const s=srcInst(); if(!s) return;
+  const want=s.value*mult, list=AURAS.filter(a=>a.tier!=="unique"&&a.price>s.value);
+  if(!list.length){upDst=null;toast("Эта аура уже самая дорогая — апгрейдить некуда");return}
+  upDst=list.sort((a,b)=>Math.abs(Math.log(a.price/want))-Math.abs(Math.log(b.price/want)))[0].id;
+}
+$("#upInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-src]");if(!b)return;upSrc=+b.dataset.src;boost=0;
+  const s=srcInst(); if(!upDst||BY_ID[upDst].price<=s.value) autoTarget(2); renderUpgrade()});
+$("#mults").innerHTML=[1.5,2,3,5,10].map(m=>`<button class="mult" type="button" data-m="${m}">x${m}</button>`).join("");
+$("#mults").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b||busy)return;if(!srcInst()){toast("Сначала выбери свою ауру");return}autoTarget(+b.dataset.m);boost=0;renderUpgrade()});
 $("#upTargets").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-dst]");if(b){upDst=b.dataset.dst;boost=0;renderUpgrade()}});
 $("#upSearch").addEventListener("input",renderUpgrade);
 $("#boostRange").addEventListener("input",e=>{boost=+e.target.value;renderUpgrade()});
