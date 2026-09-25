@@ -409,6 +409,9 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
 .item.st{box-shadow:inset 0 0 0 1px rgba(255,197,61,.55)}
 .case-art .peek{height:64px;top:-6px}
 .open-head .case-art .peek{height:54px}
+
+.save-badge{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+.save-badge[data-st="ok"]{background:var(--win);box-shadow:0 0 6px var(--win)}
 </style>
 
 <div class="sky" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -419,7 +422,7 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
     <div class="logo"><i></i>БРЕЙНРОТ <span>КЕЙСЫ</span></div>
     <button class="snd" id="sndBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="w1" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="bal" title="Виртуальный баланс">
-      <span class="coin"></span><span class="num" id="balance">0</span>
+      <span class="coin"></span><span class="num" id="balance">0</span><i class="save-badge" id="saveBadge" data-st="off" aria-hidden="true"></i>
       <button class="bonus-btn" id="bonusBtn" type="button">+ бонус</button>
     </div>
   </div>
@@ -773,18 +776,30 @@ const ITEMS = [
 const BY_ID = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 
 const CASES = [
-  {id:"start", name:"Стартовый", tag:"Для разгона", c1:"#4b7bff", c2:"#22d3ee", price:25, lvl:1,
-   items:["tatasahur","frigo","boneca","trippi","lirili","brrbrr","chimp","cappuccina","bombombini"]},
+  {id:"nishiy", name:"Нищий", tag:"Для самых бедных", c1:"#8a93a6", c2:"#4b7bff", price:52, lvl:1,
+   items:["boneca","trippi","lirili","brrbrr","chimp","cappuccina","cappassassino","glorbo","tungtung"]},
+  {id:"sixseven", name:"Шесть-Семь", tag:"67 67 67", c1:"#22d3ee", c2:"#9d5cff", price:67, lvl:1,
+   items:["trippi","lirili","brrbrr","chimp","cappuccina","cappassassino","burbaloni","bombombini","svinino"]},
   {id:"coffee", name:"Кофейный", tag:"Капучино и компания", c1:"#c98a4e", c2:"#ff3d9a", price:100, lvl:1,
    items:["lirili","brrbrr","chimp","cappuccina","cappassassino","burbaloni","glorbo","bombombini","orangutini","tungtung"]},
-  {id:"sea", name:"Морской", tag:"Шанс на Tralalero", c1:"#22d3ee", c2:"#2e6cff", price:250, lvl:1,
-   items:["cappuccina","cappassassino","burbaloni","glorbo","bombombini","orangutini","trulimero","tralalero","graipussi"]},
-  {id:"sky", name:"Небесный", tag:"Летают и бомбят", c1:"#3ef08f", c2:"#22d3ee", price:500, lvl:1,
-   items:["glorbo","bombombini","orangutini","trulimero","svinino","tungtung","bombardiro","girafa"]},
-  {id:"legend", name:"Легендарный", tag:"Только топ", c1:"#f040ff", c2:"#9d5cff", price:1500, lvl:1,
+  {id:"zone228", name:"Двести двадцать восемь", tag:"Статья для брейнротов", c1:"#4b7bff", c2:"#1a1142", price:228, lvl:1,
+   items:["cappuccina","cappassassino","burbaloni","glorbo","bombombini","orangutini","trulimero","tungtung","bombardiro"]},
+  {id:"sea", name:"Морской", tag:"Шанс на Tralalero", c1:"#22d3ee", c2:"#2e6cff", price:322, lvl:1,
+   items:["cappassassino","burbaloni","glorbo","bombombini","orangutini","trulimero","svinino","tralalero","graipussi"]},
+  {id:"sky", name:"Небесный", tag:"420 над облаками", c1:"#3ef08f", c2:"#22d3ee", price:420, lvl:1,
+   items:["burbaloni","glorbo","bombombini","orangutini","trulimero","svinino","tungtung","bombardiro","girafa"]},
+  {id:"hell", name:"Адский", tag:"666 градусов", c1:"#ff4d4d", c2:"#3a0a0a", price:666, lvl:1,
+   items:["glorbo","orangutini","trulimero","svinino","tungtung","tralalero","bombardiro","vaca"]},
+  {id:"casino", name:"Казино", tag:"Три топора", c1:"#ffc53d", c2:"#ff3d9a", price:777, lvl:1,
+   items:["bombombini","orangutini","trulimero","svinino","tungtung","tralalero","graipussi","vaca","girafa"]},
+  {id:"hacker", name:"Хакерский", tag:"1337 h4x0r", c1:"#3ef08f", c2:"#0a2a14", price:1337, lvl:1,
    items:["trulimero","svinino","tungtung","tralalero","bombardiro","graipussi","vaca","garama"]},
-  {id:"myth", name:"Мифический", tag:"Los Tralaleritos внутри", c1:"#ffc53d", c2:"#ff7a1a", price:5000, lvl:1,
-   items:["tralalero","bombardiro","graipussi","vaca","girafa","garama","lostral"]}
+  {id:"legend", name:"Легендарный", tag:"Как в 2007", c1:"#f040ff", c2:"#9d5cff", price:2007, lvl:1,
+   items:["svinino","tungtung","tralalero","bombardiro","graipussi","vaca","girafa"]},
+  {id:"myth", name:"Мифический", tag:"Los Tralaleritos внутри", c1:"#ffc53d", c2:"#ff7a1a", price:4200, lvl:1,
+   items:["tralalero","bombardiro","graipussi","vaca","girafa","garama","lostral"]},
+  {id:"over9000", name:"Больше 9000", tag:"It's over 9000!", c1:"#ff7a1a", c2:"#ff4d4d", price:9000, lvl:1,
+   items:["graipussi","vaca","girafa","garama","lostral"]}
 ];
 // шанс каждого предмета: шанс его редкости делится поровну между предметами этой редкости в кейсе
 // Баланс «60 на 40»: ~60% дропов дороже кейса, ~40% дешевле.
@@ -830,7 +845,32 @@ const KEY = "brainrot-cases-v1";
 let S = load() || fresh();
 function fresh(){return {balance:START_BALANCE, inv:[], feed:[], uid:1, xp:0, collected:[], lastWheel:0, stats:{opened:0, upWin:0, upLose:0, contracts:0, best:0, battlesWon:0, battles:0, crashBest:0}}}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s&&Array.isArray(s.inv)?s:null}catch(e){return null}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+// Сохранение: в браузере (сразу) и в облаке Claude (личный документ игрока),
+// чтобы баланс не терялся при очистке браузера и был на всех устройствах.
+let cloud=null, cloudT=null;
+function save(){
+  S.savedAt=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(cloud){clearTimeout(cloudT);cloudT=setTimeout(pushCloud,1200)}
+}
+function pushCloud(){if(!cloud)return;cloud.ref.set({json:JSON.stringify(S),savedAt:S.savedAt}).then(()=>setSaveBadge("ok")).catch(()=>setSaveBadge("off"))}
+function setSaveBadge(st){const b=document.getElementById("saveBadge");if(!b)return;b.dataset.st=st;b.title=st==="ok"?"Прогресс сохранён в облаке":"Прогресс сохраняется только в этом браузере"}
+(async()=>{
+  try{
+    const [db,user]=await Promise.all([window.claude?.use?.("db"),window.claude?.use?.("user")]);
+    const uid=db&&user?await user.id():null;
+    if(!uid){setSaveBadge("off");return}
+    const ref=db.doc("data/users/"+uid+"/save");
+    const snap=await ref.get();
+    const d=snap.exists?snap.data():null;
+    if(d&&d.json&&(d.savedAt||0)>(S.savedAt||0)){
+      const r=JSON.parse(d.json);
+      if(r&&Array.isArray(r.inv)){S=r;S.inv=S.inv.filter(x=>BY_ID[x.id]);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderCases();renderAll();toast("Прогресс загружен из облака")}
+    }
+    cloud={ref}; setSaveBadge("ok");
+    if(!d||(S.savedAt||0)>(d.savedAt||0)) pushCloud();
+  }catch(e){setSaveBadge("off")}
+})();
 
 // ---------- utils ----------
 const $ = s=>document.querySelector(s);
