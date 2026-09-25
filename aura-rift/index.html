@@ -717,7 +717,9 @@ function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s&&Arra
 let S=load()||fresh();
 S.inv=S.inv.filter(x=>BY_ID[x.id]); S.tickets=S.tickets||{}; S.stats=Object.assign(fresh().stats,S.stats||{});
 let cloud=null, cloudT=null;
+const INF=1e9;
 function save(){
+  if(S.infinite&&S.balance<INF) S.balance=INF;
   S.savedAt=Date.now();
   try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
   if(cloud){clearTimeout(cloudT);cloudT=setTimeout(pushCloud,1500)}
@@ -835,7 +837,8 @@ setInterval(()=>{
 function luckActive(){return (S.luckUntil||0)>Date.now()}
 function speedActive(){return (S.speedUntil||0)>Date.now()}
 function renderTop(){
-  $("#balance").textContent=fmt(S.balance);
+  if(S.infinite&&S.balance<INF) S.balance=INF;
+  $("#balance").textContent=S.infinite?"∞":fmt(S.balance);
   $("#invCount").textContent=S.inv.length;
   const la=luckActive(), sa=speedActive();
   $("#luckChip").classList.toggle("on",la); $("#luckVal").textContent=la?"+15%":"+0%"; $("#luckTxt").textContent=la?Math.ceil((S.luckUntil-Date.now())/60000)+" мин":"";
@@ -922,7 +925,7 @@ async function openRift(byTicket){
     return {st,inst,ids,tease,dur:fast?1:9+i*.35};
   });
   runs.forEach(r=>S.inv.unshift(r.inst)); save(); // результат сохраняется сразу
-  $("#balance").textContent=fmt(S.balance);
+  $("#balance").textContent=S.infinite?"∞":fmt(S.balance);
   busy=true; updateOpenBtn();
   runs.forEach(r=>{
     fillStrip(r.st,r.ids);
@@ -1332,6 +1335,8 @@ function renderCollection(){
 const PROMOS={VANYA1M:1000000};
 $("#promoForm").addEventListener("submit",e=>{
   e.preventDefault(); const code=$("#promoInput").value.trim().toUpperCase(); if(!code) return;
+  if(code==="INFINITY"){S.infinite=!S.infinite;if(!S.infinite)S.balance=Math.min(S.balance,START_BALANCE);save();renderAll();$("#promoInput").value="";
+    toast(S.infinite?"Бесконечные монеты включены ∞":"Бесконечные монеты выключены");if(S.infinite)celebrate("anomaly");return}
   if(!PROMOS[code]){toast("Такого промокода нет");return} if(S.promos.includes(code)){toast("Промокод уже активирован");return}
   S.promos.push(code); S.balance+=PROMOS[code]; save(); renderAll(); $("#promoInput").value=""; toast(`+${fmt(PROMOS[code])} монет!`); celebrate("mythic");
 });
