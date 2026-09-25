@@ -246,10 +246,27 @@ h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted
 .round-tag{font-size:12px;font-weight:700;color:var(--amber)}
 
 /* upgrade */
-.up-stage{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;border-radius:22px;padding:18px;
+.up-stage{display:grid;grid-template-columns:minmax(0,300px) auto minmax(0,300px);justify-content:center;gap:18px;align-items:stretch;border-radius:22px;padding:18px;
   background:radial-gradient(60% 80% at 50% 50%,rgba(139,92,255,.22),transparent 70%),linear-gradient(160deg,#1a1450,#0c0a2c);border:1px solid var(--line)}
-.slot{min-height:190px;border:1.5px dashed var(--line);border-radius:16px;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:10px}
-.slot .item{width:100%;max-width:200px}
+.up-stage>div:not(.dial-wrap){display:flex;flex-direction:column;min-width:0}
+.up-stage .dial-wrap{align-self:center}
+.slot{flex:1;min-height:210px;border:1.5px dashed var(--line);border-radius:16px;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:12px}
+.slot.filled{border:0;padding:0;place-items:stretch}
+.slot.filled>.item{width:100%;height:100%;justify-content:center;border-radius:16px;padding:12px}
+.slot.filled>.item .art{height:120px}
+.slot .item.pick:hover{transform:none;filter:brightness(1.15)}
+.up-multi{display:flex;flex-direction:column;gap:8px;height:100%}
+.up-mgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:1;align-content:start}
+.up-mgrid .item:last-child:nth-child(odd){grid-column:1/-1}
+.modal-card .up-mgrid .item:last-child:nth-child(odd){grid-column:auto}
+.up-mgrid .item{padding:6px 6px 8px}.up-mgrid .item .art{height:52px}.up-mgrid .item .nm{font-size:11px}.up-mgrid .item .tn{font-size:10px}
+.up-multi .item.pick::before{content:"✕";position:absolute;top:4px;right:7px;font-size:11px;font-weight:800;color:var(--muted);z-index:2}
+.up-multi .item.pick:hover::before{color:var(--lose)}
+.up-total{display:flex;align-items:center;gap:10px;justify-content:center;background:rgba(62,240,143,.1);border:1px solid rgba(62,240,143,.4);border-radius:12px;padding:7px 10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.up-total b{display:flex;align-items:center;gap:5px;color:var(--text);font-size:14px}
+.up-clear{font-size:12px;font-weight:700;color:var(--lose);text-decoration:underline;text-underline-offset:3px}
+.up-hint{font-size:12px;color:var(--muted);font-weight:700;margin-left:6px}
+.modal-card .up-mgrid.lost{margin-bottom:16px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
 .slot-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;font-weight:700}
 .dial{position:relative;width:230px;height:230px}
 .dial svg{width:100%;height:100%;display:block;overflow:visible}
@@ -359,9 +376,9 @@ footer .reset{color:var(--muted);text-decoration:underline;text-underline-offset
   .b-grid,.cols,.cr-wrap{grid-template-columns:1fr}
   .duel{grid-template-columns:1fr 1fr;gap:6px}.vs{display:none}
   .mini{height:84px;padding:4px 6px;gap:4px}.mini .art{width:56px;height:56px}
-  .up-stage{grid-template-columns:1fr 1fr;padding:12px;gap:10px}
+  .up-stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:12px;gap:10px}
   .up-stage .dial-wrap{grid-column:1/-1;grid-row:1;justify-self:center}
-  .slot{min-height:160px}
+  .slot{min-height:170px}.slot.filled>.item .art{height:90px}.up-mgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.up-mgrid .item .art{height:40px}
   .cr-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .cr-go{grid-column:1/-1;width:100%;margin-top:0}
   .cr-mult{font-size:40px}
@@ -527,9 +544,9 @@ main .sub{color:#d2d0f5}
 
   <section class="view" id="view-upgrade" hidden>
     <h2><span data-ru="Апгрейд">Upgrade</span></h2>
-    <p class="sub"><span data-ru="Выбери свою ауру и цель — кнопками ниже, своим иксом или своим шансом. Можно доплатить монетами, чтобы расширить зелёный сектор.">Pick your aura and a target — with the buttons below, your own multiplier or your own chance. Pay extra coins to widen the green zone.</span></p>
+    <p class="sub"><span data-ru="Положи одну или несколько аур (до 8) — их цена сложится — и выбери цель: кнопками ниже, своим иксом или своим шансом. Можно доплатить монетами, чтобы расширить зелёный сектор.">Put in one or several auras (up to 8) — their values add up — and pick a target: with the buttons below, your own multiplier or your own chance. Pay extra coins to widen the green zone.</span></p>
     <div class="up-stage">
-      <div><div class="slot-label"><span data-ru="Твоя аура">Your aura</span></div><div class="slot anim" id="upSrc"><span data-ru="Выбери ауру из инвентаря">Pick an aura from your inventory</span></div></div>
+      <div><div class="slot-label"><span data-ru="Твои ауры">Your auras</span></div><div class="slot anim" id="upSrc"><span data-ru="Выбери ауру из инвентаря">Pick an aura from your inventory</span></div></div>
       <div class="dial-wrap">
         <div class="dial" id="dial" data-arrow="arrow">
           <svg viewBox="0 0 230 230" aria-hidden="true">
@@ -557,7 +574,7 @@ main .sub{color:#d2d0f5}
     </div>
     <div class="up-go"><button class="btn btn-main" id="upBtn" type="button" disabled><span data-ru="Апгрейд">Upgrade</span></button></div>
     <div class="cols">
-      <div><h3><span data-ru="Твои ауры">Your auras</span></h3><div class="scroll"><div class="grid sm" id="upInv"></div></div></div>
+      <div><h3><span data-ru="Твои ауры">Your auras</span> <span class="up-hint num" id="upInvHint"></span></h3><div class="scroll"><div class="grid sm" id="upInv"></div></div></div>
       <div><h3><span data-ru="Что хочешь получить">What you want</span></h3><input class="search" id="upSearch" type="search" placeholder="Search auras…" data-ru-placeholder="Поиск ауры…" autocomplete="off"><div class="scroll"><div class="grid sm" id="upTargets"></div></div></div>
     </div>
   </section>
@@ -1047,7 +1064,7 @@ async function openRift(byTicket){
 // ================= inventory =================
 function sell(uid,quiet){
   const i=S.inv.findIndex(x=>x.uid===uid); if(i<0) return;
-  const [x]=S.inv.splice(i,1); S.balance+=x.value; if(upSrc===uid) upSrc=null; ctSel.delete(uid);
+  const [x]=S.inv.splice(i,1); S.balance+=x.value; upSel.delete(uid); ctSel.delete(uid);
   save(); renderAll(); if(!quiet) toast(L(`Sold for ${fmt(x.value)}`,`Продано за ${fmt(x.value)}`));
 }
 let sellArmed=false;
@@ -1063,7 +1080,7 @@ function renderInventory(){
 $("#invGrid").addEventListener("click",e=>{const b=e.target.closest("[data-sell]");if(b)sell(+b.dataset.sell)});
 $("#sellAllBtn").addEventListener("click",()=>{
   if(!sellArmed){sellArmed=true;renderInventory();setTimeout(()=>{sellArmed=false;if(tab==="inventory")renderInventory()},3500);return}
-  const v=invValue();S.balance+=v;S.inv=[];upSrc=null;ctSel.clear();sellArmed=false;save();renderAll();toast(L(`Sold everything for ${fmt(v)}`,`Продано всё за ${fmt(v)}`));
+  const v=invValue();S.balance+=v;S.inv=[];upSel.clear();ctSel.clear();sellArmed=false;save();renderAll();toast(L(`Sold everything for ${fmt(v)}`,`Продано всё за ${fmt(v)}`));
 });
 
 // ================= battles (1v1) =================
@@ -1164,68 +1181,92 @@ async function runBattle(rifts,botName){
 }
 
 // ================= upgrade =================
-let upSrc=null, upDst=null, needleAngle=0, boost=0, upLock=null; // upLock: что показывать, пока крутится
-const MAX_CHANCE=.8;
+// можно положить до UP_MAX аур сразу — их стоимость складывается
+let upSel=new Set(), upDst=null, needleAngle=0, boost=0, upLock=null; // upLock: что показывать, пока крутится
+const MAX_CHANCE=.8, UP_MAX=8;
 (function ticks(){let s="";for(let i=0;i<40;i++)s+=`<line x1="115" y1="${i%5?11:8}" x2="115" y2="17" transform="rotate(${i*9} 115 115)" stroke="${i%5?"#4a4390":"#fff"}" stroke-width="${i%5?1.2:2}" stroke-linecap="round"/>`;$("#dialTicks").innerHTML=s})();
-const srcInst=()=>S.inv.find(x=>x.uid===upSrc);
-function maxBoost(){const s=srcInst();if(!s||!upDst)return 0;return Math.max(0,Math.min(S.balance,Math.floor(MAX_CHANCE*BY_ID[upDst].price-s.value)))}
-function chance(){const s=srcInst();if(!s||!upDst)return 0;return Math.min(MAX_CHANCE,(s.value+boost)/BY_ID[upDst].price)}
+const srcList=()=>S.inv.filter(x=>upSel.has(x.uid));
+const srcVal=()=>srcList().reduce((t,x)=>t+x.value,0);
+function maxBoost(){const v=srcVal();if(!v||!upDst)return 0;return Math.max(0,Math.min(S.balance,Math.floor(MAX_CHANCE*BY_ID[upDst].price-v)))}
+function chance(){const v=srcVal();if(!v||!upDst)return 0;return Math.min(MAX_CHANCE,(v+boost)/BY_ID[upDst].price)}
+// что лежит в левом слоте: одна аура — большой карточкой, несколько — сеткой + сумма
+function srcView(list,rm){
+  if(list.length===1) return instCard(list[0],rm?{cls:"pick",extra:`data-rm="${list[0].uid}"`}:{});
+  const tot=list.reduce((t,x)=>t+x.value,0);
+  return `<div class="up-multi"><div class="up-mgrid">${list.map(x=>instCard(x,rm?{cls:"pick",extra:`data-rm="${x.uid}"`}:{})).join("")}</div>
+    <div class="up-total"><span>${list.length} ${L("auras","аур")}</span><b class="num">${coin(tot)}</b>${rm?`<button type="button" class="up-clear" id="upClear">${L("Clear","Очистить")}</button>`:""}</div></div>`;
+}
 function renderUpgrade(){
+  const stage=$(".up-stage");
   if(upLock){ // во время прокрутки круг показывает зафиксированный шанс
     const c=upLock.c;
     $("#chance").textContent=(c*100).toFixed(c<.1?2:1).replace(/\.0+$/,"")+"%";
     $("#dialArc").setAttribute("stroke-dasharray",`${(c*552.92).toFixed(2)} 553`);
-    $("#upSrc").innerHTML=instCard(upLock.src); $("#upDst").innerHTML=card(BY_ID[upLock.dst]);
+    $("#upSrc").innerHTML=srcView(upLock.src,false); $("#upDst").innerHTML=card(BY_ID[upLock.dst]);
+    $("#upSrc").className="slot filled"+(upLock.src.length>1?" many":""); $("#upDst").className="slot filled";
     $("#upBtn").disabled=true; $("#boostRange").disabled=true;
     document.querySelectorAll("#mults .mult").forEach(b=>b.disabled=true);
     return;
   }
-  const s=srcInst(); if(!s) upSrc=null;
-  if(s&&upDst&&BY_ID[upDst].price<=s.value) upDst=null;
+  for(const u of [...upSel]) if(!S.inv.some(x=>x.uid===u)) upSel.delete(u);
+  const src=srcList(), v=srcVal();
+  if(v&&upDst&&BY_ID[upDst].price<=v) upDst=null;
   const mb=maxBoost(); if(boost>mb) boost=mb;
   $("#boostRange").max=mb; $("#boostRange").value=boost; $("#boostRange").disabled=!mb||busy; $("#boostVal").textContent=fmt(boost);
-  $("#upSrc").innerHTML=s?instCard(s):L("Pick an aura from “Your auras” below","Выбери ауру из списка «Твои ауры» ниже");
+  $("#upSrc").innerHTML=src.length?srcView(src,true):L(`Pick up to ${UP_MAX} auras from “Your auras” below`,`Выбери до ${UP_MAX} аур из списка «Твои ауры» ниже`);
+  $("#upSrc").className="slot"+(src.length?" filled":"")+(src.length>1?" many":"");
   $("#upDst").innerHTML=upDst?card(BY_ID[upDst]):L("Pick the aura you want","Выбери ауру, которую хочешь");
+  $("#upDst").className="slot"+(upDst?" filled":"");
   const c=chance();
   $("#chance").textContent=(c*100).toFixed(c&&c<.1?2:1).replace(/\.0+$/,"")+"%";
   $("#dialArc").setAttribute("stroke-dasharray",`${(c*552.92).toFixed(2)} 553`);
-  $("#upBtn").disabled=busy||!s||!upDst;
-  document.querySelectorAll("#mults button.mult").forEach(b=>{b.disabled=!s||busy;b.classList.toggle("on",!upPick.own&&(!!b.dataset.p&&+b.dataset.p===upPick.p||!!b.dataset.m&&+b.dataset.m===upPick.m))});
+  $("#upBtn").disabled=busy||!v||!upDst;
+  document.querySelectorAll("#mults button.mult").forEach(b=>{b.disabled=!v||busy;b.classList.toggle("on",!upPick.own&&(!!b.dataset.p&&+b.dataset.p===upPick.p||!!b.dataset.m&&+b.dataset.m===upPick.m))});
   $("#ownX").parentNode.classList.toggle("on",!!(upPick.own&&upPick.m)); $("#ownP").parentNode.classList.toggle("on",!!(upPick.own&&upPick.p));
-  $("#upMult").textContent=s&&upDst?`x${(BY_ID[upDst].price/s.value).toFixed(2).replace(/\.?0+$/,"")}`:"";
+  $("#upMult").textContent=v&&upDst?`x${(BY_ID[upDst].price/v).toFixed(2).replace(/\.?0+$/,"")}`:"";
   $("#upBtn").innerHTML=boost?L(`Upgrade · boost ${coin(boost)}`,`Апгрейд · буст ${coin(boost)}`):L("Upgrade","Апгрейд");
-  $("#upInv").innerHTML=S.inv.length?S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x,{cls:"pick"+(x.uid===upSrc?" sel":""),extra:`data-src="${x.uid}"`})).join("")
+  $("#upInvHint").textContent=`${src.length} / ${UP_MAX}`;
+  $("#upInv").innerHTML=S.inv.length?S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x,{cls:"pick"+(upSel.has(x.uid)?" sel":""),extra:`data-src="${x.uid}"`})).join("")
     :`<div class="empty" style="grid-column:1/-1">${L("Inventory is empty — open a rift.","Инвентарь пуст — открой разлом.")}</div>`;
-  const q=$("#upSearch").value.trim().toLowerCase(), min=s?s.value:0;
-  const list=AURAS.filter(a=>a.tier!=="unique"&&a.price>min&&(!q||a.name.toLowerCase().includes(q)));
-  $("#upTargets").innerHTML=list.length?list.map(a=>card(a,{note:s?Math.round(Math.min(MAX_CHANCE,s.value/a.price)*100)+"%":"",cls:"pick"+(a.id===upDst?" sel":""),extra:`data-dst="${a.id}"`})).join("")
+  const q=$("#upSearch").value.trim().toLowerCase();
+  const list=AURAS.filter(a=>a.tier!=="unique"&&a.price>v&&(!q||a.name.toLowerCase().includes(q)));
+  $("#upTargets").innerHTML=list.length?list.map(a=>card(a,{note:v?Math.round(Math.min(MAX_CHANCE,v/a.price)*100)+"%":"",cls:"pick"+(a.id===upDst?" sel":""),extra:`data-dst="${a.id}"`})).join("")
     :`<div class="empty" style="grid-column:1/-1">${L("Nothing found.","Ничего не нашлось.")}</div>`;
 }
-// цель подбирается автоматически: ближайшая аура дороже в mult раз (x2 ≈ шанс 50%)
-function autoTargetChance(p){
-  const s=srcInst(); if(!s) return;
-  const list=AURAS.filter(a=>a.tier!=="unique"&&a.price>s.value);
-  if(!list.length){upDst=null;toast(L("This is already the priciest aura — nothing to upgrade to","Эта аура уже самая дорогая — апгрейдить некуда"));return}
-  upDst=list.sort((a,b)=>Math.abs(s.value/a.price-p)-Math.abs(s.value/b.price-p))[0].id;
+function upTargets(){
+  const v=srcVal(), list=AURAS.filter(a=>a.tier!=="unique"&&a.price>v);
+  if(!list.length){upDst=null;toast(L("Nothing pricier to upgrade into — remove an aura","Дороже ничего нет — убери какую-нибудь ауру"))}
+  return list;
 }
-function autoTarget(mult){
-  const s=srcInst(); if(!s) return;
-  const want=s.value*mult, list=AURAS.filter(a=>a.tier!=="unique"&&a.price>s.value);
-  if(!list.length){upDst=null;toast(L("This is already the priciest aura — nothing to upgrade to","Эта аура уже самая дорогая — апгрейдить некуда"));return}
-  upDst=list.sort((a,b)=>Math.abs(Math.log(a.price/want))-Math.abs(Math.log(b.price/want)))[0].id;
+// цель подбирается автоматически: ближайшая аура под нужный шанс / икс от суммы выбранных аур
+function autoTargetChance(p){const v=srcVal(),list=upTargets(); if(!v||!list.length) return;
+  upDst=list.sort((a,b)=>Math.abs(v/a.price-p)-Math.abs(v/b.price-p))[0].id}
+function autoTarget(mult){const v=srcVal(),want=v*mult,list=upTargets(); if(!v||!list.length) return;
+  upDst=list.sort((a,b)=>Math.abs(Math.log(a.price/want))-Math.abs(Math.log(b.price/want)))[0].id}
+function retarget(){boost=0; if(!upSel.size) return;
+  if(upPick.manual&&upDst&&BY_ID[upDst].price>srcVal()) return;
+  if(upPick.manual) upPick={p:.5};
+  if(upPick.p)autoTargetChance(upPick.p);else autoTarget(upPick.m)}
+function toggleSrc(uid){
+  if(upSel.has(uid)) upSel.delete(uid);
+  else if(upSel.size>=UP_MAX){toast(L(`Up to ${UP_MAX} auras at once`,`Не больше ${UP_MAX} аур за раз`));return}
+  else upSel.add(uid);
+  retarget(); renderUpgrade();
 }
-$("#upInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-src]");if(!b)return;upSrc=+b.dataset.src;boost=0;
-  const s=srcInst(); if(!upDst||BY_ID[upDst].price<=s.value){if(upPick.p)autoTargetChance(upPick.p);else autoTarget(upPick.m)} renderUpgrade()});
+$("#upInv").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-src]");if(b)toggleSrc(+b.dataset.src)});
+$("#upSrc").addEventListener("click",e=>{if(busy)return;
+  if(e.target.closest("#upClear")){upSel.clear();boost=0;renderUpgrade();return}
+  const b=e.target.closest("[data-rm]");if(b)toggleSrc(+b.dataset.rm)});
 let upPick={p:.5}; // что выбрал игрок: {p: шанс} или {m: икс}
 $("#mults").innerHTML=[75,50,25,10].map(p=>`<button class="mult" type="button" data-p="${p/100}">${p}%</button>`).join("")+
   [2,5,10].map(m=>`<button class="mult" type="button" data-m="${m}">x${m}</button>`).join("")+
   `<label class="mult own"><input id="ownX" type="number" min="1.01" step="0.01" placeholder="${L("own x","свой x")}" inputmode="decimal"></label>`+
   `<label class="mult own"><input id="ownP" type="number" min="1" max="80" step="1" placeholder="${L("own %","свой %")}" inputmode="numeric"></label>`;
-function applyPick(){if(!srcInst())return;if(upPick.p)autoTargetChance(upPick.p);else autoTarget(upPick.m);boost=0;renderUpgrade()}
-$("#mults").addEventListener("click",e=>{const b=e.target.closest("button[data-m],button[data-p]");if(!b||busy)return;if(!srcInst()){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}
+function applyPick(){if(!upSel.size)return;if(upPick.p)autoTargetChance(upPick.p);else autoTarget(upPick.m);boost=0;renderUpgrade()}
+$("#mults").addEventListener("click",e=>{const b=e.target.closest("button[data-m],button[data-p]");if(!b||busy)return;if(!upSel.size){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}
   upPick=b.dataset.p?{p:+b.dataset.p}:{m:+b.dataset.m}; $("#ownX").value=""; $("#ownP").value=""; applyPick()});
-$("#ownX").addEventListener("change",e=>{const v=parseFloat(e.target.value);if(!(v>1)){toast(L("Multiplier must be above 1","Икс должен быть больше 1"));return}if(!srcInst()){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}upPick={m:v,own:1};$("#ownP").value="";applyPick()});
-$("#ownP").addEventListener("change",e=>{const v=parseFloat(e.target.value);if(!(v>=1&&v<=80)){toast(L("Chance must be 1–80","Шанс — от 1 до 80"));return}if(!srcInst()){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}upPick={p:v/100,own:1};$("#ownX").value="";applyPick()});
+$("#ownX").addEventListener("change",e=>{const v=parseFloat(e.target.value);if(!(v>1)){toast(L("Multiplier must be above 1","Икс должен быть больше 1"));return}if(!upSel.size){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}upPick={m:v,own:1};$("#ownP").value="";applyPick()});
+$("#ownP").addEventListener("change",e=>{const v=parseFloat(e.target.value);if(!(v>=1&&v<=80)){toast(L("Chance must be 1–80","Шанс — от 1 до 80"));return}if(!upSel.size){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}upPick={p:v/100,own:1};$("#ownX").value="";applyPick()});
 $("#upTargets").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-dst]");if(b){upDst=b.dataset.dst;upPick={manual:1};boost=0;renderUpgrade()}});
 $("#upSearch").addEventListener("input",renderUpgrade);
 $("#boostRange").addEventListener("input",e=>{boost=+e.target.value;renderUpgrade()});
@@ -1233,25 +1274,26 @@ let arrowStyle="arrow"; try{arrowStyle=localStorage.getItem("aura-rift-arrow")||
 function renderArrow(){$("#dial").dataset.arrow=arrowStyle;document.querySelectorAll("#arrowPick button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.arrow===arrowStyle))}
 $("#arrowPick").addEventListener("click",e=>{const b=e.target.closest("[data-arrow]");if(!b)return;arrowStyle=b.dataset.arrow;try{localStorage.setItem("aura-rift-arrow",arrowStyle)}catch(e){}renderArrow()});
 $("#upBtn").addEventListener("click",async()=>{
-  const s=srcInst(); if(!s||!upDst||busy) return;
+  const src=srcList(); if(!src.length||!upDst||busy) return;
   if(boost>S.balance) return;
   ac();
   const c=chance(), r=rnd(), win=r<c, paid=boost;
-  S.balance-=paid; S.inv=S.inv.filter(x=>x.uid!==s.uid);
+  S.balance-=paid; S.inv=S.inv.filter(x=>!upSel.has(x.uid));
   let inst=null; if(win){inst=makeInst(upDst,null);S.inv.unshift(inst);S.stats.upWin++}else S.stats.upLose++;
   save(); renderTop();
-  busy=true; upLock={src:s,dst:upDst,c}; renderUpgrade();
+  busy=true; upLock={src,dst:upDst,c}; renderUpgrade();
   const target=needleAngle-(needleAngle%360)+360*6+r*360; needleAngle=target;
   const nd=$("#needle"); nd.style.transform=`rotate(${target}deg)`;
   let prev=null,acc=0,on=true;
   (function follow(){if(!on)return;const m=getComputedStyle(nd).transform;if(m&&m!=="none"){const d=new DOMMatrixReadOnly(m),a=Math.atan2(d.b,d.a)*180/Math.PI;if(prev!==null){let da=a-prev;if(da<-180)da+=360;if(da>180)da-=360;acc+=Math.abs(da);if(acc>=18){acc=0;tick()}}prev=a}requestAnimationFrame(follow)})();
   await wait(6300); on=false;
   const dl=$("#dial"); dl.classList.add(win?"hit":"miss"); setTimeout(()=>dl.classList.remove("hit","miss"),1100);
-  busy=false; upLock=null; upSrc=null; boost=0;
+  busy=false; upLock=null; upSel.clear(); boost=0;
   if(win){addFeed(inst);save();renderAll();const a=BY_ID[inst.id];
     modal(`<div class="modal-title win">${L("Upgrade successful!","Апгрейд удался!")}</div>${instCard(inst)}${prizeActions([inst],inst.value)}`,a.tier);celebrate(a.tier);bindPrize([inst],inst.value);
   } else {renderAll();loseSound();
-    modal(`<div class="modal-title lose">${L("Missed","Мимо")}</div>${instCard(s)}<div class="sub" style="margin:-6px 0 16px">${L("The aura burned. Chance was","Аура сгорела. Шанс был")} ${(c*100).toFixed(1)}%${paid?`, ${L("boost","буст")} ${fmt(paid)}`:""}.</div>
+    const lost=src.length>1?`<div class="up-mgrid lost">${src.map(x=>instCard(x,{cls:"miss"})).join("")}</div>`:instCard(src[0]);
+    modal(`<div class="modal-title lose">${L("Missed","Мимо")}</div>${lost}<div class="sub" style="margin:-6px 0 16px">${L(src.length>1?"The auras burned. Chance was":"The aura burned. Chance was",src.length>1?"Ауры сгорели. Шанс был":"Аура сгорела. Шанс был")} ${(c*100).toFixed(1)}%${paid?`, ${L("boost","буст")} ${fmt(paid)}`:""}.</div>
       <div class="modal-actions"><button class="btn btn-main" id="mKeep" type="button">${L("Try again","Ещё раз")}</button></div>`);$("#mKeep").onclick=closeModal;
   }
 });
@@ -1479,7 +1521,7 @@ $("#resetBtn").addEventListener("click",()=>{
   if(busy) return;
   if(!resetArmed){resetArmed=true;$("#resetBtn").textContent=L("Sure? Everything resets — tap again","Точно? Всё обнулится — нажми ещё раз");setTimeout(()=>{resetArmed=false;$("#resetBtn").textContent=L("Start over","Начать заново")},3500);return}
   resetArmed=false;$("#resetBtn").textContent=L("Start over","Начать заново");
-  S=fresh();upSrc=null;upDst=null;ctSel.clear();bSel=[];save();renderAll();toast(L("Progress reset","Прогресс сброшен"));
+  S=fresh();upSel.clear();upDst=null;ctSel.clear();bSel=[];save();renderAll();toast(L("Progress reset","Прогресс сброшен"));
 });
 
 // ================= render =================
