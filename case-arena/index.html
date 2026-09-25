@@ -231,6 +231,54 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
   *{animation-duration:.01ms!important}
   .case:hover,.item.pick:hover{transform:none}
 }
+
+/* ---------- v6: multi-open, StatTrak, sound, live ---------- */
+.roulettes{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.roulettes .roulette{margin-bottom:0}
+.roulettes.multi .roulette{height:128px}
+.roulettes.multi .strip{top:10px}
+.roulettes.multi .strip .item{width:100px;height:108px;padding:7px 8px 6px}
+.roulettes.multi .item .gun{height:46px}
+.roulettes.multi .item .w{display:none}
+.roulettes.multi .item .s{font-size:12px}
+.counts{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.cnt-btn{font-family:var(--mono);font-weight:700;font-size:13px;padding:6px 10px;border-radius:8px;color:var(--muted)}
+.cnt-btn[aria-pressed="true"]{background:var(--grad);color:#fff}
+.item .stb,.feed-item .stb{position:absolute;top:6px;left:7px;z-index:2;font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.04em;
+  color:#1f0d00;background:linear-gradient(135deg,#ffb35c,#ff7a1a);padding:1px 5px;border-radius:4px;box-shadow:0 0 10px rgba(255,122,26,.5)}
+.item.st .w{color:#ffa552}
+.item.st{box-shadow:inset 0 0 0 1px rgba(255,122,26,.45)}
+.feed-item .stb{top:3px;left:3px;font-size:8px;padding:0 3px}
+.feed-item .fw{position:absolute;right:5px;top:3px;font-size:9px;color:rgba(255,255,255,.65);max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-item.mine{outline:1.5px solid var(--accent3);outline-offset:-1.5px}
+.feed-item.mine .fw{color:var(--accent3);font-weight:700}
+.feed-item.new{animation:feedIn .6s cubic-bezier(.2,1.3,.4,1)}
+.feed-item:not(.new){animation:none}
+@keyframes feedIn{from{transform:translateX(-30px) scale(.8);opacity:0}}
+.feed-label{display:flex;align-items:center;gap:6px}
+.feed-label i{width:7px;height:7px;border-radius:50%;background:#ff3d5a;box-shadow:0 0 8px #ff3d5a;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.snd{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);color:var(--text)}
+.snd svg{width:18px;height:18px}
+.snd .x{display:none}
+.snd.off{color:var(--dim)}
+.snd.off .x{display:inline}
+.snd.off .w1{display:none}
+.modal-card.wide{width:min(560px,100%)}
+.prize-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:14px 0 16px;max-height:52vh;overflow:auto}
+.modal-card .prize-grid .item{margin:0;max-width:none}
+.modal-card .prize-grid .item .gun{height:60px}
+.pos{color:var(--win)} .neg{color:var(--lose)}
+@media (max-width:720px){
+  .top-in{flex-wrap:nowrap;gap:8px}
+  .logo{font-size:14px;gap:7px}
+  .logo i{width:20px;height:20px}
+  .snd{width:30px;height:30px;flex:none}
+  .bal{padding:4px 4px 4px 10px;gap:6px;flex:none}
+  .bonus-btn{font-size:11px;padding:4px 8px}
+  .roulettes.multi .strip .item{width:92px}
+  .open-actions .btn-main{width:100%}
+}
 </style>
 
 <div class="sky" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -239,6 +287,7 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
 <header class="top">
   <div class="top-in">
     <div class="logo"><i></i>КЕЙС <span>АРЕНА</span></div>
+    <button class="snd" id="sndBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="w1" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="bal" title="Виртуальный баланс">
       <span class="coin"></span><span class="num" id="balance">0</span>
       <button class="bonus-btn" id="bonusBtn" type="button">+ бонус</button>
@@ -271,9 +320,10 @@ footer button{color:var(--muted);text-decoration:underline;text-underline-offset
           <div class="sub" id="openSub" style="margin-bottom:0"></div>
         </div>
       </div>
-      <div class="roulette"><div class="marker"></div><div class="strip" id="strip"></div></div>
+      <div class="roulettes" id="roulettes"></div>
       <div class="open-actions">
         <button class="btn btn-main" id="openBtn" type="button"></button>
+        <div class="counts" id="counts" role="group" aria-label="Сколько кейсов открыть"></div>
         <label class="chk"><input type="checkbox" id="fastChk"> Быстрое открытие</label>
       </div>
       <div class="odds" id="odds"></div>
@@ -495,6 +545,8 @@ const WEARS = [
   {k:"BS", n:"Закалённое в боях", p:.10, m:.8}
 ];
 const AVG_WEAR = WEARS.reduce((s,w)=>s+w.p*w.m,0);
+// StatTrak™: 10% дропов из кейсов, стоит в 2 раза дороже
+const ST_CHANCE=.1, ST_MULT=2;
 
 const ITEMS = [
   // id, weapon, skin, rarity, price, icon
@@ -574,12 +626,12 @@ for (const c of CASES){
   const ps = c.items.map(id=>BY_ID[id].price);
   const raw = ps.map(p=>Math.pow(p,-SLOPE)), tot = raw.reduce((x,y)=>x+y,0);
   c.drops = c.items.map((id,i)=>({id, w:raw[i]/tot}));
-  const ev = c.drops.reduce((s,d)=>s+d.w*BY_ID[d.id].price,0)*AVG_WEAR/RTP;
+  const ev = c.drops.reduce((s,d)=>s+d.w*BY_ID[d.id].price,0)*AVG_WEAR*(1+ST_CHANCE*(ST_MULT-1))/RTP;
   c.price = ev<100 ? Math.round(ev/5)*5 : Math.round(ev/10)*10;
   const byR = {};
   c.drops.forEach(d=>{const r=BY_ID[d.id].rarity;byR[r]=(byR[r]||0)+d.w});
   c.rarities = Object.keys(R).filter(r=>byR[r]).map(r=>({r, pct:byR[r]*100}));
-  c.profit = c.drops.reduce((s,d)=>s+d.w*WEARS.reduce((q,wr)=>q+(BY_ID[d.id].price*wr.m>=c.price?wr.p:0),0),0);
+  c.profit = c.drops.reduce((s,d)=>s+d.w*WEARS.reduce((q,wr)=>q+wr.p*((BY_ID[d.id].price*wr.m>=c.price?1-ST_CHANCE:0)+(BY_ID[d.id].price*wr.m*ST_MULT>=c.price?ST_CHANCE:0)),0),0);
 }
 CASES.sort((a,b)=>a.price-b.price);
 const MIN_CASE = CASES[0].price;
@@ -600,16 +652,17 @@ const coin = n=>`<span class="coin"></span>${fmt(n)}`;
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function pickWeighted(list){let r=rnd(),acc=0;for(const x of list){acc+=x.w;if(r<acc)return x}return list[list.length-1]}
 function rollWear(){let r=rnd(),acc=0;for(const w of WEARS){acc+=w.p;if(r<acc)return w}return WEARS[2]}
-function makeInst(id, wear){const it=BY_ID[id];const w=wear||rollWear();return {uid:S.uid++, id, wear:w.k, value:Math.max(1,Math.round(it.price*w.m))}}
+function makeInst(id, wear, st){const it=BY_ID[id];const w=wear||rollWear();if(st===undefined)st=rnd()<ST_CHANCE;
+  return {uid:S.uid++, id, wear:w.k, st, value:Math.max(1,Math.round(it.price*w.m*(st?ST_MULT:1)))}}
 const wearOf = k=>WEARS.find(w=>w.k===k)||WEARS[2];
 
-function card(it, {value, wear, cls="", extra=""}={}){
+function card(it, {value, wear, st=false, cls="", extra=""}={}){
   const v = value ?? it.price;
-  return `<div class="item rar-${it.rarity} ${cls}" ${extra}>${gun(it.id)}
-    <div class="w">${esc(it.weapon)}</div><div class="s">${esc(it.skin)}</div>
+  return `<div class="item rar-${it.rarity}${st?" st":""} ${cls}" ${extra}>${st?'<span class="stb">ST™</span>':""}${gun(it.id)}
+    <div class="w">${st?"StatTrak™ ":""}${esc(it.weapon)}</div><div class="s">${esc(it.skin)}</div>
     <div class="meta"><span class="wear">${wear||""}</span><span class="p">${coin(v)}</span></div></div>`;
 }
-const instCard = (x,o={})=>card(BY_ID[x.id],{value:x.value,wear:x.wear,...o});
+const instCard = (x,o={})=>card(BY_ID[x.id],{value:x.value,wear:x.wear,st:!!x.st,...o});
 
 function caseArt(c,pfx=""){
   const top=c.items.reduce((a,b)=>BY_ID[b].price>BY_ID[a].price?b:a);
@@ -623,9 +676,31 @@ function caseArt(c,pfx=""){
     <rect x="56" y="44" width="18" height="12" rx="3" fill="#150e33" stroke="#fff" stroke-opacity=".7" stroke-width="1.5"/></svg></div>`;
 }
 
+// ---------- sound (WebAudio, без файлов) ----------
+let AC=null, soundOn=true;
+try{soundOn=localStorage.getItem("case-arena-sound")!=="off"}catch(e){}
+function ac(){if(!soundOn)return null;try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();return AC}catch(e){return null}}
+function tone(freq,dur,{type="triangle",vol=.12,at=0,slide=0}={}){
+  const a=ac(); if(!a) return;
+  const t=a.currentTime+at, o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.008); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.02);
+}
+let lastTick=0;
+function tick(){const n=performance.now();if(n-lastTick<28)return;lastTick=n;tone(1500+rnd()*300,.035,{type:"square",vol:.035})}
+const WIN_NOTES={blue:[523,659],purple:[523,659,784],pink:[523,659,784,1047],red:[523,659,784,1047,1319],gold:[392,523,659,784,1047,1319,1568]};
+function winSound(r){(WIN_NOTES[r]||WIN_NOTES.blue).forEach((f,i)=>{tone(f,.28,{at:i*.085,vol:.1});if(r==="gold")tone(f*2,.2,{at:i*.085+.04,type:"sine",vol:.04})});
+  if(r==="gold"||r==="red")tone(1568,.9,{at:.6,type:"sine",vol:.05,slide:2093})}
+function loseSound(){tone(330,.45,{type:"sawtooth",vol:.06,slide:110})}
+function celebrate(r){winSound(r);confetti(r)}
+$("#sndBtn").addEventListener("click",()=>{soundOn=!soundOn;try{localStorage.setItem("case-arena-sound",soundOn?"on":"off")}catch(e){}renderSnd();if(soundOn)tone(880,.12)});
+function renderSnd(){const b=$("#sndBtn");b.classList.toggle("off",!soundOn);b.title=soundOn?"Выключить звук":"Включить звук";b.setAttribute("aria-label",b.title)}
+renderSnd();
+
 let toastT;
 function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2400)}
-function modal(html,rarity){const m=$("#modalCard");m.style.setProperty("--rc",rarity?`var(--r-${rarity})`:"var(--accent2)");m.innerHTML=html;$("#modal").hidden=false}
+function modal(html,rarity){const m=$("#modalCard");m.classList.remove("wide");m.style.setProperty("--rc",rarity?`var(--r-${rarity})`:"var(--accent2)");m.innerHTML=html;$("#modal").hidden=false}
 function confetti(rarity){
   if(!["pink","red","gold"].includes(rarity)||matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const cv=$("#confetti"),ctx=cv.getContext("2d"),W=cv.width=innerWidth,H=cv.height=innerHeight;
@@ -638,7 +713,23 @@ function confetti(rarity){
 function closeModal(){$("#modal").hidden=true}
 $("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 
-function addFeed(inst){S.feed.unshift({id:inst.id,value:inst.value});S.feed=S.feed.slice(0,14);if(inst.value>S.stats.best)S.stats.best=inst.value}
+// ---------- live feed: твои дропы + дропы «других игроков» ----------
+const BOTS=["sanya_2009","KaRaMbiT","m0nesy_fan","Ваня","dimon228","zxc_ghoul","Lexa","tapok","Nikita_Pro","keks","Артём","s1lent","ne_vezet","Grisha","hellcat","pupsik"];
+const LIVE=[];
+function botDrop(){
+  const cw=[6,5,4,2.5,1.6,1], tot=cw.reduce((a,b)=>a+b,0);
+  let r=rnd()*tot, c=CASES[0]; for(let i=0;i<CASES.length;i++){r-=cw[i];if(r<0){c=CASES[i];break}}
+  const id=pickWeighted(c.drops).id, st=rnd()<ST_CHANCE, w=rollWear();
+  return {id, st, value:Math.max(1,Math.round(BY_ID[id].price*w.m*(st?ST_MULT:1))), who:BOTS[Math.floor(rnd()*BOTS.length)]};
+}
+function pushLive(d){LIVE.unshift(d);LIVE.length=Math.min(LIVE.length,20);renderFeed(true)}
+function addFeed(inst){pushLive({id:inst.id,st:!!inst.st,value:inst.value,who:"Ты",mine:true});if(inst.value>S.stats.best)S.stats.best=inst.value}
+for(let i=0;i<12;i++) LIVE.push(botDrop());
+(function loop(){setTimeout(()=>{if(!document.hidden)pushLive(botDrop());loop()},2200+rnd()*4200)})();
+function renderFeed(fresh){
+  $("#feed").innerHTML=`<div class="feed-label"><i></i>Лайв</div>`+LIVE.map((d,i)=>{const it=BY_ID[d.id];
+    return `<div class="feed-item rar-${it.rarity}${d.mine?" mine":""}${fresh&&i===0?" new":""}" title="${esc(d.who+": "+(d.st?"StatTrak™ ":"")+it.weapon+" | "+it.skin)}">${d.st?'<span class="stb">ST</span>':""}${gun(it.id)}<span class="fw">${esc(d.who)}</span><span class="fp num">${fmt(d.value)}</span></div>`}).join("");
+}
 
 // ---------- header ----------
 function invValue(){return S.inv.reduce((s,x)=>s+x.value,0)}
@@ -648,10 +739,6 @@ function renderTop(){
   const can = S.balance+invValue()<MIN_CASE;
   $("#bonusBtn").disabled=!can;
   $("#bonusBtn").title=can?`Получить ${BONUS} монет`:"Бонус доступен, когда монет и скинов не хватает даже на самый дешёвый кейс";
-  const f=$("#feed");
-  f.innerHTML = S.feed.length
-    ? `<div class="feed-label">Мои дропы</div>`+S.feed.map(d=>{const it=BY_ID[d.id];return `<div class="feed-item rar-${it.rarity}" title="${esc(it.weapon+" | "+it.skin)}">${gun(it.id)}<span class="fp num">${fmt(d.value)}</span></div>`}).join("")
-    : `<div class="feed-empty">Здесь появятся твои дропы. Стартовый баланс — ${fmt(START_BALANCE)} монет.</div>`;
 }
 $("#bonusBtn").addEventListener("click",()=>{if(S.balance+invValue()<MIN_CASE){S.balance+=BONUS;save();renderAll();toast(`+${BONUS} монет. Удачи!`)}});
 
@@ -686,77 +773,120 @@ function showCase(id){
   $("#caseItems").innerHTML=current.drops.slice().sort((a,b)=>BY_ID[b.id].price-BY_ID[a.id].price)
     .map(d=>card(BY_ID[d.id],{wear:(d.w*100<1?(d.w*100).toFixed(2):(d.w*100).toFixed(1))+"%"})).join("");
   // стартовая лента для красоты
-  fillStrip(Array.from({length:12},()=>pickWeighted(current.drops).id), false);
+  renderRoulettes(); prefill();
   updateOpenBtn();
   window.scrollTo({top:0});
 }
+let openCount=1;
+$("#counts").innerHTML=[1,2,3,4,5].map(n=>`<button class="cnt-btn" type="button" data-n="${n}">x${n}</button>`).join("");
+$("#counts").addEventListener("click",e=>{const b=e.target.closest("[data-n]");if(!b||spinning)return;openCount=+b.dataset.n;renderRoulettes();prefill();updateOpenBtn()});
+function renderRoulettes(){
+  const box=$("#roulettes");
+  box.classList.toggle("multi",openCount>1);
+  box.innerHTML=Array.from({length:openCount},()=>`<div class="roulette"><div class="marker"></div><div class="strip"></div></div>`).join("");
+  document.querySelectorAll("#counts .cnt-btn").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.n===openCount));
+}
+function prefill(){document.querySelectorAll("#roulettes .strip").forEach(st=>fillStrip(st,Array.from({length:12},()=>pickWeighted(current.drops).id),false))}
 function updateOpenBtn(){
   const b=$("#openBtn");
   if(!current) return;
-  const enough=S.balance>=current.price;
+  const cost=current.price*openCount, enough=S.balance>=cost;
   b.disabled=spinning||!enough;
-  b.innerHTML=enough?`Открыть за ${coin(current.price)}`:`Не хватает ${coin(current.price-S.balance)}`;
+  b.innerHTML=enough?`Открыть ${openCount>1?openCount+" шт. ":""}за ${coin(cost)}`:`Не хватает ${coin(cost-S.balance)}`;
 }
-const CARD_W=()=>($(".strip .item")?.getBoundingClientRect().width||124)+8;
-function fillStrip(ids, reset=true){
-  const st=$("#strip");
+const CARD_W=st=>(st.querySelector(".item")?.getBoundingClientRect().width||124)+8;
+function fillStrip(st, ids, reset=true){
   st.style.transition="none";
-  st.innerHTML=ids.map(id=>card(BY_ID[id])).join("");
-  st.style.transform=`translateX(${reset?0:-(CARD_W()*2)}px)`;
+  st.innerHTML=ids.map(x=>typeof x==="string"?card(BY_ID[x]):card(BY_ID[x.id],{st:x.st})).join("");
+  st.style.transform=`translateX(${reset?0:-(CARD_W(st)*2)}px)`;
 }
+function stripPos(st){const m=getComputedStyle(st).transform;if(!m||m==="none")return 0;return new DOMMatrixReadOnly(m).m41}
 $("#openBtn").addEventListener("click",()=>{
-  if(spinning||!current||S.balance<current.price) return;
-  S.balance-=current.price; S.stats.opened++;
-  const win=pickWeighted(current.drops).id;
-  const inst=makeInst(win);
-  S.inv.unshift(inst); save(); // скин сохраняется сразу, даже если закрыть страницу во время прокрутки
+  const n=openCount, cost=current?current.price*n:0;
+  if(spinning||!current||S.balance<cost) return;
+  ac(); // звук можно включать только после нажатия
+  S.balance-=cost; S.stats.opened+=n;
   const fast=$("#fastChk").checked;
   const WIN_AT=fast?30:110;
-  const ids=Array.from({length:WIN_AT+6},(_,i)=>i===WIN_AT?win:pickWeighted(current.drops).id);
+  const expensive=current.items.filter(id=>["red","gold"].includes(BY_ID[id].rarity)||BY_ID[id].price>=current.price*6);
+  const strips=[...document.querySelectorAll("#roulettes .strip")];
+  const runs=strips.map((st,i)=>{
+    const inst=makeInst(pickWeighted(current.drops).id);
+    const ids=Array.from({length:WIN_AT+6},(_,j)=>j===WIN_AT?{id:inst.id,st:inst.st}:{id:pickWeighted(current.drops).id,st:rnd()<ST_CHANCE});
+    // «чуть-чуть не хватило»: иногда сразу за выигрышем стоит дорогой скин
+    let tease=false;
+    if(!fast&&expensive.length&&rnd()<.35&&!expensive.includes(inst.id)){ids[WIN_AT+1]={id:expensive[Math.floor(rnd()*expensive.length)],st:false};tease=true}
+    return {st,inst,ids,tease,dur:fast?1:9+i*.35};
+  });
+  runs.forEach(r=>S.inv.unshift(r.inst)); save(); // скины сохраняются сразу
   $("#balance").textContent=fmt(S.balance);
   spinning=true; updateOpenBtn();
-  fillStrip(ids);
-  const st=$("#strip"), w=CARD_W(), box=$(".roulette").getBoundingClientRect().width;
-  const inCard=14+rnd()*(w-8-28);
-  const x=-(WIN_AT*w+inCard)+box/2;
-  const center=-(WIN_AT*w+(w-8)/2)+box/2;
-  st.getBoundingClientRect();
-  const dur=fast?1:9;
-  st.style.transition=`transform ${dur}s cubic-bezier(.1,.62,.08,1)`;
-  st.style.transform=`translateX(${x}px)`;
-  setTimeout(()=>{
-    // доводка к центру выигравшей карточки
-    st.style.transition="transform .45s cubic-bezier(.3,0,.2,1)";
-    st.style.transform=`translateX(${center}px)`;
-    st.children[WIN_AT].classList.add("won");
-    setTimeout(()=>{
-      spinning=false;
-      addFeed(inst); save(); renderAll();
-      showPrize(inst);
-    }, fast?350:750);
-  }, dur*1000+120);
+  runs.forEach(r=>{
+    fillStrip(r.st,r.ids);
+    const w=CARD_W(r.st), box=r.st.parentNode.getBoundingClientRect().width, cw=w-8;
+    const inCard=r.tease? cw-6-rnd()*Math.min(14,cw*.12) : 12+rnd()*(cw-24);
+    r.w=w; r.box=box;
+    r.x=-(WIN_AT*w+inCard)+box/2; r.center=-(WIN_AT*w+cw/2)+box/2;
+    r.st.getBoundingClientRect();
+    r.st.style.transition=`transform ${r.dur}s cubic-bezier(.1,.62,.08,1)`;
+    r.st.style.transform=`translateX(${r.x}px)`;
+  });
+  // щелчки, когда карточка проходит под маркером (по первой ленте)
+  const lead=runs[0]; let lastIdx=-1, ticking=true;
+  (function follow(){if(!ticking)return;const idx=Math.floor((lead.box/2-stripPos(lead.st))/lead.w);if(idx!==lastIdx){if(lastIdx>=0)tick();lastIdx=idx}requestAnimationFrame(follow)})();
+  let done=0;
+  runs.forEach(r=>setTimeout(()=>{
+    r.st.style.transition="transform .45s cubic-bezier(.3,0,.2,1)";
+    r.st.style.transform=`translateX(${r.center}px)`;
+    r.st.children[WIN_AT].classList.add("won");
+    if(++done===runs.length){
+      ticking=false;
+      setTimeout(()=>{
+        spinning=false;
+        runs.forEach(x=>addFeed(x.inst)); save(); renderAll();
+        showPrizes(runs.map(x=>x.inst));
+      }, fast?350:750);
+    }
+  }, r.dur*1000+120));
 });
+const RANK={blue:0,purple:1,pink:2,red:3,gold:4};
+function bestRarity(list){return list.map(x=>BY_ID[x.id].rarity).sort((a,b)=>RANK[b]-RANK[a])[0]}
+function showPrizes(list){
+  if(list.length===1) return showPrize(list[0]);
+  const total=list.reduce((s,x)=>s+x.value,0), spent=current.price*list.length, r=bestRarity(list);
+  modal(`<div class="modal-title">Твои дропы</div>
+    <div class="sub" style="margin:4px 0 0">Потрачено ${fmt(spent)} · выпало на <b class="${total>=spent?"pos":"neg"}">${fmt(total)}</b></div>
+    <div class="prize-grid">${list.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x)).join("")}</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="mSell" type="button">Продать всё за ${coin(total)}</button>
+      <button class="btn btn-main" id="mKeep" type="button">Забрать</button>
+    </div>`, r);
+  $("#modalCard").classList.add("wide");
+  celebrate(r);
+  $("#mSell").onclick=()=>{list.forEach(x=>sell(x.uid,true));toast(`Продано на ${fmt(total)} монет`);closeModal()};
+  $("#mKeep").onclick=closeModal;
+}
 function showPrize(inst){
   const it=BY_ID[inst.id];
-  modal(`<div class="modal-title">${it.rarity==="gold"?"Вот это дроп!":"Твой дроп"}</div>
+  modal(`<div class="modal-title">${it.rarity==="gold"?"Вот это дроп!":inst.st?"StatTrak™ дроп!":"Твой дроп"}</div>
     ${instCard(inst)}
-    <div class="sub" style="margin:-6px 0 16px">${esc(wearOf(inst.wear).n)}</div>
+    <div class="sub" style="margin:-6px 0 16px">${esc(wearOf(inst.wear).n)}${inst.st?" · StatTrak™ ×2":""}</div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="mSell" type="button">Продать за ${coin(inst.value)}</button>
       <button class="btn btn-main" id="mKeep" type="button">Забрать</button>
     </div>`, it.rarity);
-  confetti(it.rarity);
+  celebrate(it.rarity);
   $("#mSell").onclick=()=>{sell(inst.uid);closeModal()};
   $("#mKeep").onclick=closeModal;
 }
 
 // ---------- inventory ----------
-function sell(uid){
+function sell(uid,quiet){
   const i=S.inv.findIndex(x=>x.uid===uid); if(i<0) return;
   const [x]=S.inv.splice(i,1); S.balance+=x.value;
   if(upSrc===uid) upSrc=null;
   ctSel.delete(uid);
-  save(); renderAll(); toast(`Продано за ${fmt(x.value)} монет`);
+  save(); renderAll(); if(!quiet) toast(`Продано за ${fmt(x.value)} монет`);
 }
 let sellArmed=false;
 function renderInventory(){
@@ -823,22 +953,27 @@ $("#upBtn").addEventListener("click",()=>{
   const target=needleAngle-(needleAngle%360)+360*5+r*360;
   needleAngle=target;
   const nd=$("#needle");
+  ac();
   nd.style.transform=`rotate(${target}deg)`;
+  let prevA=null, acc=0, spinT=true;
+  (function follow(){if(!spinT)return;const m=getComputedStyle(nd).transform;if(m&&m!=="none"){const d=new DOMMatrixReadOnly(m);const a=Math.atan2(d.b,d.a)*180/Math.PI;
+    if(prevA!==null){let da=a-prevA;if(da<-180)da+=360;if(da>180)da-=360;acc+=Math.abs(da);if(acc>=18){acc=0;tick()}}prevA=a}requestAnimationFrame(follow)})();
+  setTimeout(()=>spinT=false,4300);
   setTimeout(()=>{
     spinning=false;
     const i=S.inv.findIndex(x=>x.uid===s.uid); if(i>=0) S.inv.splice(i,1);
     upSrc=null;
     if(win){
-      const inst=makeInst(upDst,WEARS[2]); S.inv.unshift(inst); addFeed(inst); S.stats.upWin++;
+      const inst=makeInst(upDst,WEARS[2],false); S.inv.unshift(inst); addFeed(inst); S.stats.upWin++;
       save(); renderAll();
       modal(`<div class="modal-title win">Апгрейд удался!</div>${instCard(inst)}
         <div class="modal-actions"><button class="btn btn-ghost" id="mSell" type="button">Продать за ${coin(inst.value)}</button>
         <button class="btn btn-main" id="mKeep" type="button">Забрать</button></div>`, BY_ID[inst.id].rarity);
-      confetti(BY_ID[inst.id].rarity);
+      celebrate(BY_ID[inst.id].rarity);
       $("#mSell").onclick=()=>{sell(inst.uid);closeModal()};
       $("#mKeep").onclick=closeModal;
     } else {
-      S.stats.upLose++; save(); renderAll();
+      S.stats.upLose++; save(); renderAll(); loseSound();
       modal(`<div class="modal-title lose">Мимо</div>${instCard(s)}
         <div class="sub" style="margin:-6px 0 16px">Скин сгорел. Шанс был ${(c*100).toFixed(1)}%.</div>
         <div class="modal-actions"><button class="btn btn-main" id="mKeep" type="button">Ещё раз</button></div>`);
@@ -889,10 +1024,11 @@ function contractResult(sum){
   if(!best){ // сумма меньше самого дешёвого скина
     const it=ITEMS[0]; best={it,w:WEARS[4]};
   }
-  return makeInst(best.it.id,best.w);
+  return makeInst(best.it.id,best.w,false);
 }
 $("#ctBtn").addEventListener("click",()=>{
   if(spinning||ctSel.size<CT_MIN) return;
+  ac();
   const sum=ctSum();
   S.inv=S.inv.filter(x=>!ctSel.has(x.uid)); ctSel.clear();
   const inst=contractResult(sum); S.stats.contracts++;
@@ -902,16 +1038,17 @@ $("#ctBtn").addEventListener("click",()=>{
   const shuffle=(pool.length?pool:ITEMS);
   const iv=setInterval(()=>{
     const it=shuffle[Math.floor(rnd()*shuffle.length)];
-    $("#reveal").innerHTML=card(it); k++;
+    $("#reveal").innerHTML=card(it); k++; tick();
     if(k>=16){
       clearInterval(iv); spinning=false;
       S.inv.unshift(inst); addFeed(inst); save(); renderAll();
       const profit=inst.value-sum;
+      if(profit<0) loseSound();
       modal(`<div class="modal-title ${profit>=0?"win":"lose"}">${profit>=0?"В плюсе":"В минусе"}: ${profit>=0?"+":"−"}${fmt(Math.abs(profit))}</div>
         ${instCard(inst)}<div class="sub" style="margin:-6px 0 16px">Вложено ${fmt(sum)} · ${esc(wearOf(inst.wear).n)}</div>
         <div class="modal-actions"><button class="btn btn-ghost" id="mSell" type="button">Продать за ${coin(inst.value)}</button>
         <button class="btn btn-main" id="mKeep" type="button">Забрать</button></div>`, BY_ID[inst.id].rarity);
-      confetti(BY_ID[inst.id].rarity);
+      celebrate(BY_ID[inst.id].rarity);
       $("#mSell").onclick=()=>{sell(inst.uid);closeModal()};
       $("#mKeep").onclick=closeModal;
     }
@@ -935,7 +1072,7 @@ function renderView(){
   if(tab==="inventory") renderInventory();
 }
 function renderAll(){renderTop();renderView()}
-buildPaints(); renderCases(); renderAll();
+buildPaints(); renderCases(); renderFeed(false); renderAll();
 })();
 </script>
 
