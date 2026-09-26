@@ -476,6 +476,7 @@ main .sub{color:#d2d0f5}
 .mult.own input::placeholder{color:var(--muted);font-weight:500}
 .dial-c .up-mult{display:inline-block;justify-self:center;font-size:13px;color:#bfe9ff;-webkit-text-fill-color:#bfe9ff;background:rgba(34,230,255,.12);border:1px solid rgba(34,230,255,.35);border-radius:999px;padding:1px 9px;margin-top:5px;filter:none}
 .dial-c .up-mult:empty{display:none}
+.dial-c .up-bonus{justify-self:center;margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.04em;color:#ffd84d;background:rgba(255,197,61,.14);border:1px solid rgba(255,197,61,.45);border-radius:999px;padding:1px 8px;text-shadow:0 0 8px rgba(255,197,61,.5)}
 
 .lang{height:34px;min-width:40px;padding:0 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font:800 12px var(--display);letter-spacing:.06em;color:var(--cyan);flex:none}
 .lang:hover{border-color:var(--cyan)}
@@ -694,7 +695,7 @@ main .sub{color:#d2d0f5}
           </svg>
           <div class="needle" id="needle"><svg viewBox="0 0 230 230" aria-hidden="true"><defs><linearGradient id="dArw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#ffd46b"/></linearGradient></defs><g class="arw-arrow" filter="url(#dGlow)"><path d="M115 16 L131 48 L115 41 L99 48 Z" fill="url(#dArw)" stroke="#1a0f3a" stroke-width="2" stroke-linejoin="round"/><path d="M115 41 L115 60" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><circle cx="115" cy="62" r="3" fill="#fff"/></g>
               <g class="arw-neon" filter="url(#glow)"><path d="M115 115 L115 36" stroke="rgba(34,230,255,.4)" stroke-width="3" stroke-dasharray="3 5"/><circle cx="115" cy="27" r="11" fill="#22e6ff"/><circle cx="115" cy="27" r="5.5" fill="#fff"/></g></svg></div>
-          <div class="dial-c"><span class="num" id="chance">0%</span><small><span data-ru="шанс">chance</span></small><b class="num up-mult" id="upMult"></b></div>
+          <div class="dial-c"><span class="num" id="chance">0%</span><small><span data-ru="шанс">chance</span></small><b class="num up-mult" id="upMult"></b><b class="up-bonus" id="upBonus" hidden><span data-ru="+10% бонус">+10% bonus</span></b></div>
         </div>
         <div class="arrow-pick" id="arrowPick" role="group" aria-label="Pointer style" data-ru-aria-label="Вид указателя">
           <button type="button" data-arrow="arrow"><span data-ru="➤ Стрелка">➤ Arrow</span></button><button type="button" data-arrow="neon"><span data-ru="● Неон">● Neon</span></button>
@@ -1370,13 +1371,15 @@ async function runBattle(rifts,botName){
 // ================= upgrade =================
 // можно положить до UP_MAX аур сразу — их стоимость складывается
 let upSel=new Set(), upDst=null, needleAngle=0, boost=0, upLock=null; // upLock: что показывать, пока крутится
-const MAX_CHANCE=.8, UP_MAX=8;
+// к шансу апгрейда всегда добавляется честный бонус +10% (он виден на круге)
+const UP_BONUS=.1, MAX_BASE=.8, MAX_CHANCE=.9, UP_MAX=8;
 (function ticks(){let s="";for(let i=0;i<60;i++){const big=i%5===0;s+=`<line x1="115" y1="${big?7:10}" x2="115" y2="${big?15:13}" transform="rotate(${i*6} 115 115)" stroke="${big?"#e9e6ff":"#5a52a8"}" stroke-width="${big?2.2:1.2}" stroke-linecap="round"/>`}
   for(let i=0;i<4;i++)s+=`<circle cx="115" cy="5" r="2.2" fill="#22e6ff" transform="rotate(${i*90+45} 115 115)"/>`;$("#dialTicks").innerHTML=s})();
 const srcList=()=>S.inv.filter(x=>upSel.has(x.uid));
 const srcVal=()=>srcList().reduce((t,x)=>t+x.value,0);
-function maxBoost(){const v=srcVal();if(!v||!upDst)return 0;return Math.max(0,Math.min(S.balance,Math.floor(MAX_CHANCE*BY_ID[upDst].price-v)))}
-function chance(){const v=srcVal();if(!v||!upDst)return 0;return Math.min(MAX_CHANCE,(v+boost)/BY_ID[upDst].price)}
+function maxBoost(){const v=srcVal();if(!v||!upDst)return 0;return Math.max(0,Math.min(S.balance,Math.floor(MAX_BASE*BY_ID[upDst].price-v)))}
+const withBonus=base=>Math.min(MAX_CHANCE,Math.min(MAX_BASE,base)+UP_BONUS);
+function chance(){const v=srcVal();if(!v||!upDst)return 0;return withBonus((v+boost)/BY_ID[upDst].price)}
 // что лежит в левом слоте: одна аура — большой карточкой, несколько — сеткой + сумма
 function srcView(list,rm){
   if(list.length===1) return instCard(list[0],rm?{cls:"pick",extra:`data-rm="${list[0].uid}"`}:{});
@@ -1411,14 +1414,14 @@ function renderUpgrade(){
   $("#upBtn").disabled=busy||!v||!upDst;
   document.querySelectorAll("#mults button.mult").forEach(b=>{b.disabled=!v||busy;b.classList.toggle("on",!upPick.own&&(!!b.dataset.p&&+b.dataset.p===upPick.p||!!b.dataset.m&&+b.dataset.m===upPick.m))});
   $("#ownX").parentNode.classList.toggle("on",!!(upPick.own&&upPick.m)); $("#ownP").parentNode.classList.toggle("on",!!(upPick.own&&upPick.p));
-  $("#upMult").textContent=v&&upDst?`x${(BY_ID[upDst].price/v).toFixed(2).replace(/\.?0+$/,"")}`:"";
+  $("#upBonus").hidden=!(v&&upDst); $("#upMult").textContent=v&&upDst?`x${(BY_ID[upDst].price/v).toFixed(2).replace(/\.?0+$/,"")}`:"";
   $("#upBtn").innerHTML=boost?L(`Upgrade · boost ${coin(boost)}`,`Апгрейд · буст ${coin(boost)}`):L("Upgrade","Апгрейд");
   $("#upInvHint").textContent=`${src.length} / ${UP_MAX}`;
   $("#upInv").innerHTML=S.inv.length?S.inv.slice().sort((a,b)=>b.value-a.value).map(x=>instCard(x,{cls:"pick"+(upSel.has(x.uid)?" sel":""),extra:`data-src="${x.uid}"`})).join("")
     :`<div class="empty" style="grid-column:1/-1">${L("Inventory is empty — open a rift.","Инвентарь пуст — открой разлом.")}</div>`;
   const q=$("#upSearch").value.trim().toLowerCase();
   const list=AURAS.filter(a=>a.tier!=="unique"&&a.price>v&&(!q||a.name.toLowerCase().includes(q)));
-  $("#upTargets").innerHTML=list.length?list.map(a=>card(a,{note:v?Math.round(Math.min(MAX_CHANCE,v/a.price)*100)+"%":"",cls:"pick"+(a.id===upDst?" sel":""),extra:`data-dst="${a.id}"`})).join("")
+  $("#upTargets").innerHTML=list.length?list.map(a=>card(a,{note:v?Math.round(withBonus(v/a.price)*100)+"%":"",cls:"pick"+(a.id===upDst?" sel":""),extra:`data-dst="${a.id}"`})).join("")
     :`<div class="empty" style="grid-column:1/-1">${L("Nothing found.","Ничего не нашлось.")}</div>`;
 }
 function upTargets(){
@@ -1428,7 +1431,8 @@ function upTargets(){
 }
 // цель подбирается автоматически: ближайшая аура под нужный шанс / икс от суммы выбранных аур
 function autoTargetChance(p){const v=srcVal(),list=upTargets(); if(!v||!list.length) return;
-  upDst=list.sort((a,b)=>Math.abs(v/a.price-p)-Math.abs(v/b.price-p))[0].id}
+  const want=Math.max(.02,p-UP_BONUS); // бонус уже даёт +10%, цель подбираем под оставшуюся часть
+  upDst=list.sort((a,b)=>Math.abs(v/a.price-want)-Math.abs(v/b.price-want))[0].id}
 function autoTarget(mult){const v=srcVal(),want=v*mult,list=upTargets(); if(!v||!list.length) return;
   upDst=list.sort((a,b)=>Math.abs(Math.log(a.price/want))-Math.abs(Math.log(b.price/want)))[0].id}
 function retarget(){boost=0; if(!upSel.size) return;
@@ -1449,12 +1453,12 @@ let upPick={p:.5}; // что выбрал игрок: {p: шанс} или {m: �
 $("#mults").innerHTML=[75,50,25,10].map(p=>`<button class="mult" type="button" data-p="${p/100}">${p}%</button>`).join("")+
   [2,5,10].map(m=>`<button class="mult" type="button" data-m="${m}">x${m}</button>`).join("")+
   `<label class="mult own"><input id="ownX" type="number" min="1.01" step="0.01" placeholder="${L("own x","свой x")}" inputmode="decimal"></label>`+
-  `<label class="mult own"><input id="ownP" type="number" min="1" max="80" step="1" placeholder="${L("own %","свой %")}" inputmode="numeric"></label>`;
+  `<label class="mult own"><input id="ownP" type="number" min="1" max="90" step="1" placeholder="${L("own %","свой %")}" inputmode="numeric"></label>`;
 function applyPick(){if(!upSel.size)return;if(upPick.p)autoTargetChance(upPick.p);else autoTarget(upPick.m);boost=0;renderUpgrade()}
 $("#mults").addEventListener("click",e=>{const b=e.target.closest("button[data-m],button[data-p]");if(!b||busy)return;if(!upSel.size){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}
   upPick=b.dataset.p?{p:+b.dataset.p}:{m:+b.dataset.m}; $("#ownX").value=""; $("#ownP").value=""; applyPick()});
 $("#ownX").addEventListener("change",e=>{const v=parseFloat(e.target.value);if(!(v>1)){toast(L("Multiplier must be above 1","Икс должен быть больше 1"));return}if(!upSel.size){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}upPick={m:v,own:1};$("#ownP").value="";applyPick()});
-$("#ownP").addEventListener("change",e=>{const v=parseFloat(e.target.value);if(!(v>=1&&v<=80)){toast(L("Chance must be 1–80","Шанс — от 1 до 80"));return}if(!upSel.size){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}upPick={p:v/100,own:1};$("#ownX").value="";applyPick()});
+$("#ownP").addEventListener("change",e=>{const v=parseFloat(e.target.value);if(!(v>=1&&v<=90)){toast(L("Chance must be 1–90","Шанс — от 1 до 90"));return}if(!upSel.size){toast(L("Pick your aura first","Сначала выбери свою ауру"));return}upPick={p:v/100,own:1};$("#ownX").value="";applyPick()});
 $("#upTargets").addEventListener("click",e=>{if(busy)return;const b=e.target.closest("[data-dst]");if(b){upDst=b.dataset.dst;upPick={manual:1};boost=0;renderUpgrade()}});
 $("#upSearch").addEventListener("input",renderUpgrade);
 $("#boostRange").addEventListener("input",e=>{boost=+e.target.value;renderUpgrade()});
