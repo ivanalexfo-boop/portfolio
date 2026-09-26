@@ -1004,6 +1004,37 @@ function tick(){
   const o=a.createOscillator(), og=a.createGain(); o.type="sine"; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(90,t+.03);
   og.gain.setValueAtTime(.16,t); og.gain.exponentialRampToValueAtTime(.001,t+.035); o.connect(og).connect(a.destination); o.start(t); o.stop(t+.04);
 }
+// звук клавиши механической клавиатуры (мягкий «thock» смазанного линейного свитча)
+let KB=null, kbDownT=0;
+function kbInit(a){
+  if(KB&&KB.a===a) return KB;
+  const len=Math.floor(a.sampleRate*.2), b=a.createBuffer(1,len,a.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  const out=a.createGain(), lp=a.createBiquadFilter(); out.gain.value=.42; lp.type="lowpass"; lp.frequency.value=4800; lp.Q.value=.5; // срезаем резкие верха
+  out.connect(lp).connect(a.destination); return KB={a,b,out};
+}
+function kbNoise(k,t,{type,f,q,vol,dur,att=.002}){
+  const a=k.a, s=a.createBufferSource(), fl=a.createBiquadFilter(), g=a.createGain();
+  s.buffer=k.b; fl.type=type; fl.frequency.value=f; fl.Q.value=q;
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+att); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(fl).connect(g).connect(k.out); s.start(t,Math.random()*.1); s.stop(t+dur+.02);
+}
+function keyDown(){
+  const a=ac(); if(!a) return; const k=kbInit(a), t=a.currentTime+.002, r=.93+Math.random()*.14, v=.9+Math.random()*.2; kbDownT=performance.now();
+  kbNoise(k,t,{type:"highpass",f:3000,q:.7,vol:.035*v,dur:.012,att:.001});        // лёгкий касательный щелчок
+  kbNoise(k,t+.004,{type:"bandpass",f:430*r,q:1.8,vol:.6*v,dur:.075});             // «thock» корпуса
+  kbNoise(k,t+.004,{type:"lowpass",f:950*r,q:.9,vol:.3*v,dur:.05});                // глухой удар о дно
+  const o=a.createOscillator(), og=a.createGain(); o.type="sine";
+  o.frequency.setValueAtTime(160*r,t+.004); o.frequency.exponentialRampToValueAtTime(95*r,t+.07);
+  og.gain.setValueAtTime(.0001,t+.004); og.gain.exponentialRampToValueAtTime(.1*v,t+.008); og.gain.exponentialRampToValueAtTime(.0001,t+.07);
+  o.connect(og).connect(k.out); o.start(t); o.stop(t+.09);
+}
+function keyUp(){
+  if(!kbDownT||performance.now()-kbDownT>1500) return; kbDownT=0;
+  const a=ac(); if(!a) return; const k=kbInit(a), t=a.currentTime+.002, r=.93+Math.random()*.14;
+  kbNoise(k,t,{type:"bandpass",f:820*r,q:2.2,vol:.16,dur:.045});                   // тихий возврат клавиши
+  kbNoise(k,t,{type:"highpass",f:2600,q:.7,vol:.012,dur:.01,att:.001});
+}
 const NOTES=[[523,659],[523,659,784],[523,659,784,1047],[523,659,784,1047,1319],[392,523,659,784,1047,1319],[392,523,659,784,1047,1319,1568],[262,392,523,659,784,1047,1319,1568,2093]];
 function winSound(tier){const i=TIER_IDX[tier]??0;NOTES[i].forEach((f,k)=>{tone(f,.28,{at:k*.08,vol:.1});if(i>=4)tone(f*2,.2,{at:k*.08+.04,type:"sine",vol:.04})});if(i>=3)tone(1568,.9,{at:.6,type:"sine",vol:.05,slide:2093})}
 function loseSound(){tone(330,.45,{type:"sawtooth",vol:.06,slide:110})}
@@ -1227,9 +1258,10 @@ $("#clkOrb").addEventListener("pointerdown",e=>{
   const p=document.createElement("span"); p.className="clk-pop"; p.innerHTML=`<span class="coin"></span><b>+${CLK_GAIN}</b>`;
   p.style.left=x+"px"; p.style.top=(y-16)+"px"; p.style.setProperty("--dx",((rnd()-.5)*50).toFixed(0)+"px"); p.style.setProperty("--rot",((rnd()-.5)*14).toFixed(1)+"deg");
   st.appendChild(p); setTimeout(()=>p.remove(),1300);
-  o.classList.remove("hit"); void o.offsetWidth; o.classList.add("hit"); tick();
+  o.classList.remove("hit"); void o.offsetWidth; o.classList.add("hit"); keyDown();
 });
 $("#clkOrb").addEventListener("keydown",e=>{if(e.repeat)e.preventDefault()});
+["pointerup","pointercancel","pointerleave","keyup"].forEach(ev=>$("#clkOrb").addEventListener(ev,keyUp));
 $("#clkOrb").addEventListener("click",e=>{if(e.detail===0){const r=$("#clkOrb").getBoundingClientRect();$("#clkOrb").dispatchEvent(new PointerEvent("pointerdown",{clientX:r.left+r.width/2,clientY:r.top+r.height/2}))}});
 function renderClicker(){}
 
