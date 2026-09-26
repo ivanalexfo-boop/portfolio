@@ -742,7 +742,7 @@ main .sub{color:#d2d0f5}
             <div class="cr-quick" id="crQuickBet"><button type="button" data-q="half">½</button><button type="button" data-q="double">×2</button><button type="button" data-q="max"><span data-ru="Макс">Max</span></button></div>
           </div>
           <div class="cr-field"><label for="crAuto"><span data-ru="Автовывод">Auto cash-out</span></label>
-            <div class="cr-input"><input id="crAuto" type="number" min="1.01" step="0.01" placeholder="off" data-ru-placeholder="выкл" inputmode="decimal"><span class="cr-x">×</span></div>
+            <div class="cr-input"><input id="crAuto" type="number" min="1.01" max="50" step="0.01" placeholder="off" data-ru-placeholder="выкл" inputmode="decimal"><span class="cr-x">×</span></div>
             <div class="cr-quick" id="crQuickAuto"><button type="button" data-a="1.66">1.66×</button><button type="button" data-a="2">2×</button><button type="button" data-a="5">5×</button></div>
           </div>
           <button class="btn btn-main cr-go" id="crBtn" type="button"><span data-ru="Поставить">Place bet</span></button>
@@ -1580,7 +1580,8 @@ $("#ctBtn").addEventListener("click",async()=>{
 // ================= crash (continuous rounds + players) =================
 const CR_K=0.00012, BET_TIME=7000, AFTER_TIME=3200;
 const cr={phase:"bet",start:performance.now(),crashAt:1,hist:[],players:[],me:null,t:0};
-function crashPoint(){return Math.max(1,Math.floor(0.97/(1-rnd())*100)/100)} // как было изначально: ~3% раундов взрываются сразу на 1.00×
+const CR_MAX=50; // потолок икса в краше
+function crashPoint(){return Math.min(CR_MAX,Math.max(1,Math.floor(0.97/(1-rnd())*100)/100))} // ~3% раундов взрываются сразу на 1.00×, максимум 50×
 function newRound(){
   cr.phase="bet"; cr.start=performance.now(); cr.crashAt=crashPoint(); cr.t=0; cr.me=null;
   const n=5+Math.floor(rnd()*6), names=BOTS.slice().sort(()=>rnd()-.5).slice(0,n);
@@ -1644,7 +1645,7 @@ $("#crAuto").addEventListener("input",crHint);
 $("#crBtn").addEventListener("click",()=>{
   if(cr.phase==="fly"&&cr.me&&!cr.me.cashed){crCash(crM());return}
   if(cr.phase!=="bet"||cr.me) return;
-  const bet=Math.floor(+$("#crBet").value||0), auto=parseFloat($("#crAuto").value)||0;
+  const bet=Math.floor(+$("#crBet").value||0), auto=Math.min(CR_MAX,parseFloat($("#crAuto").value)||0);
   if(bet<1){toast(L("Enter a bet","Введи ставку"));return} if(bet>S.balance){toast(L("Not enough coins","Не хватает монет"));return}
   ac(); S.balance-=bet; save(); renderTop();
   cr.me={bet,auto:auto>1?auto:0,cashed:0}; renderCrashCtl(); renderCrTable();
