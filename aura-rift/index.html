@@ -885,10 +885,10 @@ function riftSVG(rf){return `<img src="${RIMG[rf.id]}" alt="" draggable="false">
 
 // ================= rifts =================
 // id, имя, тег, цена, цвета
-// Экономика кейса: 40% — убыточный дроп, 50% — окуп (аура ровно за цену кейса),
-// остальные 10% — профит (~3x) и джекпот. Шанс джекпота у каждого кейса свой (всегда < 1%):
+// Экономика кейса: 30% — убыточный дроп, 70% — окуп и выше (окуп, профит ~3x и джекпот).
+// Доля профита подбирается так, чтобы возврат остался ~97%. Шанс джекпота у каждого кейса свой (всегда < 1%):
 // он подобран так, чтобы в среднем возвращалось 97% цены — иначе баланс раздувается сам.
-const RTP=0.97;
+const RTP=0.97, LOSS=0.3; // 70/30: 70% дропов окупают кейс
 const RIFTS=[
   // id, имя, англ., цена, цвета, буква, кнопка, [убыток, окуп, профит, джекпот]
   ["echo","Эхо-Сфера","Echo Sphere",5e3,"#3ef08f","#1d6b3a","Э","green",["dust","sparkle","blizzard","wind"]],
@@ -906,9 +906,9 @@ const RIFTS=[
   Object.defineProperties(rf,{name:{get:()=>L(en,ru)},tag:{get:()=>L(ru,en)},short:{get:()=>L(en[0],short)}});return rf});
 const RIFT_BY=Object.fromEntries(RIFTS.map(r=>[r.id,r]));
 // Состав кейса собирается из каталога по цене (плюс ауры из таблицы — они всегда внутри):
-//  убыток (40%)  — до 4 аур дешевле кейса (от 5% его цены), чаще — те, что ближе к цене;
-//  окуп   (50%)  — до 3 аур от 1x до 2x цены;
-//  профит (~10%) — до 3 аур от 2x до 20x;
+//  убыток (30%)  — до 4 аур дешевле кейса (от 5% его цены), чаще — те, что ближе к цене;
+//  окуп   (~60%) — до 3 аур от 1x до 2x цены;
+//  профит (2–10%) — до 3 аур от 2x до 20x;
 //  джекпот (<1%) — до 3 аур от 20x до 300x.
 // Шанс джекпота подбирается так, чтобы в среднем возвращалось ~97% цены кейса.
 function riftBuckets(rf){
@@ -923,15 +923,17 @@ for(const rf of RIFTS){
   const split=(list,mass,e)=>{const raw=list.map(a=>Math.pow(a.price,e)),t=raw.reduce((x,y)=>x+y,0)||1;return list.map((a,i)=>({id:a.id,w:mass*raw[i]/t}))};
   const avg=(list,e)=>list.length?split(list,1,e).reduce((s,x)=>s+x.w*BY_ID[x.id].price,0):0;
   // Подбор весов от мягкого к жёсткому: первый вариант, где шанс джекпота получается 0.05–1%
+  // 30% дропов — дешевле кейса, 70% — окуп и выше; доля профита ужимается, чтобы возврат остался ~97%
   let pick=null;
+  search: for(const pm of [.1,.09,.08,.07,.06,.05,.04,.03,.02])
   for(const [eL,t] of [[1,1],[1,2],[1,3],[0,3],[0,5],[-1,6],[-2,8],[-4,12]]){
-    const aL=avg(L,eL),aO=avg(O,-t),aP=avg(Pr,-t),aJ=avg(J,-1), base=.4*aL+.5*aO+.1*aP;
+    const aL=avg(L,eL),aO=avg(O,-t),aP=avg(Pr,-t),aJ=avg(J,-1), base=LOSS*aL+(1-LOSS-pm)*aO+pm*aP;
     const j=J.length?(RTP*rf.price-base)/(aJ-aP):0;
-    pick={eL,t,j:Math.max(0,Math.min(.01,j))};
-    if(j>=.0005&&j<=.01) break;
+    pick={eL,t,pm,j:Math.max(0,Math.min(.01,pm*.5,j))};
+    if(j>=.0005&&j<=.01&&j<pm*.5) break search;
   }
   rf.jack=pick.j; rf.buckets=[L,O,Pr,J];
-  rf.drops=[...split(L,.4,pick.eL),...split(O,.5,-pick.t),...split(Pr,.1-pick.j,-pick.t),...split(J,pick.j,-1)].filter(d=>d.w>1e-9);
+  rf.drops=[...split(L,LOSS,pick.eL),...split(O,1-LOSS-pick.pm,-pick.t),...split(Pr,pick.pm-pick.j,-pick.t),...split(J,pick.j,-1)].filter(d=>d.w>1e-9);
   rf.items=rf.drops.map(d=>d.id);
   // витрина ленты: все ауры кейса мелькают, дорогие — реже
   rf.show=[...split(L,.32,0),...split(O,.3,0),...split(Pr,.24,0),...split(J,.14,0)];
@@ -1301,7 +1303,7 @@ $("#bCreate").addEventListener("click",async()=>{
   await wait(1500+rnd()*2000);
   runBattle(bSel.slice(),pick(BOTS));
 });
-const BATTLE_WIN=0.6; // шанс игрока выиграть битву
+const BATTLE_WIN=0.7; // шанс игрока выиграть битву
 async function runBattle(rifts,botName){
   const cost=bCost(rifts); if(busy||S.balance<cost) return;
   ac();
@@ -1487,10 +1489,10 @@ $("#upBtn").addEventListener("click",async()=>{
 // ================= contract (10 → next tier) =================
 const ctSel=new Set(); let ctFilter="all";
 // Контракт: от 3 до 10 любых аур вперемешку. База — самый высокий тир среди вложенных.
-// Шанс получить ауру тиром выше: 3 ауры — 60%, 10 аур — гарантированно.
+// Шанс получить ауру тиром выше: 3 ауры — 70%, 10 аур — гарантированно.
 const CT_MIN=3, CT_MAX=10;
 function nextTier(k){return TIERS[TIER_IDX[k]+1]?.k}
-const ctUpChance=n=>Math.min(1,.6+(n-CT_MIN)/(CT_MAX-CT_MIN)*.4);
+const ctUpChance=n=>Math.min(1,.7+(n-CT_MIN)/(CT_MAX-CT_MIN)*.3);
 const ctSelected=()=>S.inv.filter(x=>ctSel.has(x.uid));
 function ctBase(){const sel=ctSelected();return sel.length?TIERS[Math.max(...sel.map(x=>TIER_IDX[BY_ID[x.id].tier]))].k:"common"}
 function ctPool(up){
