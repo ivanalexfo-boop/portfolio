@@ -268,7 +268,13 @@ h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted
 .up-hint{font-size:12px;color:var(--muted);font-weight:700;margin-left:6px}
 .modal-card .up-mgrid.lost{margin-bottom:16px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
 .slot-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;font-weight:700}
-.dial{position:relative;width:230px;height:230px}
+.dial{position:relative;width:250px;height:250px;isolation:isolate}
+.dial::before{content:"";position:absolute;inset:-14px;border-radius:50%;z-index:-1;background:conic-gradient(from 0deg,#22e6ff,#8b5cff,#ff3dcb,#ffc53d,#3ef08f,#22e6ff);filter:blur(22px);opacity:.45;animation:dialAura 9s linear infinite}
+.dial::after{content:"";position:absolute;inset:2px;border-radius:50%;pointer-events:none;box-shadow:0 0 0 0 transparent;transition:box-shadow .3s}
+.dial.spinning::before{animation-duration:1.4s;opacity:.7}
+.dial.hit::after{box-shadow:0 0 40px 10px rgba(62,240,143,.75),inset 0 0 40px rgba(62,240,143,.5)}
+.dial.miss::after{box-shadow:0 0 40px 10px rgba(255,77,109,.7),inset 0 0 40px rgba(255,77,109,.45)}
+@keyframes dialAura{to{transform:rotate(360deg)}}
 .dial svg{width:100%;height:100%;display:block;overflow:visible}
 .dial .needle{position:absolute;inset:0;transform-origin:50% 50%;will-change:transform;transition:transform 6.2s cubic-bezier(.2,.85,.12,1);pointer-events:none}
 .dial .needle svg{width:100%;height:100%;display:block;overflow:visible}
@@ -278,9 +284,9 @@ h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted
 .dial.miss svg{animation:shake .4s ease}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .dial-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
-.dial-c .num{font-size:34px;font-weight:700;color:var(--win);text-shadow:0 0 18px rgba(62,240,143,.5)}
+.dial-c .num{font-size:36px;font-weight:800;color:var(--win);background:linear-gradient(180deg,#b6ffd6,#3ef08f 60%,#22e6ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px rgba(62,240,143,.55))}
 .dial-c small{color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
-.arrow-pick{display:flex;gap:4px;justify-content:center;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.arrow-pick{display:flex;gap:4px;justify-content:center;margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
 .arrow-pick button{flex:1;font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;color:var(--muted);white-space:nowrap}
 .arrow-pick button[aria-pressed="true"]{background:var(--grad);color:#fff}
 .boost{margin-top:14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
@@ -453,7 +459,8 @@ main .sub{color:#d2d0f5}
 .mult.own input{width:98px;background:none;border:0;color:var(--text);font:700 14px var(--mono);padding:8px 12px;outline:none;text-align:center}
 .mult.own.on input{color:#04210f}
 .mult.own input::placeholder{color:var(--muted);font-weight:500}
-.dial-c .up-mult{display:block;font-size:15px;color:#bfe9ff;text-shadow:none;margin-top:2px}
+.dial-c .up-mult{display:inline-block;justify-self:center;font-size:13px;color:#bfe9ff;-webkit-text-fill-color:#bfe9ff;background:rgba(34,230,255,.12);border:1px solid rgba(34,230,255,.35);border-radius:999px;padding:1px 9px;margin-top:5px;filter:none}
+.dial-c .up-mult:empty{display:none}
 
 .lang{height:34px;min-width:40px;padding:0 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font:800 12px var(--display);letter-spacing:.06em;color:var(--cyan);flex:none}
 .lang:hover{border-color:var(--cyan)}
@@ -550,13 +557,28 @@ main .sub{color:#d2d0f5}
       <div class="dial-wrap">
         <div class="dial" id="dial" data-arrow="arrow">
           <svg viewBox="0 0 230 230" aria-hidden="true">
-            <circle cx="115" cy="115" r="110" fill="#0a0822" stroke="#2e2870" stroke-width="2"/>
+            <defs>
+              <linearGradient id="dRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22e6ff"/><stop offset=".5" stop-color="#8b5cff"/><stop offset="1" stop-color="#ff3dcb"/></linearGradient>
+              <radialGradient id="dBezel" cx="50%" cy="35%" r="65%"><stop offset="0" stop-color="#1d1760"/><stop offset=".7" stop-color="#0c0930"/><stop offset="1" stop-color="#05041a"/></radialGradient>
+              <linearGradient id="dWin" gradientUnits="userSpaceOnUse" x1="115" y1="20" x2="115" y2="210"><stop offset="0" stop-color="#7dffb8"/><stop offset=".5" stop-color="#3ef08f"/><stop offset="1" stop-color="#22e6ff"/></linearGradient>
+              <linearGradient id="dLose" gradientUnits="userSpaceOnUse" x1="20" y1="115" x2="210" y2="115"><stop offset="0" stop-color="#ff4d6d"/><stop offset="1" stop-color="#b3124a"/></linearGradient>
+              <radialGradient id="dCore" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#3a2a9a"/><stop offset=".55" stop-color="#150f4a"/><stop offset="1" stop-color="#07061a"/></radialGradient>
+              <linearGradient id="dGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+              <filter id="dGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <circle cx="115" cy="115" r="113" fill="none" stroke="url(#dRim)" stroke-width="3" opacity=".9"/>
+            <circle cx="115" cy="115" r="110" fill="url(#dBezel)"/>
             <g id="dialTicks"></g>
-            <circle cx="115" cy="115" r="88" fill="none" stroke="#ff4d6d" stroke-opacity=".75" stroke-width="20"/>
-            <circle class="winarc" id="dialArc" cx="115" cy="115" r="88" fill="none" stroke="#3ef08f" stroke-width="20" stroke-dasharray="0 553" transform="rotate(-90 115 115)" filter="url(#glow)"/>
-            <circle cx="115" cy="115" r="75" fill="url(#dialCore)" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+            <circle cx="115" cy="115" r="88" fill="none" stroke="#120e36" stroke-width="24"/>
+            <circle cx="115" cy="115" r="88" fill="none" stroke="url(#dLose)" stroke-opacity=".8" stroke-width="18"/>
+            <circle class="winarc" id="dialArc" cx="115" cy="115" r="88" fill="none" stroke="url(#dWin)" stroke-width="18" stroke-dasharray="0 553" transform="rotate(-90 115 115)" filter="url(#dGlow)"/>
+            <circle cx="115" cy="115" r="99.5" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+            <circle cx="115" cy="115" r="76.5" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+            <circle cx="115" cy="115" r="74" fill="url(#dCore)"/>
+            <circle cx="115" cy="115" r="74" fill="none" stroke="url(#dRim)" stroke-opacity=".5" stroke-width="1.5"/>
+            <path d="M52 100a64 64 0 0 1 126 0a120 60 0 0 0 -126 0z" fill="url(#dGlass)"/>
           </svg>
-          <div class="needle" id="needle"><svg viewBox="0 0 230 230" aria-hidden="true"><g class="arw-arrow"><path d="M115 22 L129 50 L115 44 L101 50 Z" fill="#fff" stroke="#07061a" stroke-width="2" stroke-linejoin="round"/><path d="M115 44 L115 58" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g>
+          <div class="needle" id="needle"><svg viewBox="0 0 230 230" aria-hidden="true"><defs><linearGradient id="dArw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#ffd46b"/></linearGradient></defs><g class="arw-arrow" filter="url(#dGlow)"><path d="M115 16 L131 48 L115 41 L99 48 Z" fill="url(#dArw)" stroke="#1a0f3a" stroke-width="2" stroke-linejoin="round"/><path d="M115 41 L115 60" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><circle cx="115" cy="62" r="3" fill="#fff"/></g>
               <g class="arw-neon" filter="url(#glow)"><path d="M115 115 L115 36" stroke="rgba(34,230,255,.4)" stroke-width="3" stroke-dasharray="3 5"/><circle cx="115" cy="27" r="11" fill="#22e6ff"/><circle cx="115" cy="27" r="5.5" fill="#fff"/></g></svg></div>
           <div class="dial-c"><span class="num" id="chance">0%</span><small><span data-ru="шанс">chance</span></small><b class="num up-mult" id="upMult"></b></div>
         </div>
@@ -1184,7 +1206,8 @@ async function runBattle(rifts,botName){
 // можно положить до UP_MAX аур сразу — их стоимость складывается
 let upSel=new Set(), upDst=null, needleAngle=0, boost=0, upLock=null; // upLock: что показывать, пока крутится
 const MAX_CHANCE=.8, UP_MAX=8;
-(function ticks(){let s="";for(let i=0;i<40;i++)s+=`<line x1="115" y1="${i%5?11:8}" x2="115" y2="17" transform="rotate(${i*9} 115 115)" stroke="${i%5?"#4a4390":"#fff"}" stroke-width="${i%5?1.2:2}" stroke-linecap="round"/>`;$("#dialTicks").innerHTML=s})();
+(function ticks(){let s="";for(let i=0;i<60;i++){const big=i%5===0;s+=`<line x1="115" y1="${big?7:10}" x2="115" y2="${big?15:13}" transform="rotate(${i*6} 115 115)" stroke="${big?"#e9e6ff":"#5a52a8"}" stroke-width="${big?2.2:1.2}" stroke-linecap="round"/>`}
+  for(let i=0;i<4;i++)s+=`<circle cx="115" cy="5" r="2.2" fill="#22e6ff" transform="rotate(${i*90+45} 115 115)"/>`;$("#dialTicks").innerHTML=s})();
 const srcList=()=>S.inv.filter(x=>upSel.has(x.uid));
 const srcVal=()=>srcList().reduce((t,x)=>t+x.value,0);
 function maxBoost(){const v=srcVal();if(!v||!upDst)return 0;return Math.max(0,Math.min(S.balance,Math.floor(MAX_CHANCE*BY_ID[upDst].price-v)))}
@@ -1281,13 +1304,13 @@ $("#upBtn").addEventListener("click",async()=>{
   S.balance-=paid; S.inv=S.inv.filter(x=>!upSel.has(x.uid));
   let inst=null; if(win){inst=makeInst(upDst,null);S.inv.unshift(inst);S.stats.upWin++}else S.stats.upLose++;
   save(); renderTop();
-  busy=true; upLock={src,dst:upDst,c}; renderUpgrade();
+  busy=true; upLock={src,dst:upDst,c}; renderUpgrade(); $("#dial").classList.add("spinning");
   const target=needleAngle-(needleAngle%360)+360*6+r*360; needleAngle=target;
   const nd=$("#needle"); nd.style.transform=`rotate(${target}deg)`;
   let prev=null,acc=0,on=true;
   (function follow(){if(!on)return;const m=getComputedStyle(nd).transform;if(m&&m!=="none"){const d=new DOMMatrixReadOnly(m),a=Math.atan2(d.b,d.a)*180/Math.PI;if(prev!==null){let da=a-prev;if(da<-180)da+=360;if(da>180)da-=360;acc+=Math.abs(da);if(acc>=18){acc=0;tick()}}prev=a}requestAnimationFrame(follow)})();
   await wait(6300); on=false;
-  const dl=$("#dial"); dl.classList.add(win?"hit":"miss"); setTimeout(()=>dl.classList.remove("hit","miss"),1100);
+  const dl=$("#dial"); dl.classList.remove("spinning"); dl.classList.add(win?"hit":"miss"); setTimeout(()=>dl.classList.remove("hit","miss"),1100);
   busy=false; upLock=null; upSel.clear(); boost=0;
   if(win){addFeed(inst);save();renderAll();const a=BY_ID[inst.id];
     modal(`<div class="modal-title win">${L("Upgrade successful!","Апгрейд удался!")}</div>${instCard(inst)}${prizeActions([inst],inst.value)}`,a.tier);celebrate(a.tier);bindPrize([inst],inst.value);
