@@ -991,18 +991,18 @@ function tone(freq,dur,{type="triangle",vol=.12,at=0,slide=0}={}){
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.008); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.02);
 }
-let lastTick=0, noiseBuf=null;
+let lastTick=0;
+// щелчок прокрутки: мягкий деревянный «ток» без резких верхов; при быстрой прокрутке тише
 function tick(){
-  const n=performance.now(); if(n-lastTick<30) return; lastTick=n;
-  const a=ac(); if(!a) return;
-  if(!noiseBuf){noiseBuf=a.createBuffer(1,Math.floor(a.sampleRate*.04),a.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3)}
-  const t=a.currentTime;
-  const src=a.createBufferSource(); src.buffer=noiseBuf; src.playbackRate.value=.9+Math.random()*.25;
-  const bp=a.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2600+Math.random()*900; bp.Q.value=1.4;
-  const g=a.createGain(); g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+.03);
-  src.connect(bp).connect(g).connect(a.destination); src.start(t); src.stop(t+.04);
-  const o=a.createOscillator(), og=a.createGain(); o.type="sine"; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(90,t+.03);
-  og.gain.setValueAtTime(.16,t); og.gain.exponentialRampToValueAtTime(.001,t+.035); o.connect(og).connect(a.destination); o.start(t); o.stop(t+.04);
+  const n=performance.now(), dt=n-lastTick; if(dt<28) return; lastTick=n;
+  const a=ac(); if(!a) return; const k=kbInit(a), t=a.currentTime+.002, r=.96+Math.random()*.08, v=(dt<70?.65:1)*(.9+Math.random()*.2);
+  kbNoise(k,t,{type:"bandpass",f:1400*r,q:5,vol:.6*v,dur:.02,att:.001});       // деревянный щелчок
+  for(const [f,g,d] of [[980,.24,.045],[520,.13,.035]]){                        // тёплый тон «ток»
+    const o=a.createOscillator(), og=a.createGain(); o.type="sine";
+    o.frequency.setValueAtTime(f*r,t); o.frequency.exponentialRampToValueAtTime(f*r*.92,t+d);
+    og.gain.setValueAtTime(.0001,t); og.gain.exponentialRampToValueAtTime(g*v,t+.002); og.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(og).connect(k.out); o.start(t); o.stop(t+d+.02);
+  }
 }
 // звук клавиши механической клавиатуры (мягкий «thock» смазанного линейного свитча)
 let KB=null, kbDownT=0;
