@@ -541,18 +541,28 @@ main .sub{color:#d2d0f5}
 @keyframes vsPulse{50%{transform:scale(1.08);box-shadow:0 0 36px rgba(255,61,203,.9)}}
 
 /* ===== trump clicker ===== */
-.clk-stage{position:relative;overflow:hidden;border-radius:22px;padding:24px 16px;display:flex;justify-content:center;user-select:none;-webkit-user-select:none;
+.clk-stage{position:relative;overflow:hidden;border-radius:22px;padding:20px 16px;margin-bottom:24px;display:flex;justify-content:center;user-select:none;-webkit-user-select:none;
   background:radial-gradient(45% 55% at 50% 55%,rgba(255,197,61,.28),transparent 70%),radial-gradient(80% 60% at 50% 0%,rgba(139,92,255,.3),transparent 70%),rgba(12,10,40,.85);
   border:2px solid rgba(255,197,61,.45);box-shadow:0 0 30px -10px rgba(255,197,61,.8),inset 0 0 40px rgba(139,92,255,.12)}
-.clk-orb{position:relative;height:440px;max-height:62vh;aspect-ratio:253/560;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;transition:transform .12s}
+.clk-orb{position:relative;height:640px;max-height:78vh;aspect-ratio:253/560;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;transition:transform .12s}
 .clk-orb img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) drop-shadow(0 0 22px rgba(255,197,61,.35))}
 .clk-orb:hover{transform:scale(1.02)}
 .clk-orb.hit{animation:clkHit .16s ease}
 @keyframes clkHit{40%{transform:scale(.94)}}
-.clk-pop{position:absolute;z-index:5;pointer-events:none;font-family:var(--mono);font-weight:800;font-size:24px;color:#ffc53d;text-shadow:0 0 12px rgba(255,197,61,.9),0 2px 0 rgba(0,0,0,.6);transform:translate(-50%,0);animation:clkPop .9s ease-out forwards;white-space:nowrap}
-@keyframes clkPop{to{transform:translate(-50%,-90px) scale(1.1);opacity:0}}
+.clk-pop{position:absolute;z-index:5;pointer-events:none;display:flex;align-items:center;gap:6px;white-space:nowrap;transform:translate(-50%,-50%);will-change:transform,opacity;
+  animation:clkPop 1.25s cubic-bezier(.22,.8,.3,1) forwards}
+.clk-pop b{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:.01em;line-height:1;
+  background:linear-gradient(180deg,#fffbe6 0%,#ffe27a 45%,#ffb020 75%,#ff8a00 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  -webkit-text-stroke:1px rgba(120,60,0,.55);filter:drop-shadow(0 2px 0 rgba(90,40,0,.6)) drop-shadow(0 0 10px rgba(255,197,61,.6))}
+.clk-pop .coin{width:24px;height:24px;box-shadow:0 0 12px rgba(34,230,255,.8)}
+@keyframes clkPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(0)}
+  14%{opacity:1;transform:translate(-50%,-70%) scale(1.15) rotate(var(--rot))}
+  28%{transform:translate(calc(-50% + var(--dx)*.3),-95%) scale(1) rotate(var(--rot))}
+  70%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% - 110px)) scale(.9) rotate(var(--rot))}}
 @media (max-width:760px){
-  .clk-orb{height:380px}
+  .clk-orb{height:540px;max-height:70vh}
   .b-sel{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.vs span{width:44px;height:44px;font-size:14px}
   .duel{grid-template-columns:1fr 1fr}.side{padding:8px}.side-head .ava{width:34px;height:34px;font-size:14px}.side-total{font-size:15px}.crown{font-size:20px}
   .won-list{grid-template-columns:1fr}.lobby{flex-wrap:wrap}.b-pot{margin-left:0}
@@ -758,9 +768,6 @@ main .sub{color:#d2d0f5}
   </section>
 </main>
 
-<footer>
-  <button class="reset" id="resetBtn" type="button"><span data-ru="Начать заново">Start over</span></button>
-</footer>
 
 <div class="modal" id="modal" hidden><div class="modal-card" id="modalCard"></div></div>
 <div class="toast" id="toast" hidden></div>
@@ -1215,8 +1222,9 @@ $("#clkOrb").addEventListener("pointerdown",e=>{
   S.balance+=CLK_GAIN; S.stats.clickEarned=(S.stats.clickEarned||0)+CLK_GAIN; S.stats.clicks=(S.stats.clicks||0)+1; renderTop(); clkSave();
   const o=$("#clkOrb"), st=$("#clkStage"), r=st.getBoundingClientRect(), ob=o.getBoundingClientRect();
   const x=(e.clientX||ob.left+ob.width/2)-r.left, y=(e.clientY||ob.top+ob.height/2)-r.top;
-  const p=document.createElement("span"); p.className="clk-pop"; p.innerHTML=`+${CLK_GAIN}`;
-  p.style.left=(x+(rnd()-.5)*30)+"px"; p.style.top=(y-10)+"px"; st.appendChild(p); setTimeout(()=>p.remove(),900);
+  const p=document.createElement("span"); p.className="clk-pop"; p.innerHTML=`<span class="coin"></span><b>+${CLK_GAIN}</b>`;
+  p.style.left=x+"px"; p.style.top=(y-16)+"px"; p.style.setProperty("--dx",((rnd()-.5)*50).toFixed(0)+"px"); p.style.setProperty("--rot",((rnd()-.5)*14).toFixed(1)+"deg");
+  st.appendChild(p); setTimeout(()=>p.remove(),1300);
   o.classList.remove("hit"); void o.offsetWidth; o.classList.add("hit"); tick();
 });
 $("#clkOrb").addEventListener("keydown",e=>{if(e.repeat)e.preventDefault()});
@@ -1734,13 +1742,6 @@ $("#promoForm").addEventListener("submit",e=>{
     toast(S.infinite?L("Infinite coins on ∞","Бесконечные монеты включены ∞"):L("Infinite coins off","Бесконечные монеты выключены"));if(S.infinite)celebrate("anomaly");return}
   if(!PROMOS[code]){toast(L("No such promo code","Такого промокода нет"));return} if(S.promos.includes(code)){toast(L("Promo code already redeemed","Промокод уже активирован"));return}
   S.promos.push(code); S.balance+=PROMOS[code]; save(); renderAll(); $("#promoInput").value=""; toast(L(`+${fmt(PROMOS[code])} coins!`,`+${fmt(PROMOS[code])} монет!`)); celebrate("mythic");
-});
-let resetArmed=false;
-$("#resetBtn").addEventListener("click",()=>{
-  if(busy) return;
-  if(!resetArmed){resetArmed=true;$("#resetBtn").textContent=L("Sure? Everything resets — tap again","Точно? Всё обнулится — нажми ещё раз");setTimeout(()=>{resetArmed=false;$("#resetBtn").textContent=L("Start over","Начать заново")},3500);return}
-  resetArmed=false;$("#resetBtn").textContent=L("Start over","Начать заново");
-  S=fresh();upSel.clear();upDst=null;ctSel.clear();bSel=[];save();renderAll();toast(L("Progress reset","Прогресс сброшен"));
 });
 
 // ================= render =================
