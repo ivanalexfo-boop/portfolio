@@ -1,6 +1,6 @@
 # Где мы остановились (перенос «Битвы Аур» в Roblox)
 
-_Обновлено: 28 сентября 2026._
+_Обновлено: 28 сентября 2026 — картинки и звуки загружены в Roblox, id вписаны в Config.IMAGES / Config.SOUNDS._
 
 ## Состояние
 - **Веб-прототип** (живой, приватный): https://claude.ai/artifact/NwkmaWK23FD4oR1BkGbqdu — исходник `aura-rift/index.html`.

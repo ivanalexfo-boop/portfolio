@@ -150,7 +150,7 @@ return function(page: Frame, Core)
 			task.wait(0.09 + k * 0.01)
 		end
 		local good = res.up or res.item.v >= sum
-		Core.sound(if good then "win" else "lose")
+		Core.sound(if res.up then "win_big" elseif good then "win" else "lose")
 		local tier = Core.tierOf(res.item.id)
 		Core.showPrize(
 			if res.up then L("Rarer: ", "Редче: ") .. L(tier.en, tier.ru) .. "!" else L("New aura", "Новая аура"),

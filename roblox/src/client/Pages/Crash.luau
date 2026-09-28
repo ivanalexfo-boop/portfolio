@@ -266,9 +266,16 @@ return function(page: Frame, Core)
 	RunService.RenderStepped:Connect(frame)
 
 	local lastPhase = nil
+	local manualCash = false
 	Core.R.CrashState.OnClientEvent:Connect(function(s)
 		local me0 = mine()
 		st = s
+		-- автовывод сработал на сервере — тоже радуемся
+		local me1 = mine()
+		if me0 and me1 and me0.cashed == 0 and me1.cashed > 0 and not manualCash then
+			Core.sound(if me1.cashed >= 3 then "win_big" else "win")
+			Core.toast(L("Auto cash-out at ", "Автовывод на ") .. string.format("%.2f×", me1.cashed))
+		end
 		if lastPhase == "fly" and s.phase == "after" then
 			local me = mine()
 			if me0 and me and me.cashed == 0 then
@@ -292,9 +299,13 @@ return function(page: Frame, Core)
 		end
 		local me = mine()
 		if st.phase == "fly" and me and me.cashed == 0 then
+			manualCash = true
 			local res = Core.R.CrashCashout:InvokeServer()
+			task.delay(1, function()
+				manualCash = false
+			end)
 			if res and res.ok then
-				Core.sound("win")
+				Core.sound(if res.cashed >= 3 then "win_big" else "win")
 				Core.toast(L("Cashed out ", "Выведено ") .. Core.fmt(res.win) .. L(" at ", " на ") .. string.format("%.2f×", res.cashed))
 			end
 			return

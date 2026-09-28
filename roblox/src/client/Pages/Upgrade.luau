@@ -339,7 +339,7 @@ return function(page: Frame, Core)
 		targetId = nil
 		boostPart = 0
 		if res.win then
-			Core.sound("win")
+			Core.sound(if Config.TIER_INDEX[Config.AURA_BY_ID[res.item.id].tier] >= 4 then "win_big" else "win")
 			Core.showPrize(L("Upgrade successful!", "Апгрейд удался!"), C.win, { res.item })
 		else
 			Core.sound("lose")

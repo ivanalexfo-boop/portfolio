@@ -181,7 +181,7 @@ return function(page: Frame, Core)
 			end
 		end
 		local good = best.v >= rf.price
-		Core.sound(if good then "win" else "lose")
+		Core.sound(if Config.TIER_INDEX[Config.AURA_BY_ID[best.id].tier] >= 4 then "win_big" elseif good then "win" else "lose")
 		Core.showPrize(if n > 1 then L("Your drop", "Твой дроп") else L("You got", "Тебе выпало"), Core.tierOf(best.id).color, res.items)
 	end
 

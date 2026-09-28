@@ -51,7 +51,7 @@ return function(page: Frame, Core)
 		Core.R.Tap:FireServer()
 		Core.state.balance += Config.CLICK_GAIN -- сразу показываем, сервер пришлёт точное значение
 		Core.changed()
-		Core.sound("tap", 0.35)
+		Core.sound("tap", 0.6)
 		local pop = Ui.label("+" .. Config.CLICK_GAIN, 30, C.gold, {
 			Font = Enum.Font.GothamBlack,
 			AnchorPoint = Vector2.new(0.5, 0.5),

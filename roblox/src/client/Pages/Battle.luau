@@ -239,7 +239,7 @@ return function(page: Frame, Core)
 		;(winner.frame:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = C.win
 		task.wait(1)
 		if res.won then
-			Core.sound("win")
+			Core.sound("win_big")
 			local pot = res.A + res.B
 			Core.showPrize(L("Victory!", "Победа!"), C.win, res.prize, L("Spent ", "Потрачено ") .. Core.fmt(res.cost) .. L(" · pool ", " · пул ") .. Core.fmt(pot))
 		else

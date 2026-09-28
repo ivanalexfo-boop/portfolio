@@ -28,9 +28,9 @@ Config.INV_LIMIT = 400           -- лимит предметов в инвен�
 Config.IMAGES = {
 	auras = "rbxassetid://125384373148579",
 	rifts = "rbxassetid://114109902820743",
-	tom = "", -- img_tom
-	rocket = "", -- img_rocket
-	background = "", -- img_background
+	tom = "rbxassetid://132231415903419",
+	rocket = "rbxassetid://76423203466143",
+	background = "rbxassetid://75409017923246",
 }
 Config.ATLAS = {
 	auraCell = 170,
@@ -123,14 +123,15 @@ Config.PROMOS = { VANYA1M = 1_000_000 }
 
 Config.BOTS = { "xX_Shadow_Xx", "NeoKid", "auraFarmer", "Lexa228", "zxc_ghost", "Mira", "pro_gamer67", "kittyUwU", "Dimon", "VoidWalker", "sanya_2009", "Nikita_Pro", "ne_vezet", "Grisha", "hellcat", "NoobMaster" }
 
--- звуки: встроенные звуки Roblox; можно заменить на rbxassetid://... из Toolbox → Audio
+-- звуки из веб-демо, загружены в Roblox
 Config.SOUNDS = {
-	tick = "rbxasset://sounds/clickfast.wav",
-	tap = "rbxasset://sounds/button.wav",
-	win = "rbxasset://sounds/victory.wav",
-	lose = "rbxasset://sounds/uuhhh.mp3",
-	open = "rbxasset://sounds/swoosh.wav",
-	coin = "rbxasset://sounds/electronicpingshort.wav",
+	tick = "rbxassetid://105329459015835", -- деревянный щелчок прокрутки
+	tap = "rbxassetid://90707289737194", -- механическая клавиатура (кликер)
+	win = "rbxassetid://117250031511376", -- радостная фанфара
+	win_big = "rbxassetid://94131572806172", -- большая фанфара (крупный выигрыш)
+	lose = "rbxassetid://130283317842912", -- грустная мелодия
+	coin = "rbxassetid://98897028893667", -- звон монет при продаже
+	open = "",
 }
 
 Config.TIERS = {
@@ -2395,7 +2396,7 @@ return function(page: Frame, Core)
 		;(winner.frame:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = C.win
 		task.wait(1)
 		if res.won then
-			Core.sound("win")
+			Core.sound("win_big")
 			local pot = res.A + res.B
 			Core.showPrize(L("Victory!", "Победа!"), C.win, res.prize, L("Spent ", "Потрачено ") .. Core.fmt(res.cost) .. L(" · pool ", " · пул ") .. Core.fmt(pot))
 		else
@@ -2465,7 +2466,7 @@ return function(page: Frame, Core)
 		Core.R.Tap:FireServer()
 		Core.state.balance += Config.CLICK_GAIN -- сразу показываем, сервер пришлёт точное значение
 		Core.changed()
-		Core.sound("tap", 0.35)
+		Core.sound("tap", 0.6)
 		local pop = Ui.label("+" .. Config.CLICK_GAIN, 30, C.gold, {
 			Font = Enum.Font.GothamBlack,
 			AnchorPoint = Vector2.new(0.5, 0.5),
@@ -2702,7 +2703,7 @@ return function(page: Frame, Core)
 			task.wait(0.09 + k * 0.01)
 		end
 		local good = res.up or res.item.v >= sum
-		Core.sound(if good then "win" else "lose")
+		Core.sound(if res.up then "win_big" elseif good then "win" else "lose")
 		local tier = Core.tierOf(res.item.id)
 		Core.showPrize(
 			if res.up then L("Rarer: ", "Редче: ") .. L(tier.en, tier.ru) .. "!" else L("New aura", "Новая аура"),
@@ -2988,9 +2989,16 @@ return function(page: Frame, Core)
 	RunService.RenderStepped:Connect(frame)
 
 	local lastPhase = nil
+	local manualCash = false
 	Core.R.CrashState.OnClientEvent:Connect(function(s)
 		local me0 = mine()
 		st = s
+		-- автовывод сработал на сервере — тоже радуемся
+		local me1 = mine()
+		if me0 and me1 and me0.cashed == 0 and me1.cashed > 0 and not manualCash then
+			Core.sound(if me1.cashed >= 3 then "win_big" else "win")
+			Core.toast(L("Auto cash-out at ", "Автовывод на ") .. string.format("%.2f×", me1.cashed))
+		end
 		if lastPhase == "fly" and s.phase == "after" then
 			local me = mine()
 			if me0 and me and me.cashed == 0 then
@@ -3014,9 +3022,13 @@ return function(page: Frame, Core)
 		end
 		local me = mine()
 		if st.phase == "fly" and me and me.cashed == 0 then
+			manualCash = true
 			local res = Core.R.CrashCashout:InvokeServer()
+			task.delay(1, function()
+				manualCash = false
+			end)
 			if res and res.ok then
-				Core.sound("win")
+				Core.sound(if res.cashed >= 3 then "win_big" else "win")
 				Core.toast(L("Cashed out ", "Выведено ") .. Core.fmt(res.win) .. L(" at ", " на ") .. string.format("%.2f×", res.cashed))
 			end
 			return
@@ -3353,7 +3365,7 @@ return function(page: Frame, Core)
 			end
 		end
 		local good = best.v >= rf.price
-		Core.sound(if good then "win" else "lose")
+		Core.sound(if Config.TIER_INDEX[Config.AURA_BY_ID[best.id].tier] >= 4 then "win_big" elseif good then "win" else "lose")
 		Core.showPrize(if n > 1 then L("Your drop", "Твой дроп") else L("You got", "Тебе выпало"), Core.tierOf(best.id).color, res.items)
 	end
 
@@ -3706,7 +3718,7 @@ return function(page: Frame, Core)
 		targetId = nil
 		boostPart = 0
 		if res.win then
-			Core.sound("win")
+			Core.sound(if Config.TIER_INDEX[Config.AURA_BY_ID[res.item.id].tier] >= 4 then "win_big" else "win")
 			Core.showPrize(L("Upgrade successful!", "Апгрейд удался!"), C.win, { res.item })
 		else
 			Core.sound("lose")

@@ -16,9 +16,9 @@ Config.INV_LIMIT = 400           -- лимит предметов в инвен�
 Config.IMAGES = {
 	auras = "rbxassetid://125384373148579",
 	rifts = "rbxassetid://114109902820743",
-	tom = "", -- img_tom
-	rocket = "", -- img_rocket
-	background = "", -- img_background
+	tom = "rbxassetid://132231415903419",
+	rocket = "rbxassetid://76423203466143",
+	background = "rbxassetid://75409017923246",
 }
 Config.ATLAS = {
 	auraCell = 170,
@@ -111,14 +111,15 @@ Config.PROMOS = { VANYA1M = 1_000_000 }
 
 Config.BOTS = { "xX_Shadow_Xx", "NeoKid", "auraFarmer", "Lexa228", "zxc_ghost", "Mira", "pro_gamer67", "kittyUwU", "Dimon", "VoidWalker", "sanya_2009", "Nikita_Pro", "ne_vezet", "Grisha", "hellcat", "NoobMaster" }
 
--- звуки: встроенные звуки Roblox; можно заменить на rbxassetid://... из Toolbox → Audio
+-- звуки из веб-демо, загружены в Roblox
 Config.SOUNDS = {
-	tick = "rbxasset://sounds/clickfast.wav",
-	tap = "rbxasset://sounds/button.wav",
-	win = "rbxasset://sounds/victory.wav",
-	lose = "rbxasset://sounds/uuhhh.mp3",
-	open = "rbxasset://sounds/swoosh.wav",
-	coin = "rbxasset://sounds/electronicpingshort.wav",
+	tick = "rbxassetid://105329459015835", -- деревянный щелчок прокрутки
+	tap = "rbxassetid://90707289737194", -- механическая клавиатура (кликер)
+	win = "rbxassetid://117250031511376", -- радостная фанфара
+	win_big = "rbxassetid://94131572806172", -- большая фанфара (крупный выигрыш)
+	lose = "rbxassetid://130283317842912", -- грустная мелодия
+	coin = "rbxassetid://98897028893667", -- звон монет при продаже
+	open = "",
 }
 
 Config.TIERS = {
