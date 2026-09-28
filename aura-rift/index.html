@@ -985,6 +985,8 @@ function invValue(){return S.inv.reduce((s,x)=>s+x.value,0)}
 // ================= sound =================
 let AC=null, soundOn=true;
 try{soundOn=localStorage.getItem("aura-rift-sound")!=="off"}catch(e){}
+// iPhone: без этого звуки игры молчат, когда включён беззвучный режим (переключатель сбоку)
+try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
 function ac(){if(!soundOn)return null;try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();return AC}catch(e){return null}}
 function tone(freq,dur,{type="triangle",vol=.12,at=0,slide=0}={}){
   const a=ac(); if(!a) return;
