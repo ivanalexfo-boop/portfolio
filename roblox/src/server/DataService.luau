@@ -18,7 +18,14 @@ export type Data = {
 	balance: number,
 	inv: { Item },
 	uid: number,
-	stats: { opened: number, clicks: number, clickEarned: number, best: number },
+	stats: { [string]: number },
+	collected: { [string]: boolean },
+	lastWheel: number,
+	luckUntil: number,
+	speedUntil: number,
+	tickets: { [string]: number },
+	promos: { [string]: boolean },
+	infinite: boolean,
 }
 
 local store = nil
@@ -41,7 +48,17 @@ local function fresh(): Data
 		balance = Config.START_BALANCE,
 		inv = {},
 		uid = 1,
-		stats = { opened = 0, clicks = 0, clickEarned = 0, best = 0 },
+		stats = {
+			opened = 0, clicks = 0, clickEarned = 0, best = 0, afk = 0,
+			upWin = 0, upLose = 0, contracts = 0, battles = 0, battlesWon = 0, crashBest = 0,
+		},
+		collected = {},
+		lastWheel = 0,
+		luckUntil = 0,
+		speedUntil = 0,
+		tickets = {},
+		promos = {},
+		infinite = false,
 	}
 end
 

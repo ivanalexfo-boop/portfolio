@@ -188,9 +188,72 @@ function Economy.pickWeighted(list: { Drop }, rand: () -> number): Drop
 	return list[#list]
 end
 
--- выпадение ауры (решает только сервер)
-function Economy.roll(riftId: string, rand: () -> number): string
-	return Economy.pickWeighted(Economy.RIFT[riftId].drops, rand).id
+-- выпадение ауры (решает только сервер); удача: 15% шанс перекрутить и взять дороже
+function Economy.roll(riftId: string, rand: () -> number, luck: boolean?): string
+	local drops = Economy.RIFT[riftId].drops
+	local id = Economy.pickWeighted(drops, rand).id
+	if luck and rand() < Config.LUCK_REROLL then
+		local id2 = Economy.pickWeighted(drops, rand).id
+		if priceOf(id2) > priceOf(id) then
+			id = id2
+		end
+	end
+	return id
+end
+
+-- ===== контракт =====
+function Economy.contractUpChance(n: number): number
+	return math.min(1, 0.7 + (n - Config.CONTRACT_MIN) / (Config.CONTRACT_MAX - Config.CONTRACT_MIN) * 0.3)
+end
+
+-- аура в диапазоне 0.4–2.5 от суммы вложенного; ближе к сумме — вероятнее.
+-- up = true: только тир выше базового (самого редкого из вложенных), иначе базовый или ниже
+function Economy.contractPool(sum: number, baseTier: number, up: boolean): { Drop }
+	local inRange, c = {}, {}
+	for _, a in Config.AURAS do
+		if a.tier ~= "unique" and a.price >= sum * 0.4 and a.price <= sum * 2.5 then
+			table.insert(inRange, a)
+			local ti = Config.TIER_INDEX[a.tier]
+			if (up and ti > baseTier) or (not up and ti <= baseTier) then
+				table.insert(c, a)
+			end
+		end
+	end
+	if #c == 0 then
+		if #inRange > 0 then
+			c = inRange
+		else
+			local best, bd = nil, math.huge
+			for _, a in Config.AURAS do
+				if a.tier ~= "unique" then
+					local dd = math.abs(math.log(a.price / sum))
+					if dd < bd then
+						best, bd = a, dd
+					end
+				end
+			end
+			c = { best }
+		end
+	end
+	local out, tot = {}, 0
+	for _, a in c do
+		local w = math.exp(-1.5 * math.abs(math.log(a.price / sum)))
+		table.insert(out, { id = a.id, w = w })
+		tot += w
+	end
+	for _, d in out do
+		d.w /= tot
+	end
+	table.sort(out, function(x, y)
+		return x.w > y.w
+	end)
+	return out
+end
+
+-- ===== краш =====
+function Economy.crashPoint(rand: () -> number): number
+	local x = math.floor(Config.CRASH_K / (1 - rand()) * 100) / 100
+	return math.min(Config.CRASH_MAX, math.max(1, x))
 end
 
 -- лента для анимации: без одинаковых аур подряд, на позиции winAt — выигрыш

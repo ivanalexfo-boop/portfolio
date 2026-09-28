@@ -11,6 +11,59 @@ Config.LOSS = 0.3                -- 30% дропов дешевле разлом
 Config.MAX_OPEN = 5              -- сколько разломов можно открыть за раз
 Config.INV_LIMIT = 400           -- лимит предметов в инвентаре (чтобы сохранение не разрасталось)
 Config.CLICKER_IMAGE = ""         -- rbxassetid://... картинки персонажа для кликера (пусто — светящаяся сфера TAP)
+Config.ROCKET_IMAGE = ""          -- rbxassetid://... картинки ракеты для краша (пусто — эмодзи 🚀)
+
+-- ===== режимы (значения как в веб-версии) =====
+Config.AFK_EVERY = 10            -- каждые 10 секунд онлайн...
+Config.AFK_GAIN = 100            -- ...+100 монет (x2 с бустом скорости)
+Config.LUCK_REROLL = 0.15        -- удача: 15% шанс перекрутить дроп и взять дороже
+
+Config.UPGRADE_MAX_CHANCE = 0.8  -- максимум шанса апгрейда
+Config.UPGRADE_MAX_ITEMS = 8     -- сколько аур можно положить в апгрейд
+
+Config.CONTRACT_MIN = 3
+Config.CONTRACT_MAX = 10          -- шанс «тиром выше»: 3 ауры — 70%, 10 аур — 100%
+
+Config.BATTLE_WIN = 0.7           -- шанс игрока выиграть битву с ботом
+Config.BATTLE_MAX_RIFTS = 6
+
+Config.CRASH_K = 1.75             -- медиана полёта ≈ 3.5×
+Config.CRASH_MAX = 50             -- потолок икса
+Config.CRASH_SPEED = 0.12         -- множитель = e^(0.12 × секунды полёта)
+Config.CRASH_BET_TIME = 7         -- секунд на ставки
+Config.CRASH_AFTER_TIME = 3.2     -- пауза после взрыва
+
+Config.WHEEL_COOLDOWN = 24 * 3600 -- колесо раз в сутки
+export type WheelSeg = { t: string, w: number, color: Color3, v: number?, rift: string?, en: string?, ru: string? }
+Config.WHEEL = {
+	{ t = "coins", v = 1000, w = 25, color = Color3.fromRGB(75, 139, 255) },
+	{ t = "speed", w = 10, color = Color3.fromRGB(139, 92, 255), en = "Speed x2", ru = "Скорость x2" },
+	{ t = "coins", v = 2500, w = 10, color = Color3.fromRGB(109, 40, 217) },
+	{ t = "luck", w = 12, color = Color3.fromRGB(62, 240, 143), en = "Luck +15%", ru = "Удача +15%" },
+	{ t = "coins", v = 5000, w = 14, color = Color3.fromRGB(34, 230, 255) },
+	{ t = "ticket", rift = "prism", w = 9, color = Color3.fromRGB(255, 61, 203), en = "Ticket", ru = "Билет" },
+	{ t = "coins", v = 10000, w = 9, color = Color3.fromRGB(255, 154, 31) },
+	{ t = "coins", v = 25000, w = 5, color = Color3.fromRGB(255, 197, 61) },
+	{ t = "ticket", rift = "vault", w = 4, color = Color3.fromRGB(176, 77, 255), en = "Ticket+", ru = "Билет+" },
+	{ t = "coins", v = 100000, w = 1.9, color = Color3.fromRGB(255, 77, 109) },
+	{ t = "fortune", w = 0.1, color = Color3.fromRGB(255, 255, 255), en = "FORTUNE", ru = "FORTUNE" },
+} :: { WheelSeg }
+Config.BOOST_TIME = 3600          -- удача и скорость с колеса действуют 1 час
+
+-- промокоды: +монеты один раз. INFINITY — бесконечный баланс, только для владельца игры и в Studio
+Config.PROMOS = { VANYA1M = 1_000_000 }
+
+Config.BOTS = { "xX_Shadow_Xx", "NeoKid", "auraFarmer", "Lexa228", "zxc_ghost", "Mira", "pro_gamer67", "kittyUwU", "Dimon", "VoidWalker", "sanya_2009", "Nikita_Pro", "ne_vezet", "Grisha", "hellcat", "NoobMaster" }
+
+-- звуки: встроенные звуки Roblox; можно заменить на rbxassetid://... из Toolbox → Audio
+Config.SOUNDS = {
+	tick = "rbxasset://sounds/clickfast.wav",
+	tap = "rbxasset://sounds/button.wav",
+	win = "rbxasset://sounds/victory.wav",
+	lose = "rbxasset://sounds/uuhhh.mp3",
+	open = "rbxasset://sounds/swoosh.wav",
+	coin = "rbxasset://sounds/electronicpingshort.wav",
+}
 
 Config.TIERS = {
 	{ key = "common",   en = "Common",   ru = "Обычная",    color = Color3.fromRGB(195, 202, 216) },
