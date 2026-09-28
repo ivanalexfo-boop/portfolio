@@ -10,8 +10,64 @@ Config.RTP = 0.97                -- в среднем разлом возвра�
 Config.LOSS = 0.3                -- 30% дропов дешевле разлома, 70% окупают
 Config.MAX_OPEN = 5              -- сколько разломов можно открыть за раз
 Config.INV_LIMIT = 400           -- лимит предметов в инвентаре (чтобы сохранение не разрасталось)
-Config.CLICKER_IMAGE = ""         -- rbxassetid://... картинки персонажа для кликера (пусто — светящаяся сфера TAP)
-Config.ROCKET_IMAGE = ""          -- rbxassetid://... картинки ракеты для краша (пусто — эмодзи 🚀)
+
+-- ===== картинки (загружены в Roblox) =====
+-- листы: все ауры на одной картинке, все разломы на другой; ATLAS — где какая лежит
+Config.IMAGES = {
+	auras = "rbxassetid://125384373148579",
+	rifts = "rbxassetid://114109902820743",
+	tom = "", -- img_tom
+	rocket = "", -- img_rocket
+	background = "", -- img_background
+}
+Config.ATLAS = {
+	auraCell = 170,
+	riftCell = 256,
+	auras = {
+		dust = { 0, 0 },
+		sparkle = { 170, 0 },
+		blizzard = { 340, 0 },
+		bubbles = { 510, 0 },
+		acidrain = { 680, 0 },
+		wind = { 850, 0 },
+		static = { 0, 170 },
+		neonpulse = { 170, 170 },
+		poltergeist = { 340, 170 },
+		earthroot = { 510, 170 },
+		sglaz = { 680, 170 },
+		hacker = { 850, 170 },
+		gluhwein = { 0, 340 },
+		vampire = { 170, 340 },
+		mirageshard = { 340, 340 },
+		phantasm = { 510, 340 },
+		stardust = { 680, 340 },
+		leviathan = { 850, 340 },
+		nebula = { 0, 510 },
+		halo = { 170, 510 },
+		angelic = { 340, 510 },
+		timestop = { 510, 510 },
+		quantumflux = { 680, 510 },
+		blackout = { 850, 510 },
+		singularity = { 0, 680 },
+		solar = { 170, 680 },
+		chronos = { 340, 680 },
+		eclipse = { 510, 680 },
+		fortune = { 680, 680 },
+	},
+	rifts = {
+		echo = { 0, 0 },
+		bio = { 256, 0 },
+		prism = { 512, 0 },
+		vault = { 768, 0 },
+		cyber = { 0, 256 },
+		trench = { 256, 256 },
+		shadow = { 512, 256 },
+		mirage = { 768, 256 },
+		cosmic = { 0, 512 },
+		gates = { 256, 512 },
+		quantum = { 512, 512 },
+	},
+}
 
 -- ===== режимы (значения как в веб-версии) =====
 Config.AFK_EVERY = 10            -- каждые 10 секунд онлайн...

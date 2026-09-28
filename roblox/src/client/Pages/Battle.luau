@@ -15,13 +15,8 @@ return function(page: Frame, Core)
 		end
 		return s
 	end
-	local function riftIcon(rf, size: number): Frame
-		return new("Frame", { Size = UDim2.fromOffset(size, size), BackgroundColor3 = Color3.new(1, 1, 1) }, {
-			Ui.corner(8),
-			Ui.grad(rf.c1, rf.c2, 45),
-			Ui.stroke(rf.c1, 1.5, 0.2),
-			Ui.label(string.sub(rf.en, 1, 1), math.floor(size * 0.5), Color3.new(1, 1, 1), { Font = Enum.Font.GothamBlack, Size = UDim2.fromScale(1, 1) }),
-		})
+	local function riftIcon(rf, size: number): GuiObject
+		return Core.riftArt(rf, size)
 	end
 	local function newLobby()
 		local cap = math.max(state.balance / 2, Config.RIFTS[1].price)

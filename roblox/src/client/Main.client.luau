@@ -23,7 +23,15 @@ new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(1, 1,
 		Rotation = 90,
 	}),
 })
-local root = new("Frame", { BackgroundTransparency = 1, Parent = gui })
+if Config.IMAGES.background ~= "" then
+	new("ImageLabel", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Image = Config.IMAGES.background, ScaleType = Enum.ScaleType.Crop, ZIndex = 2, Parent = gui }, {
+		new("UIGradient", { -- затемнение книзу, чтобы текст читался
+			Color = ColorSequence.new(Color3.fromRGB(180, 170, 220), Color3.fromRGB(40, 36, 70)),
+			Rotation = 90,
+		}),
+	})
+end
+local root = new("Frame", { BackgroundTransparency = 1, ZIndex = 3, Parent = gui })
 local uiScale = new("UIScale", { Parent = root })
 Core.root = root
 
@@ -32,7 +40,7 @@ local header = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, -3
 local title = Ui.label("AURA BATTLE", 28, Color3.new(1, 1, 1), { Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0, 260, 1, 0), Parent = header })
 Ui.grad(C.cyan, C.pink, 0).Parent = title
 
-local right = new("Frame", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.new(1, -270, 1, 0), Parent = header })
+local right = new("Frame", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.new(1, -440, 1, 0), Parent = header })
 new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Right, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = right })
 
 local function chip(order: number, color: Color3): TextLabel
@@ -87,7 +95,7 @@ local pagesHolder = new("Frame", { BackgroundTransparency = 1, Position = UDim2.
 
 local TABS = {
 	{ key = "Rifts", en = "Rifts", ru = "Разломы", color = C.cyan },
-	{ key = "Clicker", en = "Aura Clicker", ru = "Аура Кликер", color = Color3.fromRGB(45, 212, 191) },
+	{ key = "Clicker", en = "Tom Aura Clicker", ru = "Том Аура Кликер", color = Color3.fromRGB(45, 212, 191) },
 	{ key = "Battle", en = "Aura Battle", ru = "Битва аур", color = C.pink },
 	{ key = "Upgrade", en = "Upgrade", ru = "Апгрейд", color = C.win },
 	{ key = "Contract", en = "Contract", ru = "Контракт", color = C.gold },
@@ -192,6 +200,9 @@ local function relayout()
 	uiScale.Scale = s
 	Core.W, Core.H = vp.X / s, vp.Y / s
 	root.Size = UDim2.fromOffset(Core.W, Core.H)
+	-- слева вверху у Roblox свои кнопки (меню, чат) — сдвигаем заголовок правее
+	title.Position = UDim2.fromOffset(math.floor(150 / s), 0)
+	title.Size = UDim2.new(0, 260, 1, 0)
 end
 relayout()
 if workspace.CurrentCamera then

@@ -5,8 +5,8 @@ return function(page: Frame, Core)
 	local Config, Ui, L = Core.Config, Core.Ui, Core.L
 	local C, new = Ui.C, Ui.new
 
-	Ui.label(L("Aura Clicker", "Аура Кликер"), 26, C.text, { Font = Enum.Font.GothamBlack, Size = UDim2.new(1, 0, 0, 34), Parent = page })
-	Ui.label(L("Tap and get coins on your balance — +150 for every tap!", "Тапай и получай монеты на баланс — +150 за каждый тап!"), 15, C.muted, { Position = UDim2.fromOffset(0, 36), Size = UDim2.new(1, 0, 0, 20), Parent = page })
+	Ui.label(L("Tom Aura Clicker", "Том Аура Кликер"), 26, C.text, { Font = Enum.Font.GothamBlack, Size = UDim2.new(1, 0, 0, 34), Parent = page })
+	Ui.label(L("Tap Tom and get coins on your balance — +150 for every tap!", "Тапай Тома и получай монеты на баланс — +150 за каждый тап!"), 15, C.muted, { Position = UDim2.fromOffset(0, 36), Size = UDim2.new(1, 0, 0, 20), Parent = page })
 	local stage = new("Frame", { BackgroundColor3 = Color3.fromRGB(12, 10, 40), Position = UDim2.fromOffset(0, 66), Size = UDim2.new(1, 0, 1, -66), ClipsDescendants = true, Parent = page }, {
 		Ui.corner(20),
 		Ui.stroke(C.gold, 2, 0.5),
@@ -29,16 +29,16 @@ return function(page: Frame, Core)
 		Ui.textStroke(Color3.fromRGB(40, 20, 80), 2, 0.3),
 	})
 	local scale = new("UIScale", { Parent = btn })
-	if Config.CLICKER_IMAGE ~= "" then
+	if Config.IMAGES.tom ~= "" then
 		btn.Text = ""
 		btn.BackgroundTransparency = 1
-		btn.Size = UDim2.new(0, 360, 1, -30)
+		btn.Size = UDim2.new(0, 300, 1, -24)
 		for _, ch in btn:GetChildren() do
 			if ch:IsA("UICorner") or ch:IsA("UIGradient") or ch:IsA("UIStroke") then
 				ch:Destroy()
 			end
 		end
-		new("ImageLabel", { BackgroundTransparency = 1, Image = Config.CLICKER_IMAGE, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Fit, Parent = btn })
+		new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.tom, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Fit, Parent = btn })
 	end
 
 	local lastTap = 0

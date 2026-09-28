@@ -54,19 +54,9 @@ return function(page: Frame, Core)
 			Ui.stroke(rf.c1, 2, 0.4),
 			Ui.grad(rf.c2:Lerp(Color3.fromRGB(12, 10, 40), 0.55), Color3.fromRGB(12, 10, 40), 90),
 		})
-		local art: GuiObject
-		if rf.image ~= "" then
-			art = new("ImageLabel", { BackgroundTransparency = 1, Image = rf.image, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromOffset(120, 120) })
-		else
-			art = new("Frame", { Size = UDim2.fromOffset(110, 110), BackgroundColor3 = Color3.new(1, 1, 1) }, {
-				Ui.corner(UDim.new(1, 0)),
-				Ui.grad(rf.c1, rf.c2, 45),
-				Ui.stroke(rf.c1, 3, 0.1),
-			})
-			Ui.label(string.sub(rf.en, 1, 1), 44, Color3.new(1, 1, 1), { Size = UDim2.fromScale(1, 1), Font = Enum.Font.GothamBlack, Parent = art })
-		end
+		local art = Core.riftArt(rf, 120)
 		art.AnchorPoint = Vector2.new(0.5, 0)
-		art.Position = UDim2.new(0.5, 0, 0, 12)
+		art.Position = UDim2.new(0.5, 0, 0, 10)
 		art.Parent = card
 		Ui.label(L(rf.en, rf.ru), 16, C.text, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(6, 136), Size = UDim2.new(1, -12, 0, 22), TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = card })
 		Ui.label(L(rf.ru, rf.en), 12, rf.c1, { Position = UDim2.fromOffset(6, 158), Size = UDim2.new(1, -12, 0, 16), TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = card })

@@ -52,8 +52,8 @@ return function(page: Frame, Core)
 	for i = 1, SEGS do
 		segs[i] = new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, BackgroundColor3 = C.cyan, Size = UDim2.fromOffset(0, 4), Visible = false, Parent = stage })
 	end
-	local rocket = if Config.ROCKET_IMAGE and Config.ROCKET_IMAGE ~= ""
-		then new("ImageLabel", { BackgroundTransparency = 1, Image = Config.ROCKET_IMAGE, AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(110, 80), ScaleType = Enum.ScaleType.Fit, ZIndex = 3, Parent = stage })
+	local rocket = if Config.IMAGES.rocket ~= ""
+		then new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.rocket, AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(190, 133), ScaleType = Enum.ScaleType.Fit, ZIndex = 3, Parent = stage })
 		else Ui.label("🚀", 46, C.text, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(60, 60), ZIndex = 3, Parent = stage })
 	local boom = Ui.label("💥", 64, C.text, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(90, 90), ZIndex = 3, Visible = false, Parent = stage })
 	local multLabel = Ui.label("1.00×", 52, C.text, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(20, 12), Size = UDim2.fromOffset(300, 60), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = stage })

@@ -115,6 +115,18 @@ end
 -- сфера ауры: картинка, если загружена, иначе цветной шар по цветам ауры
 function Core.auraOrb(id: string, size: number): GuiObject
 	local a = Config.AURA_BY_ID[id]
+	local pos = Config.ATLAS.auras[id]
+	if Config.IMAGES.auras ~= "" and pos then -- картинка из листа аур
+		local cell = Config.ATLAS.auraCell
+		return new("ImageLabel", {
+			BackgroundTransparency = 1,
+			Image = Config.IMAGES.auras,
+			ImageRectOffset = Vector2.new(pos[1], pos[2]),
+			ImageRectSize = Vector2.new(cell, cell),
+			Size = UDim2.fromOffset(size, size),
+			ScaleType = Enum.ScaleType.Fit,
+		})
+	end
 	if a.image ~= "" then
 		return new("ImageLabel", { BackgroundTransparency = 1, Image = a.image, Size = UDim2.fromOffset(size, size), ScaleType = Enum.ScaleType.Fit })
 	end
@@ -133,6 +145,29 @@ function Core.auraOrb(id: string, size: number): GuiObject
 		Parent = orb,
 	}, { Ui.corner(UDim.new(1, 0)) })
 	return orb
+end
+
+-- картинка разлома (из листа разломов) или цветной круг с буквой
+function Core.riftArt(rf, size: number): GuiObject
+	local pos = Config.ATLAS.rifts[rf.id]
+	if Config.IMAGES.rifts ~= "" and pos then
+		local cell = Config.ATLAS.riftCell
+		return new("ImageLabel", {
+			BackgroundTransparency = 1,
+			Image = Config.IMAGES.rifts,
+			ImageRectOffset = Vector2.new(pos[1], pos[2]),
+			ImageRectSize = Vector2.new(cell, cell),
+			Size = UDim2.fromOffset(size, size),
+			ScaleType = Enum.ScaleType.Fit,
+		})
+	end
+	local f = new("Frame", { Size = UDim2.fromOffset(size, size), BackgroundColor3 = Color3.new(1, 1, 1) }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(rf.c1, rf.c2, 45),
+		Ui.stroke(rf.c1, 3, 0.1),
+	})
+	Ui.label(string.sub(rf.en, 1, 1), math.floor(size * 0.4), Color3.new(1, 1, 1), { Size = UDim2.fromScale(1, 1), Font = Enum.Font.GothamBlack, Parent = f })
+	return f
 end
 
 -- карточка ауры; opts.button — сделать карточку кнопкой, opts.selected — подсветка выбора

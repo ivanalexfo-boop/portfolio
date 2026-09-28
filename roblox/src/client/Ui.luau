@@ -117,7 +117,7 @@ function Ui.button(text: string, kind: string, props: { [string]: any }?): TextB
 		TextSize = 16,
 		Font = Enum.Font.GothamBlack,
 		TextColor3 = Color3.new(1, 1, 1),
-		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundColor3 = cols[1]:Lerp(cols[2], 0.55),
 		AutoButtonColor = true,
 	}
 	if props then
@@ -127,9 +127,7 @@ function Ui.button(text: string, kind: string, props: { [string]: any }?): TextB
 	end
 	return Ui.new("TextButton", p, {
 		Ui.corner(10),
-		Ui.grad(cols[1], cols[2], 90),
-		Ui.stroke(Color3.new(1, 1, 1), 2, 0.6),
-		Ui.textStroke(Color3.new(0, 0, 0), 1.5, 0.55),
+		Ui.stroke(cols[1], 2, 0.2),
 	})
 end
 
