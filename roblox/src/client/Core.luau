@@ -95,15 +95,83 @@ function Core.sound(name: string, volume: number?)
 	if not id or id == "" then
 		return
 	end
-	local s = soundCache[name]
-	if not s then
-		s = Instance.new("Sound")
-		s.SoundId = id
-		s.Parent = SoundService
-		soundCache[name] = s
-	end
+	local s = soundCache[name] or Core.makeSound(name)
 	s.Volume = volume or 0.5
 	SoundService:PlayLocalSound(s)
+end
+
+function Core.makeSound(name: string): Sound
+	local s = Instance.new("Sound")
+	s.Name = "snd_" .. name
+	s.SoundId = Config.SOUNDS[name]
+	s.Parent = SoundService
+	soundCache[name] = s
+	return s
+end
+
+-- ===== загрузка картинок и звуков заранее + понятный отчёт, если что-то не загрузилось =====
+Core.failed = {} :: { [string]: boolean }
+local failWatchers: { [string]: { () -> () } } = {}
+function Core.onFail(key: string, fn: () -> ())
+	if Core.failed[key] then
+		fn()
+		return
+	end
+	failWatchers[key] = failWatchers[key] or {}
+	table.insert(failWatchers[key], fn)
+end
+function Core.preload()
+	local ContentProvider = game:GetService("ContentProvider")
+	local byId: { [string]: string } = {}
+	local list = {}
+	for key, id in Config.IMAGES do
+		if id ~= "" then
+			byId[id] = "img_" .. key
+			table.insert(list, id)
+		end
+	end
+	for key, id in Config.SOUNDS do
+		if id ~= "" then
+			byId[id] = "snd_" .. key
+			table.insert(list, (soundCache[key] or Core.makeSound(key)) :: any)
+		end
+	end
+	local bad = {}
+	pcall(function()
+		ContentProvider:PreloadAsync(list, function(contentId: string, status: Enum.AssetFetchStatus)
+			local name = byId[contentId] or contentId
+			if status ~= Enum.AssetFetchStatus.Success then
+				warn(("[AuraBattle] не загрузилось: %s (%s) — статус %s. Проверь в Asset Manager, прошёл ли файл модерацию."):format(name, contentId, status.Name))
+				table.insert(bad, name)
+				local key = string.sub(name, 5)
+				Core.failed[key] = true
+				local watchers: { () -> () } = failWatchers[key] or {}
+				for _, fn in watchers do
+					task.spawn(fn)
+				end
+			end
+		end)
+	end)
+	if #bad > 0 then
+		Core.toast(L("Not loaded: ", "Не загрузилось: ") .. table.concat(bad, ", ") .. L(" — see Output", " — смотри Output"))
+	else
+		print("[AuraBattle] все картинки и звуки загружены ✓")
+	end
+end
+
+-- картинка с запасным вариантом: если файл не загрузился, показываем цветной круг
+local function withFallback(img: ImageLabel, key: string, c1: Color3, c2: Color3, letter: string?)
+	local fb = new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(1, 1, 1), Visible = false, Parent = img }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(c1, c2, 45),
+	})
+	if letter then
+		Ui.label(letter, 30, Color3.new(1, 1, 1), { Font = Enum.Font.GothamBlack, Size = UDim2.fromScale(1, 1), TextScaled = true, Parent = fb })
+	end
+	Core.onFail(key, function()
+		fb.Visible = true
+	end)
+	return img
 end
 
 -- ===== ауры =====
@@ -118,14 +186,14 @@ function Core.auraOrb(id: string, size: number): GuiObject
 	local pos = Config.ATLAS.auras[id]
 	if Config.IMAGES.auras ~= "" and pos then -- картинка из листа аур
 		local cell = Config.ATLAS.auraCell
-		return new("ImageLabel", {
+		return withFallback(new("ImageLabel", {
 			BackgroundTransparency = 1,
 			Image = Config.IMAGES.auras,
 			ImageRectOffset = Vector2.new(pos[1], pos[2]),
 			ImageRectSize = Vector2.new(cell, cell),
 			Size = UDim2.fromOffset(size, size),
 			ScaleType = Enum.ScaleType.Fit,
-		})
+		}), "auras", a.colors[1], a.colors[2] or a.colors[1])
 	end
 	if a.image ~= "" then
 		return new("ImageLabel", { BackgroundTransparency = 1, Image = a.image, Size = UDim2.fromOffset(size, size), ScaleType = Enum.ScaleType.Fit })
@@ -152,14 +220,14 @@ function Core.riftArt(rf, size: number): GuiObject
 	local pos = Config.ATLAS.rifts[rf.id]
 	if Config.IMAGES.rifts ~= "" and pos then
 		local cell = Config.ATLAS.riftCell
-		return new("ImageLabel", {
+		return withFallback(new("ImageLabel", {
 			BackgroundTransparency = 1,
 			Image = Config.IMAGES.rifts,
 			ImageRectOffset = Vector2.new(pos[1], pos[2]),
 			ImageRectSize = Vector2.new(cell, cell),
 			Size = UDim2.fromOffset(size, size),
 			ScaleType = Enum.ScaleType.Fit,
-		})
+		}), "rifts", rf.c1, rf.c2, string.sub(rf.en, 1, 1))
 	end
 	local f = new("Frame", { Size = UDim2.fromOffset(size, size), BackgroundColor3 = Color3.new(1, 1, 1) }, {
 		Ui.corner(UDim.new(1, 0)),

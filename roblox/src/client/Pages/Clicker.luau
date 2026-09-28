@@ -38,7 +38,15 @@ return function(page: Frame, Core)
 				ch:Destroy()
 			end
 		end
-		new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.tom, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Fit, Parent = btn })
+		local img = new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.tom, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Fit, Parent = btn })
+		Core.onFail("tom", function() -- картинка Тома не загрузилась — возвращаем светящуюся сферу
+			img:Destroy()
+			btn.Size = UDim2.fromOffset(260, 260)
+			btn.BackgroundTransparency = 0
+			btn.Text = "TAP"
+			Ui.corner(UDim.new(1, 0)).Parent = btn
+			Ui.grad(Color3.fromRGB(127, 251, 230), Color3.fromRGB(109, 60, 255), 60).Parent = btn
+		end)
 	end
 
 	local lastTap = 0

@@ -52,9 +52,14 @@ return function(page: Frame, Core)
 	for i = 1, SEGS do
 		segs[i] = new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, BackgroundColor3 = C.cyan, Size = UDim2.fromOffset(0, 4), Visible = false, Parent = stage })
 	end
-	local rocket = if Config.IMAGES.rocket ~= ""
-		then new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.rocket, AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(190, 133), ScaleType = Enum.ScaleType.Fit, ZIndex = 3, Parent = stage })
-		else Ui.label("🚀", 46, C.text, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(60, 60), ZIndex = 3, Parent = stage })
+	local rocketImg = new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.rocket, AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(190, 133), ScaleType = Enum.ScaleType.Fit, ZIndex = 3, Visible = Config.IMAGES.rocket ~= "", Parent = stage })
+	local rocketEmoji = Ui.label("🚀", 46, C.text, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(60, 60), ZIndex = 3, Visible = Config.IMAGES.rocket == "", Parent = stage })
+	local rocket: GuiObject = if Config.IMAGES.rocket ~= "" then rocketImg else rocketEmoji
+	Core.onFail("rocket", function()
+		rocketImg.Visible = false
+		rocket = rocketEmoji
+		rocketEmoji.Visible = true
+	end)
 	local boom = Ui.label("💥", 64, C.text, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(90, 90), ZIndex = 3, Visible = false, Parent = stage })
 	local multLabel = Ui.label("1.00×", 52, C.text, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(20, 12), Size = UDim2.fromOffset(300, 60), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = stage })
 	local statusLabel = Ui.label("", 14, Color3.fromRGB(216, 213, 255), { Position = UDim2.fromOffset(20, 74), Size = UDim2.fromOffset(360, 20), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = stage })
@@ -196,7 +201,7 @@ return function(page: Frame, Core)
 			end
 			rocket.Visible = true
 			boom.Visible = false
-			rocket.Position = UDim2.fromOffset(w * 0.1 + (if left < 1.5 then math.random(-2, 2) else 0), h * 0.85)
+			rocket.Position = UDim2.fromOffset(w * 0.06 + rocket.AbsoluteSize.X / 2 / math.max(k, 0.01) + (if left < 1.5 then math.random(-2, 2) else 0), h * 0.8)
 			rocket.Rotation = 0
 			go.Text = if me then L("Bet ", "Ставка ") .. Core.fmt(me.bet) .. L(" placed", " принята") else L("Place bet", "Поставить")
 			go.TextTransparency = if me then 0.4 else 0

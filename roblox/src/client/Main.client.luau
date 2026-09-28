@@ -229,6 +229,7 @@ Core.R.Feed.OnClientEvent:Connect(function(f)
 end)
 
 setTab("Rifts")
+task.spawn(Core.preload)
 task.spawn(function()
 	Core.apply(Core.R.GetState:InvokeServer())
 end)
