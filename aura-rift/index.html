@@ -1581,7 +1581,8 @@ $("#ctBtn").addEventListener("click",async()=>{
 const CR_K=0.00012, BET_TIME=7000, AFTER_TIME=3200;
 const cr={phase:"bet",start:performance.now(),crashAt:1,hist:[],players:[],me:null,t:0};
 const CR_MAX=50; // потолок икса в краше
-function crashPoint(){return Math.min(CR_MAX,Math.max(1,Math.floor(0.97/(1-rnd())*100)/100))} // ~3% раундов взрываются сразу на 1.00×, максимум 50×
+const CR_K2=1.75; // медиана полёта ≈ 3.5×: половина раундов долетает дальше 3.5×
+function crashPoint(){return Math.min(CR_MAX,Math.max(1,Math.floor(CR_K2/(1-rnd())*100)/100))} // максимум 50×
 function newRound(){
   cr.phase="bet"; cr.start=performance.now(); cr.crashAt=crashPoint(); cr.t=0; cr.me=null;
   const n=5+Math.floor(rnd()*6), names=BOTS.slice().sort(()=>rnd()-.5).slice(0,n);
