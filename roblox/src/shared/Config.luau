@@ -16,7 +16,7 @@ Config.INV_LIMIT = 400           -- лимит предметов в инвен�
 Config.IMAGES = {
 	auras = "rbxassetid://125384373148579",
 	rifts = "rbxassetid://114109902820743",
-	tom = "rbxassetid://132231415903419",
+	tom = "rbxassetid://117977497011333",
 	rocket = "rbxassetid://76423203466143",
 	background = "rbxassetid://75409017923246",
 }
