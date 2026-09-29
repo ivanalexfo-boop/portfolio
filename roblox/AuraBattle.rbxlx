@@ -1,0 +1,4144 @@
+<roblox version="4">
+  <Item class="ReplicatedStorage" referent="0">
+    <Properties>
+      <string name="Name">ReplicatedStorage</string>
+    </Properties>
+    <Item class="Folder" referent="1">
+      <Properties>
+        <string name="Name">Shared</string>
+      </Properties>
+      <Item class="ModuleScript" referent="2">
+        <Properties>
+          <string name="Name">Config</string>
+          <string name="Source"><![CDATA[--!strict
+-- Каталог аур и разломов. Перенесено из веб-версии «Битва Аур».
+-- image: сюда можно вписать rbxassetid://... загруженной картинки ауры (пока пусто — рисуется цветная сфера).
+local Config = {}
+
+Config.START_BALANCE = 1_000_000
+Config.CLICK_GAIN = 150          -- монет за один тап в кликере
+Config.CLICK_MAX_PER_SEC = 12    -- защита от автокликера
+Config.RTP = 0.97                -- в среднем разлом возвращает 97% цены
+Config.LOSS = 0.3                -- 30% дропов дешевле разлома, 70% окупают
+Config.MAX_OPEN = 5              -- сколько разломов можно открыть за раз
+Config.INV_LIMIT = 400           -- лимит предметов в инвентаре (чтобы сохранение не разрасталось)
+
+-- ===== картинки (загружены в Roblox) =====
+-- листы: все ауры на одной картинке, все разломы на другой; ATLAS — где какая лежит
+Config.IMAGES = {
+	auras = "rbxassetid://125384373148579",
+	rifts = "rbxassetid://114109902820743",
+	tom = "rbxassetid://117977497011333",
+	rocket = "rbxassetid://76423203466143",
+	background = "rbxassetid://75409017923246",
+}
+Config.ATLAS = {
+	auraCell = 170,
+	riftCell = 256,
+	auras = {
+		dust = { 0, 0 },
+		sparkle = { 170, 0 },
+		blizzard = { 340, 0 },
+		bubbles = { 510, 0 },
+		acidrain = { 680, 0 },
+		wind = { 850, 0 },
+		static = { 0, 170 },
+		neonpulse = { 170, 170 },
+		poltergeist = { 340, 170 },
+		earthroot = { 510, 170 },
+		sglaz = { 680, 170 },
+		hacker = { 850, 170 },
+		gluhwein = { 0, 340 },
+		vampire = { 170, 340 },
+		mirageshard = { 340, 340 },
+		phantasm = { 510, 340 },
+		stardust = { 680, 340 },
+		leviathan = { 850, 340 },
+		nebula = { 0, 510 },
+		halo = { 170, 510 },
+		angelic = { 340, 510 },
+		timestop = { 510, 510 },
+		quantumflux = { 680, 510 },
+		blackout = { 850, 510 },
+		singularity = { 0, 680 },
+		solar = { 170, 680 },
+		chronos = { 340, 680 },
+		eclipse = { 510, 680 },
+		fortune = { 680, 680 },
+	},
+	rifts = {
+		echo = { 0, 0 },
+		bio = { 256, 0 },
+		prism = { 512, 0 },
+		vault = { 768, 0 },
+		cyber = { 0, 256 },
+		trench = { 256, 256 },
+		shadow = { 512, 256 },
+		mirage = { 768, 256 },
+		cosmic = { 0, 512 },
+		gates = { 256, 512 },
+		quantum = { 512, 512 },
+	},
+}
+
+-- ===== режимы (значения как в веб-версии) =====
+Config.AFK_EVERY = 10            -- каждые 10 секунд онлайн...
+Config.AFK_GAIN = 100            -- ...+100 монет (x2 с бустом скорости)
+Config.LUCK_REROLL = 0.15        -- удача: 15% шанс перекрутить дроп и взять дороже
+
+Config.UPGRADE_MAX_CHANCE = 0.8  -- максимум шанса апгрейда
+Config.UPGRADE_MAX_ITEMS = 8     -- сколько аур можно положить в апгрейд
+
+Config.CONTRACT_MIN = 3
+Config.CONTRACT_MAX = 10          -- шанс «тиром выше»: 3 ауры — 70%, 10 аур — 100%
+
+Config.BATTLE_WIN = 0.7           -- шанс игрока выиграть битву с ботом
+Config.BATTLE_MAX_RIFTS = 6
+
+Config.CRASH_K = 1.75             -- медиана полёта ≈ 3.5×
+Config.CRASH_MAX = 50             -- потолок икса
+Config.CRASH_SPEED = 0.12         -- множитель = e^(0.12 × секунды полёта)
+Config.CRASH_BET_TIME = 7         -- секунд на ставки
+Config.CRASH_AFTER_TIME = 3.2     -- пауза после взрыва
+
+Config.WHEEL_COOLDOWN = 24 * 3600 -- колесо раз в сутки
+export type WheelSeg = { t: string, w: number, color: Color3, v: number?, rift: string?, en: string?, ru: string? }
+Config.WHEEL = {
+	{ t = "coins", v = 1000, w = 25, color = Color3.fromRGB(75, 139, 255) },
+	{ t = "speed", w = 10, color = Color3.fromRGB(139, 92, 255), en = "Speed x2", ru = "Скорость x2" },
+	{ t = "coins", v = 2500, w = 10, color = Color3.fromRGB(109, 40, 217) },
+	{ t = "luck", w = 12, color = Color3.fromRGB(62, 240, 143), en = "Luck +15%", ru = "Удача +15%" },
+	{ t = "coins", v = 5000, w = 14, color = Color3.fromRGB(34, 230, 255) },
+	{ t = "ticket", rift = "prism", w = 9, color = Color3.fromRGB(255, 61, 203), en = "Ticket", ru = "Билет" },
+	{ t = "coins", v = 10000, w = 9, color = Color3.fromRGB(255, 154, 31) },
+	{ t = "coins", v = 25000, w = 5, color = Color3.fromRGB(255, 197, 61) },
+	{ t = "ticket", rift = "vault", w = 4, color = Color3.fromRGB(176, 77, 255), en = "Ticket+", ru = "Билет+" },
+	{ t = "coins", v = 100000, w = 1.9, color = Color3.fromRGB(255, 77, 109) },
+	{ t = "fortune", w = 0.1, color = Color3.fromRGB(255, 255, 255), en = "FORTUNE", ru = "FORTUNE" },
+} :: { WheelSeg }
+Config.BOOST_TIME = 3600          -- удача и скорость с колеса действуют 1 час
+
+-- промокоды: +монеты один раз. INFINITY — бесконечный баланс, только для владельца игры и в Studio
+Config.PROMOS = { VANYA1M = 1_000_000 }
+
+Config.BOTS = { "xX_Shadow_Xx", "NeoKid", "auraFarmer", "Lexa228", "zxc_ghost", "Mira", "pro_gamer67", "kittyUwU", "Dimon", "VoidWalker", "sanya_2009", "Nikita_Pro", "ne_vezet", "Grisha", "hellcat", "NoobMaster" }
+
+-- звуки из веб-демо, загружены в Roblox
+Config.SOUNDS = {
+	tick = "rbxassetid://105329459015835", -- деревянный щелчок прокрутки
+	tap = "rbxassetid://90707289737194", -- механическая клавиатура (кликер)
+	win = "rbxassetid://117250031511376", -- радостная фанфара
+	win_big = "rbxassetid://94131572806172", -- большая фанфара (крупный выигрыш)
+	lose = "rbxassetid://130283317842912", -- грустная мелодия
+	coin = "rbxassetid://98897028893667", -- звон монет при продаже
+	open = "",
+}
+
+Config.TIERS = {
+	{ key = "common",   en = "Common",   ru = "Обычная",    color = Color3.fromRGB(195, 202, 216) },
+	{ key = "uncommon", en = "Uncommon", ru = "Необычная",  color = Color3.fromRGB(62, 240, 143) },
+	{ key = "rare",     en = "Rare",     ru = "Редкая",     color = Color3.fromRGB(75, 139, 255) },
+	{ key = "epic",     en = "Epic",     ru = "Эпическая",  color = Color3.fromRGB(176, 77, 255) },
+	{ key = "mythic",   en = "Mythic",   ru = "Мифическая", color = Color3.fromRGB(255, 197, 61) },
+	{ key = "anomaly",  en = "Anomaly",  ru = "Аномалия",   color = Color3.fromRGB(255, 106, 43) },
+	{ key = "unique",   en = "Unique",   ru = "Уникальная", color = Color3.fromRGB(255, 255, 255) },
+}
+Config.TIER_INDEX = {} :: { [string]: number }
+for i, t in Config.TIERS do
+	Config.TIER_INDEX[t.key] = i
+end
+
+export type Aura = { id: string, en: string, ru: string, tier: string, price: number, colors: { Color3 }, image: string }
+export type Rift = { id: string, en: string, ru: string, price: number, c1: Color3, c2: Color3, button: string, core: { string }, image: string }
+
+Config.AURAS = {
+	{ id = "dust", en = "Dust", ru = "Пыль", tier = "common", price = 750, colors = { Color3.fromRGB(227, 194, 143), Color3.fromRGB(138, 109, 59) }, image = "" },
+	{ id = "sparkle", en = "Sparkle", ru = "Искра", tier = "common", price = 5000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "blizzard", en = "Blizzard", ru = "Метель", tier = "rare", price = 15000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "bubbles", en = "Bubbles", ru = "Пузыри", tier = "common", price = 25000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "acidrain", en = "Acid Rain", ru = "Кислотный дождь", tier = "epic", price = 80000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "wind", en = "Wind", ru = "Ethereal", tier = "uncommon", price = 150000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "static", en = "Static", ru = "Статика", tier = "common", price = 500000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "neonpulse", en = "Neon Pulse", ru = "Неоновый пульс", tier = "rare", price = 500000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "poltergeist", en = "Poltergeist", ru = "Полтергейст", tier = "epic", price = 1750000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "earthroot", en = "Earth Root", ru = "Корень Земли", tier = "common", price = 2500000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "sglaz", en = "Evil Eye", ru = "Сглаз", tier = "uncommon", price = 7500000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "hacker", en = "Hacker's Domain", ru = "Домен Хакера", tier = "epic", price = 8000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "gluhwein", en = "Glühwein", ru = "Глинтвейн", tier = "rare", price = 25000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "vampire", en = "Vampire Swarm", ru = "Рой вампиров", tier = "epic", price = 80000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "mirageshard", en = "Mirage Shard", ru = "Осколок миража", tier = "uncommon", price = 100000000, colors = { Color3.fromRGB(241, 228, 255), Color3.fromRGB(183, 125, 255), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "phantasm", en = "Phantasm", ru = "Фантазм", tier = "epic", price = 350000000, colors = { Color3.fromRGB(233, 213, 255), Color3.fromRGB(126, 34, 206) }, image = "" },
+	{ id = "stardust", en = "Stardust", ru = "Звёздная пыль", tier = "uncommon", price = 500000000, colors = { Color3.fromRGB(255, 246, 216), Color3.fromRGB(255, 197, 61), Color3.fromRGB(255, 122, 26) }, image = "" },
+	{ id = "leviathan", en = "Leviathan's Gaze", ru = "Взгляд Левиафана", tier = "mythic", price = 850000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "nebula", en = "Nebula", ru = "Туманность", tier = "epic", price = 1500000000, colors = { Color3.fromRGB(255, 214, 236), Color3.fromRGB(255, 61, 203), Color3.fromRGB(109, 40, 217) }, image = "" },
+	{ id = "halo", en = "Halo", ru = "Нимб", tier = "rare", price = 2500000000, colors = { Color3.fromRGB(255, 251, 230), Color3.fromRGB(255, 227, 138), Color3.fromRGB(255, 197, 61) }, image = "" },
+	{ id = "angelic", en = "Angelic Rings", ru = "Ангельские Кольца", tier = "mythic", price = 3000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "timestop", en = "Time Stop", ru = "Остановка времени", tier = "mythic", price = 8000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "quantumflux", en = "Quantum Flux", ru = "Квантовый поток", tier = "rare", price = 10000000000, colors = { Color3.fromRGB(233, 213, 255), Color3.fromRGB(139, 92, 255), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "blackout", en = "Blackout", ru = "Затемнение", tier = "anomaly", price = 15000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "singularity", en = "Singularity Pulse", ru = "Пульс сингулярности", tier = "anomaly", price = 35000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "solar", en = "Solar System", ru = "Солнечная система", tier = "anomaly", price = 65000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "chronos", en = "Chronos", ru = "Хронос", tier = "anomaly", price = 250000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "eclipse", en = "Eclipse", ru = "Затмение", tier = "anomaly", price = 1500000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+	{ id = "fortune", en = "Fortune", ru = "Фортуна", tier = "unique", price = 3000000000000, colors = { Color3.fromRGB(255, 197, 61), Color3.fromRGB(62, 240, 143), Color3.fromRGB(255, 61, 203), Color3.fromRGB(34, 230, 255) }, image = "" },
+} :: { Aura }
+
+Config.RIFTS = {
+	{ id = "echo", en = "Echo Sphere", ru = "Эхо-Сфера", price = 5000, c1 = Color3.fromRGB(62, 240, 143), c2 = Color3.fromRGB(29, 107, 58), button = "green", core = { "dust", "sparkle", "blizzard", "wind" }, image = "" },
+	{ id = "bio", en = "Bio-Capsule", ru = "Био-Капсула", price = 25000, c1 = Color3.fromRGB(125, 255, 74), c2 = Color3.fromRGB(29, 107, 58), button = "green", core = { "sparkle", "bubbles", "acidrain", "poltergeist" }, image = "" },
+	{ id = "prism", en = "Prismatic Rift", ru = "Призматический Разлом", price = 150000, c1 = Color3.fromRGB(34, 230, 255), c2 = Color3.fromRGB(29, 78, 216), button = "green", core = { "bubbles", "wind", "neonpulse", "hacker" }, image = "" },
+	{ id = "vault", en = "Clockwork Vault", ru = "Механический Сейф", price = 500000, c1 = Color3.fromRGB(224, 168, 74), c2 = Color3.fromRGB(107, 74, 29), button = "green", core = { "acidrain", "static", "poltergeist", "gluhwein" }, image = "" },
+	{ id = "cyber", en = "Cyber Core", ru = "Кибер-Ядро", price = 2500000, c1 = Color3.fromRGB(75, 139, 255), c2 = Color3.fromRGB(139, 92, 255), button = "blue", core = { "static", "earthroot", "hacker", "leviathan" }, image = "" },
+	{ id = "trench", en = "Abyssal Trench", ru = "Бездна Океана", price = 7500000, c1 = Color3.fromRGB(34, 166, 255), c2 = Color3.fromRGB(11, 42, 107), button = "blue", core = { "poltergeist", "sglaz", "gluhwein", "leviathan" }, image = "" },
+	{ id = "shadow", en = "Shadow Monolith", ru = "Теневой Монолит", price = 25000000, c1 = Color3.fromRGB(255, 61, 90), c2 = Color3.fromRGB(126, 34, 206), button = "purple", core = { "sglaz", "gluhwein", "vampire", "angelic" }, image = "" },
+	{ id = "mirage", en = "Mirage Glass", ru = "Зеркало Иллюзий", price = 100000000, c1 = Color3.fromRGB(183, 125, 255), c2 = Color3.fromRGB(34, 230, 255), button = "purple", core = { "gluhwein", "mirageshard", "phantasm", "blackout" }, image = "" },
+	{ id = "cosmic", en = "Cosmic Singularity", ru = "Космическая Сингулярность", price = 500000000, c1 = Color3.fromRGB(255, 197, 61), c2 = Color3.fromRGB(255, 122, 26), button = "purple", core = { "vampire", "stardust", "nebula", "solar" }, image = "" },
+	{ id = "gates", en = "Celestial Gates", ru = "Врата Небожителей", price = 2500000000, c1 = Color3.fromRGB(255, 241, 184), c2 = Color3.fromRGB(255, 197, 61), button = "gold", core = { "stardust", "halo", "timestop", "chronos" }, image = "" },
+	{ id = "quantum", en = "Quantum Paradox", ru = "Квантовый Парадокс", price = 10000000000, c1 = Color3.fromRGB(182, 156, 255), c2 = Color3.fromRGB(109, 40, 217), button = "gold", core = { "halo", "quantumflux", "singularity", "eclipse" }, image = "" },
+} :: { Rift }
+
+Config.AURA_BY_ID = {} :: { [string]: Aura }
+for _, a in Config.AURAS do
+	Config.AURA_BY_ID[a.id] = a
+end
+Config.RIFT_BY_ID = {} :: { [string]: Rift }
+for _, r in Config.RIFTS do
+	Config.RIFT_BY_ID[r.id] = r
+end
+
+-- редкость зависит от цены: чем дороже аура, тем выше тир (как в веб-версии)
+do
+	local list = {}
+	for _, a in Config.AURAS do
+		if a.tier ~= "unique" then
+			table.insert(list, a)
+		end
+	end
+	table.sort(list, function(x, y)
+		return x.price < y.price
+	end)
+	local plan = { "common", "uncommon", "rare", "epic", "mythic", "anomaly" }
+	for i, a in list do
+		a.tier = plan[math.min(#plan, math.floor((i - 1) / #list * #plan) + 1)]
+	end
+end
+
+return Config
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="3">
+        <Properties>
+          <string name="Name">Economy</string>
+          <string name="Source"><![CDATA[-- Экономика разломов — перенос веб-версии один в один.
+-- 30% дропов дешевле разлома, 70% окупают (окуп, профит, джекпот).
+-- Веса подбираются так, чтобы в среднем разлом возвращал ~97% цены.
+local Config = require(script.Parent.Config)
+
+export type Drop = { id: string, w: number }
+export type RiftEconomy = { drops: { Drop }, show: { Drop }, jack: number, profit: number, items: { string } }
+
+local Economy = {}
+Economy.RIFT = {} :: { [string]: RiftEconomy }
+
+local AURA = Config.AURA_BY_ID
+local ORDER = {} :: { [string]: number }
+for i, a in Config.AURAS do
+	ORDER[a.id] = i
+end
+
+local function priceOf(id: string): number
+	return AURA[id].price
+end
+
+local function contains(list: { any }, x: any): boolean
+	for _, v in list do
+		if v == x then
+			return true
+		end
+	end
+	return false
+end
+
+-- состав разлома по ценовым корзинам: убыток / окуп / профит / джекпот
+local function buckets(rf)
+	local P = rf.price
+	local pool = {}
+	for _, a in Config.AURAS do
+		if a.tier ~= "unique" then
+			table.insert(pool, a)
+		end
+	end
+	local function near(a, b)
+		local da, db = math.abs(math.log(a.price / P)), math.abs(math.log(b.price / P))
+		if da == db then
+			return ORDER[a.id] < ORDER[b.id] -- при равенстве — порядок каталога, как в веб-версии
+		end
+		return da < db
+	end
+	local function take(lo: number, hi: number, n: number, must: string?)
+		local c = {}
+		for _, a in pool do
+			if a.price >= lo * P and a.price < hi * P then
+				table.insert(c, a)
+			end
+		end
+		table.sort(c, near)
+		local out = {}
+		for i = 1, math.min(n, #c) do
+			out[i] = c[i]
+		end
+		if must and AURA[must] and #out > 0 then
+			local m = AURA[must]
+			if not contains(out, m) and m.price >= lo * P and m.price < hi * P then
+				out[#out] = m
+			end
+		end
+		return out
+	end
+	local function spread(lo: number, hi: number, n: number, must: string?)
+		local c = {}
+		for _, a in pool do
+			if a.price >= lo * P and a.price <= hi * P then
+				table.insert(c, a)
+			end
+		end
+		table.sort(c, function(a, b)
+			return a.price < b.price
+		end)
+		if #c <= n then
+			return c
+		end
+		local out = {}
+		for _, a in { c[1], c[math.floor(#c / 2) + 1], c[#c] } do
+			if not contains(out, a) then
+				table.insert(out, a)
+			end
+		end
+		if must and AURA[must] then
+			local m = AURA[must]
+			if contains(c, m) and not contains(out, m) then
+				out[1] = m
+			end
+		end
+		return out
+	end
+	return take(0.05, 1, 4, rf.core[1]), take(1, 2, 3, rf.core[2]), take(2, 20, 3, rf.core[3]), spread(20, 300, 3, rf.core[4])
+end
+
+local function split(list, mass: number, e: number): { Drop }
+	local raw, t = {}, 0
+	for i, a in list do
+		raw[i] = a.price ^ e
+		t += raw[i]
+	end
+	if t == 0 then
+		t = 1
+	end
+	local out = {}
+	for i, a in list do
+		out[i] = { id = a.id, w = mass * raw[i] / t }
+	end
+	return out
+end
+
+local function avg(list, e: number): number
+	if #list == 0 then
+		return 0
+	end
+	local s = 0
+	for _, d in split(list, 1, e) do
+		s += d.w * priceOf(d.id)
+	end
+	return s
+end
+
+local function concat(...: { Drop }): { Drop }
+	local out = {}
+	for _, list in { ... } do
+		for _, d in list do
+			if d.w > 1e-9 then
+				table.insert(out, d)
+			end
+		end
+	end
+	return out
+end
+
+for _, rf in Config.RIFTS do
+	local L, O, Pr, J = buckets(rf)
+	local LOSS = Config.LOSS
+	local pick
+	local found = false
+	for _, pm in { 0.1, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02 } do
+		for _, v in { { 1, 1 }, { 1, 2 }, { 1, 3 }, { 0, 3 }, { 0, 5 }, { -1, 6 }, { -2, 8 }, { -4, 12 } } do
+			local eL, t = v[1], v[2]
+			local aL, aO, aP, aJ = avg(L, eL), avg(O, -t), avg(Pr, -t), avg(J, -1)
+			local base = LOSS * aL + (1 - LOSS - pm) * aO + pm * aP
+			local j = if #J > 0 then (Config.RTP * rf.price - base) / (aJ - aP) else 0
+			pick = { eL = eL, t = t, pm = pm, j = math.max(0, math.min(0.01, pm * 0.5, j)) }
+			if j >= 0.0005 and j <= 0.01 and j < pm * 0.5 then
+				found = true
+				break
+			end
+		end
+		if found then
+			break
+		end
+	end
+	local drops = concat(split(L, LOSS, pick.eL), split(O, 1 - LOSS - pick.pm, -pick.t), split(Pr, pick.pm - pick.j, -pick.t), split(J, pick.j, -1))
+	local profit = 0
+	local items = {}
+	for _, d in drops do
+		if priceOf(d.id) >= rf.price then
+			profit += d.w
+		end
+		table.insert(items, d.id)
+	end
+	Economy.RIFT[rf.id] = {
+		drops = drops,
+		-- витрина ленты: все ауры мелькают, дорогие реже
+		show = concat(split(L, 0.32, 0), split(O, 0.3, 0), split(Pr, 0.24, 0), split(J, 0.14, 0)),
+		jack = pick.j,
+		profit = profit,
+		items = items,
+	}
+end
+
+function Economy.pickWeighted(list: { Drop }, rand: () -> number): Drop
+	local total = 0
+	for _, d in list do
+		total += d.w
+	end
+	local r, acc = rand() * total, 0
+	for _, d in list do
+		acc += d.w
+		if r < acc then
+			return d
+		end
+	end
+	return list[#list]
+end
+
+-- выпадение ауры (решает только сервер); удача: 15% шанс перекрутить и взять дороже
+function Economy.roll(riftId: string, rand: () -> number, luck: boolean?): string
+	local drops = Economy.RIFT[riftId].drops
+	local id = Economy.pickWeighted(drops, rand).id
+	if luck and rand() < Config.LUCK_REROLL then
+		local id2 = Economy.pickWeighted(drops, rand).id
+		if priceOf(id2) > priceOf(id) then
+			id = id2
+		end
+	end
+	return id
+end
+
+-- ===== контракт =====
+function Economy.contractUpChance(n: number): number
+	return math.min(1, 0.7 + (n - Config.CONTRACT_MIN) / (Config.CONTRACT_MAX - Config.CONTRACT_MIN) * 0.3)
+end
+
+-- аура в диапазоне 0.4–2.5 от суммы вложенного; ближе к сумме — вероятнее.
+-- up = true: только тир выше базового (самого редкого из вложенных), иначе базовый или ниже
+function Economy.contractPool(sum: number, baseTier: number, up: boolean): { Drop }
+	local inRange, c = {}, {}
+	for _, a in Config.AURAS do
+		if a.tier ~= "unique" and a.price >= sum * 0.4 and a.price <= sum * 2.5 then
+			table.insert(inRange, a)
+			local ti = Config.TIER_INDEX[a.tier]
+			if (up and ti > baseTier) or (not up and ti <= baseTier) then
+				table.insert(c, a)
+			end
+		end
+	end
+	if #c == 0 then
+		if #inRange > 0 then
+			c = inRange
+		else
+			local best, bd = nil, math.huge
+			for _, a in Config.AURAS do
+				if a.tier ~= "unique" then
+					local dd = math.abs(math.log(a.price / sum))
+					if dd < bd then
+						best, bd = a, dd
+					end
+				end
+			end
+			c = { best }
+		end
+	end
+	local out, tot = {}, 0
+	for _, a in c do
+		local w = math.exp(-1.5 * math.abs(math.log(a.price / sum)))
+		table.insert(out, { id = a.id, w = w })
+		tot += w
+	end
+	for _, d in out do
+		d.w /= tot
+	end
+	table.sort(out, function(x, y)
+		return x.w > y.w
+	end)
+	return out
+end
+
+-- ===== краш =====
+function Economy.crashPoint(rand: () -> number): number
+	local x = math.floor(Config.CRASH_K / (1 - rand()) * 100) / 100
+	return math.min(Config.CRASH_MAX, math.max(1, x))
+end
+
+-- лента для анимации: без одинаковых аур подряд, на позиции winAt — выигрыш
+function Economy.strip(riftId: string, len: number, winAt: number, winId: string, rand: () -> number): { string }
+	local show = Economy.RIFT[riftId].show
+	local out = {}
+	for i = 1, len do
+		if i == winAt then
+			out[i] = winId
+		else
+			local c = {}
+			for _, d in show do
+				if d.id ~= out[i - 1] and not (i + 1 == winAt and d.id == winId) then
+					table.insert(c, d)
+				end
+			end
+			out[i] = Economy.pickWeighted(c, rand).id
+		end
+	end
+	return out
+end
+
+return Economy
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="4">
+        <Properties>
+          <string name="Name">Format</string>
+          <string name="Source"><![CDATA[-- Форматирование чисел: 1 500 000 → 1.5M, 2 500 000 000 → 2.5B
+local Format = {}
+
+local UNITS = { { 1e12, "T" }, { 1e9, "B" }, { 1e6, "M" } }
+
+local function trim(s: string): string
+	-- убираем хвостовые нули: 1.50 → 1.5, 2.00 → 2
+	s = s:gsub("(%..-)0+$", "%1")
+	s = s:gsub("%.$", "")
+	return s
+end
+
+function Format.coins(n: number): string
+	local a = math.abs(n)
+	for _, u in UNITS do
+		if a >= u[1] then
+			local x = n / u[1]
+			local s
+			if math.abs(x) >= 100 then
+				s = string.format("%.0f", x)
+			elseif math.abs(x) >= 10 then
+				s = trim(string.format("%.1f", x))
+			else
+				s = trim(string.format("%.2f", x))
+			end
+			return s .. u[2]
+		end
+	end
+	-- до миллиона — с разделителями тысяч
+	local s = tostring(math.floor(n + 0.5))
+	local neg = s:sub(1, 1) == "-"
+	if neg then
+		s = s:sub(2)
+	end
+	s = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	s = s:gsub("^,", "")
+	return (neg and "-" or "") .. s
+end
+
+return Format
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="ServerScriptService" referent="5">
+    <Properties>
+      <string name="Name">ServerScriptService</string>
+    </Properties>
+    <Item class="Folder" referent="6">
+      <Properties>
+        <string name="Name">Server</string>
+      </Properties>
+      <Item class="ModuleScript" referent="7">
+        <Properties>
+          <string name="Name">Ctx</string>
+          <string name="Source"><![CDATA[-- Общие серверные помощники: предметы, синхронизация с клиентом, удача, бесконечный баланс
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Config = require(ReplicatedStorage.Shared.Config)
+local Format = require(ReplicatedStorage.Shared.Format)
+local DataService = require(script.Parent.DataService)
+
+local Ctx = {}
+Ctx.INF = 1e15
+
+local rng = Random.new()
+function Ctx.rand(): number
+	return rng:NextNumber()
+end
+
+local remotes = Instance.new("Folder")
+remotes.Name = "Remotes"
+remotes.Parent = ReplicatedStorage
+function Ctx.remote(className: string, name: string): any
+	local r = Instance.new(className)
+	r.Name = name
+	r.Parent = remotes
+	return r
+end
+
+local StateChanged = Ctx.remote("RemoteEvent", "StateChanged") :: RemoteEvent
+local Feed = Ctx.remote("RemoteEvent", "Feed") :: RemoteEvent
+
+function Ctx.luck(data): boolean
+	return (data.luckUntil or 0) > os.time()
+end
+function Ctx.speed(data): boolean
+	return (data.speedUntil or 0) > os.time()
+end
+
+-- бесконечный баланс (промокод INFINITY) держит монеты на квадриллионе
+function Ctx.normalize(data)
+	if data.infinite and data.balance < Ctx.INF then
+		data.balance = Ctx.INF
+	end
+end
+
+function Ctx.addItem(data, id: string)
+	local item = { u = data.uid, id = id, v = Config.AURA_BY_ID[id].price }
+	data.uid += 1
+	table.insert(data.inv, 1, item)
+	data.collected[id] = true
+	data.stats.best = math.max(data.stats.best, item.v)
+	return item
+end
+
+-- снять предметы по списку uid; вернёт nil, если хоть одного нет или есть повторы
+function Ctx.takeItems(data, uids: any, minN: number, maxN: number)
+	if type(uids) ~= "table" or #uids < minN or #uids > maxN then
+		return nil
+	end
+	local want = {}
+	for _, u in uids do
+		if type(u) ~= "number" or want[u] then
+			return nil
+		end
+		want[u] = true
+	end
+	local picked, keep = {}, {}
+	for _, it in data.inv do
+		if want[it.u] then
+			table.insert(picked, it)
+		else
+			table.insert(keep, it)
+		end
+	end
+	if #picked ~= #uids then
+		return nil
+	end
+	return picked, keep
+end
+
+function Ctx.leaderstats(player: Player)
+	local data = DataService.get(player)
+	local ls = player:FindFirstChild("leaderstats")
+	local coins = ls and ls:FindFirstChild("Coins")
+	if data and coins then
+		(coins :: StringValue).Value = if data.infinite then "∞" else Format.coins(data.balance)
+	end
+end
+
+-- полное состояние игрока для клиента
+function Ctx.snapshot(data)
+	return {
+		balance = data.balance,
+		inv = data.inv,
+		collected = data.collected,
+		lastWheel = data.lastWheel,
+		luckUntil = data.luckUntil,
+		speedUntil = data.speedUntil,
+		tickets = data.tickets,
+		stats = data.stats,
+		infinite = data.infinite,
+		now = os.time(),
+	}
+end
+
+function Ctx.sync(player: Player, balanceOnly: boolean?)
+	local data = DataService.get(player)
+	if not data then
+		return
+	end
+	Ctx.normalize(data)
+	DataService.markDirty(player)
+	Ctx.leaderstats(player)
+	if balanceOnly then
+		StateChanged:FireClient(player, { balance = data.balance })
+	else
+		StateChanged:FireClient(player, Ctx.snapshot(data))
+	end
+end
+
+-- лента дропов для всех игроков на сервере (только заметные)
+function Ctx.feed(player: Player, id: string)
+	local a = Config.AURA_BY_ID[id]
+	if a and Config.TIER_INDEX[a.tier] >= 3 then
+		Feed:FireAllClients({ name = player.DisplayName, id = id })
+	end
+end
+
+-- простая защита от спама запросами
+local last: { [Player]: { [string]: number } } = {}
+function Ctx.throttle(player: Player, key: string, gap: number): boolean
+	local t = last[player]
+	if not t then
+		t = {}
+		last[player] = t
+	end
+	local now = os.clock()
+	if t[key] and now - t[key] < gap then
+		return false
+	end
+	t[key] = now
+	return true
+end
+game:GetService("Players").PlayerRemoving:Connect(function(p)
+	last[p] = nil
+end)
+
+return Ctx
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="8">
+        <Properties>
+          <string name="Name">DataService</string>
+          <string name="Source"><![CDATA[-- Сохранение прогресса игроков в DataStore.
+-- Если DataStore недоступен (например, в Studio не включён доступ к API),
+-- игрок играет со свежим прогрессом, но он НЕ сохраняется — чтобы не затереть настоящий.
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
+
+local STORE_NAME = "AuraBattle_v1"
+local AUTOSAVE_EVERY = 90
+
+local DataService = {}
+
+export type Item = { u: number, id: string, v: number }
+export type Data = {
+	v: number,
+	balance: number,
+	inv: { Item },
+	uid: number,
+	stats: { [string]: number },
+	collected: { [string]: boolean },
+	lastWheel: number,
+	luckUntil: number,
+	speedUntil: number,
+	tickets: { [string]: number },
+	promos: { [string]: boolean },
+	infinite: boolean,
+}
+
+local store = nil
+do
+	local ok, res = pcall(function()
+		return DataStoreService:GetDataStore(STORE_NAME)
+	end)
+	if ok then
+		store = res
+	else
+		warn("[AuraBattle] DataStore недоступен:", res)
+	end
+end
+
+local profiles: { [Player]: { data: Data, canSave: boolean, dirty: boolean } } = {}
+
+local function fresh(): Data
+	return {
+		v = 1,
+		balance = Config.START_BALANCE,
+		inv = {},
+		uid = 1,
+		stats = {
+			opened = 0, clicks = 0, clickEarned = 0, best = 0, afk = 0,
+			upWin = 0, upLose = 0, contracts = 0, battles = 0, battlesWon = 0, crashBest = 0,
+		},
+		collected = {},
+		lastWheel = 0,
+		luckUntil = 0,
+		speedUntil = 0,
+		tickets = {},
+		promos = {},
+		infinite = false,
+	}
+end
+
+-- дополняем старые сохранения новыми полями и выкидываем ауры, которых больше нет
+local function reconcile(d: any): Data
+	local base = fresh()
+	if type(d) ~= "table" then
+		return base
+	end
+	for k, v in base do
+		if d[k] == nil then
+			d[k] = v
+		end
+	end
+	for k, v in base.stats do
+		if d.stats[k] == nil then
+			d.stats[k] = v
+		end
+	end
+	local inv = {}
+	for _, it in d.inv do
+		if type(it) == "table" and Config.AURA_BY_ID[it.id] then
+			table.insert(inv, it)
+		end
+	end
+	d.inv = inv
+	return d
+end
+
+local function key(player: Player): string
+	return "u_" .. player.UserId
+end
+
+function DataService.load(player: Player): Data
+	if not store then
+		profiles[player] = { data = fresh(), canSave = false, dirty = false }
+		return profiles[player].data
+	end
+	local data, loaded = nil, false
+	for attempt = 1, 4 do
+		local ok, res = pcall(function()
+			return store:GetAsync(key(player))
+		end)
+		if ok then
+			data, loaded = res, true
+			break
+		end
+		warn(("[AuraBattle] загрузка %s, попытка %d: %s"):format(player.Name, attempt, tostring(res)))
+		task.wait(attempt)
+	end
+	profiles[player] = { data = reconcile(data), canSave = loaded, dirty = false }
+	if not loaded then
+		warn("[AuraBattle] прогресс не загрузился — в этой сессии он не будет сохраняться")
+	end
+	return profiles[player].data
+end
+
+function DataService.get(player: Player): Data?
+	local p = profiles[player]
+	return p and p.data
+end
+
+function DataService.markDirty(player: Player)
+	local p = profiles[player]
+	if p then
+		p.dirty = true
+	end
+end
+
+function DataService.save(player: Player, force: boolean?)
+	local p = profiles[player]
+	if not p or not p.canSave or not store then
+		return
+	end
+	if not p.dirty and not force then
+		return
+	end
+	p.dirty = false
+	local snapshot = table.clone(p.data)
+	local ok, err = pcall(function()
+		store:UpdateAsync(key(player), function()
+			return snapshot
+		end)
+	end)
+	if not ok then
+		p.dirty = true
+		warn("[AuraBattle] не удалось сохранить", player.Name, err)
+	end
+end
+
+function DataService.release(player: Player)
+	DataService.save(player, true)
+	profiles[player] = nil
+end
+
+-- автосохранение
+task.spawn(function()
+	while true do
+		task.wait(AUTOSAVE_EVERY)
+		for player in profiles do
+			task.spawn(DataService.save, player)
+		end
+	end
+end)
+
+-- при выключении сервера сохраняем всех
+game:BindToClose(function()
+	if RunService:IsStudio() and not store then
+		return
+	end
+	local left = 0
+	for _, player in Players:GetPlayers() do
+		left += 1
+		task.spawn(function()
+			DataService.save(player, true)
+			left -= 1
+		end)
+	end
+	local t = os.clock()
+	while left > 0 and os.clock() - t < 25 do
+		task.wait(0.2)
+	end
+end)
+
+return DataService
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="9">
+        <Properties>
+          <string name="Name">Main</string>
+          <token name="RunContext">0</token>
+          <string name="Source"><![CDATA[-- Сервер «Битвы Аур»: вся логика и все шансы — только здесь, клиент лишь показывает.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared.Config)
+local Economy = require(Shared.Economy)
+local DataService = require(script.Parent.DataService)
+local Ctx = require(script.Parent.Ctx)
+
+local GetState = Ctx.remote("RemoteFunction", "GetState") :: RemoteFunction
+local OpenRift = Ctx.remote("RemoteFunction", "OpenRift") :: RemoteFunction
+local SellItems = Ctx.remote("RemoteFunction", "SellItems") :: RemoteFunction
+local SellAll = Ctx.remote("RemoteFunction", "SellAll") :: RemoteFunction
+local Redeem = Ctx.remote("RemoteFunction", "Redeem") :: RemoteFunction
+local Tap = Ctx.remote("RemoteEvent", "Tap") :: RemoteEvent
+
+-- ===== игроки =====
+local ready: { [Player]: boolean } = {}
+
+local function onPlayerAdded(player: Player)
+	local ls = Instance.new("Folder")
+	ls.Name = "leaderstats"
+	local coins = Instance.new("StringValue")
+	coins.Name = "Coins"
+	coins.Parent = ls
+	ls.Parent = player
+	local data = DataService.load(player)
+	Ctx.normalize(data)
+	ready[player] = true
+	Ctx.leaderstats(player)
+end
+Players.PlayerAdded:Connect(onPlayerAdded)
+-- в Studio игрок может зайти раньше, чем скрипт подписался на событие
+for _, player in Players:GetPlayers() do
+	task.spawn(onPlayerAdded, player)
+end
+
+Players.PlayerRemoving:Connect(function(player)
+	ready[player] = nil
+	DataService.release(player)
+end)
+
+GetState.OnServerInvoke = function(player)
+	local t = os.clock()
+	while not ready[player] and player.Parent and os.clock() - t < 30 do
+		task.wait(0.1)
+	end
+	local data = DataService.get(player)
+	return data and Ctx.snapshot(data)
+end
+
+-- ===== разломы =====
+OpenRift.OnServerInvoke = function(player, riftId: any, count: any, byTicket: any)
+	local data = DataService.get(player)
+	if not data then
+		return { ok = false, err = "loading" }
+	end
+	if type(riftId) ~= "string" or not Config.RIFT_BY_ID[riftId] then
+		return { ok = false, err = "bad" }
+	end
+	count = tonumber(count)
+	if not count or count ~= math.floor(count) or count < 1 or count > Config.MAX_OPEN then
+		return { ok = false, err = "bad" }
+	end
+	if not Ctx.throttle(player, "open", 0.5) then
+		return { ok = false, err = "too_fast" }
+	end
+	local rf = Config.RIFT_BY_ID[riftId]
+	if byTicket == true then
+		if (data.tickets[riftId] or 0) < 1 then
+			return { ok = false, err = "no_ticket" }
+		end
+		count = 1
+	elseif data.balance < rf.price * count then
+		return { ok = false, err = "no_money" }
+	end
+	if #data.inv + count > Config.INV_LIMIT then
+		return { ok = false, err = "inv_full" }
+	end
+	if byTicket == true then
+		data.tickets[riftId] -= 1
+	else
+		data.balance -= rf.price * count
+	end
+	local items = {}
+	local luck = Ctx.luck(data)
+	for _ = 1, count do
+		local item = Ctx.addItem(data, Economy.roll(riftId, Ctx.rand, luck))
+		data.stats.opened += 1
+		table.insert(items, item)
+		Ctx.feed(player, item.id)
+	end
+	Ctx.sync(player)
+	return { ok = true, items = items, balance = data.balance }
+end
+
+-- ===== продажа =====
+SellItems.OnServerInvoke = function(player, uids: any)
+	local data = DataService.get(player)
+	if not data then
+		return { ok = false }
+	end
+	local picked, keep = Ctx.takeItems(data, uids, 1, Config.INV_LIMIT)
+	if not picked then
+		return { ok = false }
+	end
+	local total = 0
+	for _, it in picked do
+		total += it.v
+	end
+	data.inv = keep
+	data.balance += total
+	Ctx.sync(player)
+	return { ok = true, total = total, balance = data.balance }
+end
+
+SellAll.OnServerInvoke = function(player)
+	local data = DataService.get(player)
+	if not data then
+		return { ok = false }
+	end
+	local total = 0
+	for _, it in data.inv do
+		total += it.v
+	end
+	data.inv = {}
+	data.balance += total
+	Ctx.sync(player)
+	return { ok = true, total = total, balance = data.balance }
+end
+
+-- ===== промокоды =====
+Redeem.OnServerInvoke = function(player, code: any)
+	local data = DataService.get(player)
+	if not data or type(code) ~= "string" then
+		return { ok = false, err = "bad" }
+	end
+	code = string.upper((code:gsub("%s", "")))
+	if code == "INFINITY" then
+		-- только владелец игры (или тест в Studio)
+		if not (RunService:IsStudio() or player.UserId == game.CreatorId) then
+			return { ok = false, err = "no_code" }
+		end
+		data.infinite = not data.infinite
+		if not data.infinite then
+			data.balance = math.min(data.balance, Config.START_BALANCE)
+		end
+		Ctx.sync(player)
+		return { ok = true, infinite = data.infinite }
+	end
+	local gain = Config.PROMOS[code]
+	if not gain then
+		return { ok = false, err = "no_code" }
+	end
+	if data.promos[code] then
+		return { ok = false, err = "used" }
+	end
+	data.promos[code] = true
+	data.balance += gain
+	Ctx.sync(player)
+	return { ok = true, gain = gain }
+end
+
+-- ===== кликер: +150 за тап, не чаще CLICK_MAX_PER_SEC раз в секунду =====
+local tapWindow: { [Player]: { t: number, n: number } } = {}
+Tap.OnServerEvent:Connect(function(player)
+	local data = DataService.get(player)
+	if not data then
+		return
+	end
+	local now = os.clock()
+	local w = tapWindow[player]
+	if not w or now - w.t >= 1 then
+		w = { t = now, n = 0 }
+		tapWindow[player] = w
+	end
+	if w.n >= Config.CLICK_MAX_PER_SEC then
+		return
+	end
+	w.n += 1
+	data.balance += Config.CLICK_GAIN
+	data.stats.clicks += 1
+	data.stats.clickEarned += Config.CLICK_GAIN
+	Ctx.sync(player, true)
+end)
+Players.PlayerRemoving:Connect(function(player)
+	tapWindow[player] = nil
+end)
+
+-- ===== AFK-фарм: пока игрок в игре, каждые 10 секунд капают монеты =====
+task.spawn(function()
+	while true do
+		task.wait(Config.AFK_EVERY)
+		for player in ready do
+			local data = DataService.get(player)
+			if data then
+				local g = Config.AFK_GAIN * (if Ctx.speed(data) then 2 else 1)
+				data.balance += g
+				data.stats.afk += g
+				Ctx.sync(player, true)
+			end
+		end
+	end
+end)
+
+-- ===== остальные режимы =====
+require(script.Parent.Modes)
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="10">
+        <Properties>
+          <string name="Name">Modes</string>
+          <string name="Source"><![CDATA[-- Серверная логика режимов: апгрейд, контракт, битва, краш, колесо.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Economy = require(ReplicatedStorage.Shared.Economy)
+local DataService = require(script.Parent.DataService)
+local Ctx = require(script.Parent.Ctx)
+
+local AURA = Config.AURA_BY_ID
+local rand = Ctx.rand
+
+-- ================= апгрейд =================
+-- положи до 8 аур → их цены складываются → шанс = (сумма + буст) / цена цели, максимум 80%
+local Upgrade = Ctx.remote("RemoteFunction", "Upgrade") :: RemoteFunction
+Upgrade.OnServerInvoke = function(player, uids: any, targetId: any, boost: any)
+	local data = DataService.get(player)
+	if not data or not Ctx.throttle(player, "upgrade", 1) then
+		return { ok = false }
+	end
+	local target = type(targetId) == "string" and AURA[targetId]
+	if not target or target.tier == "unique" then
+		return { ok = false }
+	end
+	local picked, keep = Ctx.takeItems(data, uids, 1, Config.UPGRADE_MAX_ITEMS)
+	if not picked then
+		return { ok = false }
+	end
+	local v = 0
+	for _, it in picked do
+		v += it.v
+	end
+	if target.price <= v then
+		return { ok = false, err = "cheap_target" }
+	end
+	boost = math.floor(tonumber(boost) or 0)
+	local maxBoost = math.max(0, math.min(data.balance, math.floor(Config.UPGRADE_MAX_CHANCE * target.price - v)))
+	if boost < 0 or boost > maxBoost then
+		return { ok = false }
+	end
+	local chance = math.min(Config.UPGRADE_MAX_CHANCE, (v + boost) / target.price)
+	local r = rand()
+	local win = r < chance
+	data.inv = keep
+	data.balance -= boost
+	local item = nil
+	if win then
+		item = Ctx.addItem(data, target.id)
+		data.stats.upWin += 1
+		Ctx.feed(player, target.id)
+	else
+		data.stats.upLose += 1
+	end
+	Ctx.sync(player)
+	return { ok = true, win = win, chance = chance, r = r, item = item, lost = picked, boost = boost }
+end
+
+-- ================= контракт =================
+-- от 3 до 10 любых аур → одна новая; шанс тира выше: 70% (3 ауры) … 100% (10 аур)
+local Contract = Ctx.remote("RemoteFunction", "Contract") :: RemoteFunction
+Contract.OnServerInvoke = function(player, uids: any)
+	local data = DataService.get(player)
+	if not data or not Ctx.throttle(player, "contract", 1) then
+		return { ok = false }
+	end
+	local picked, keep = Ctx.takeItems(data, uids, Config.CONTRACT_MIN, Config.CONTRACT_MAX)
+	if not picked then
+		return { ok = false }
+	end
+	local sum, base = 0, 1
+	for _, it in picked do
+		sum += it.v
+		base = math.max(base, Config.TIER_INDEX[AURA[it.id].tier])
+	end
+	local isUp = rand() < Economy.contractUpChance(#picked)
+	local id = Economy.pickWeighted(Economy.contractPool(sum, base, isUp), rand).id
+	data.inv = keep
+	local item = Ctx.addItem(data, id)
+	data.stats.contracts += 1
+	Ctx.feed(player, id)
+	Ctx.sync(player)
+	return { ok = true, item = item, sum = sum, up = Config.TIER_INDEX[AURA[id].tier] > base }
+end
+
+-- ================= битва аур 1v1 с ботом =================
+-- оба открывают одни и те же разломы, у кого дороже — забирает всё. Ничья → доп. раунд.
+local Battle = Ctx.remote("RemoteFunction", "Battle") :: RemoteFunction
+Battle.OnServerInvoke = function(player, riftIds: any, botName: any)
+	local data = DataService.get(player)
+	if not data or not Ctx.throttle(player, "battle", 2) then
+		return { ok = false }
+	end
+	if type(riftIds) ~= "table" or #riftIds < 1 or #riftIds > Config.BATTLE_MAX_RIFTS then
+		return { ok = false }
+	end
+	local cost = 0
+	for _, id in riftIds do
+		local rf = type(id) == "string" and Config.RIFT_BY_ID[id]
+		if not rf then
+			return { ok = false }
+		end
+		cost += rf.price
+	end
+	if data.balance < cost then
+		return { ok = false, err = "no_money" }
+	end
+	if #data.inv + #riftIds * 2 + 10 > Config.INV_LIMIT then
+		return { ok = false, err = "inv_full" }
+	end
+	local bot = if type(botName) == "string" and table.find(Config.BOTS, botName) then botName else Config.BOTS[math.random(#Config.BOTS)]
+	local luck = Ctx.luck(data)
+	local wantWin = rand() < Config.BATTLE_WIN
+	local rounds, A, B
+	for _ = 1, 200 do
+		rounds, A, B = {}, 0, 0
+		for _, id in riftIds do
+			local a, b = Economy.roll(id, rand, luck), Economy.roll(id, rand)
+			table.insert(rounds, { rf = id, a = a, b = b })
+			A += AURA[a].price
+			B += AURA[b].price
+		end
+		local guard = 0
+		while A == B and guard < 20 do
+			guard += 1
+			local id = riftIds[math.random(#riftIds)]
+			local a, b = Economy.roll(id, rand, luck), Economy.roll(id, rand)
+			table.insert(rounds, { rf = id, a = a, b = b, extra = true })
+			A += AURA[a].price
+			B += AURA[b].price
+		end
+		if (A > B) == wantWin then
+			break
+		end
+	end
+	local won = A > B
+	data.balance -= cost
+	data.stats.battles += 1
+	local prize = {}
+	if won then
+		data.stats.battlesWon += 1
+		for _, r in rounds do
+			table.insert(prize, Ctx.addItem(data, r.a))
+			table.insert(prize, Ctx.addItem(data, r.b))
+		end
+	end
+	Ctx.sync(player)
+	return { ok = true, rounds = rounds, won = won, A = A, B = B, cost = cost, bot = bot, prize = prize }
+end
+
+-- ================= колесо удачи (раз в сутки) =================
+local SpinWheel = Ctx.remote("RemoteFunction", "SpinWheel") :: RemoteFunction
+SpinWheel.OnServerInvoke = function(player)
+	local data = DataService.get(player)
+	if not data then
+		return { ok = false }
+	end
+	local now = os.time()
+	local left = (data.lastWheel or 0) + Config.WHEEL_COOLDOWN - now
+	if left > 0 then
+		return { ok = false, err = "wait", left = left }
+	end
+	local list = {}
+	for i, s in Config.WHEEL do
+		list[i] = { id = tostring(i), w = s.w }
+	end
+	local idx = tonumber(Economy.pickWeighted(list, rand).id) :: number
+	local s = Config.WHEEL[idx]
+	data.lastWheel = now
+	local item = nil
+	if s.t == "coins" then
+		data.balance += s.v
+	elseif s.t == "speed" then
+		data.speedUntil = math.max(now, data.speedUntil or 0) + Config.BOOST_TIME
+	elseif s.t == "luck" then
+		data.luckUntil = math.max(now, data.luckUntil or 0) + Config.BOOST_TIME
+	elseif s.t == "ticket" then
+		data.tickets[s.rift] = (data.tickets[s.rift] or 0) + 1
+	elseif s.t == "fortune" then
+		item = Ctx.addItem(data, "fortune")
+		Ctx.feed(player, "fortune")
+	end
+	Ctx.sync(player)
+	return { ok = true, index = idx, item = item }
+end
+
+-- ================= краш: общие раунды для всех игроков на сервере =================
+local CrashBet = Ctx.remote("RemoteFunction", "CrashBet") :: RemoteFunction
+local CrashCashout = Ctx.remote("RemoteFunction", "CrashCashout") :: RemoteFunction
+local CrashState = Ctx.remote("RemoteEvent", "CrashState") :: RemoteEvent
+local GetCrash = Ctx.remote("RemoteFunction", "GetCrash") :: RemoteFunction
+
+type Bet = { name: string, bet: number, auto: number, cashed: number, bot: boolean?, target: number? }
+local cr = {
+	phase = "bet",
+	t0 = workspace:GetServerTimeNow(), -- начало текущей фазы (общие часы сервера и клиентов)
+	crashAt = 1,
+	bets = {} :: { [any]: Bet },
+	hist = {} :: { number },
+}
+
+local function mult(): number
+	if cr.phase ~= "fly" then
+		return 1
+	end
+	return math.exp(Config.CRASH_SPEED * (workspace:GetServerTimeNow() - cr.t0))
+end
+
+local function publicState()
+	local players = {}
+	for key, b in cr.bets do
+		table.insert(players, { name = b.name, bet = b.bet, cashed = b.cashed, me = if typeof(key) == "Instance" then (key :: Player).UserId else nil })
+	end
+	table.sort(players, function(x, y)
+		return x.bet > y.bet
+	end)
+	return {
+		phase = cr.phase,
+		t0 = cr.t0,
+		betTime = Config.CRASH_BET_TIME,
+		afterTime = Config.CRASH_AFTER_TIME,
+		speed = Config.CRASH_SPEED,
+		crashAt = if cr.phase == "after" then cr.crashAt else nil,
+		hist = cr.hist,
+		players = players,
+	}
+end
+
+local function broadcast()
+	CrashState:FireAllClients(publicState())
+end
+GetCrash.OnServerInvoke = function()
+	return publicState()
+end
+
+local function newRound()
+	cr.phase = "bet"
+	cr.t0 = workspace:GetServerTimeNow()
+	cr.crashAt = Economy.crashPoint(rand)
+	cr.bets = {}
+	-- несколько ботов для живости таблицы (на баланс игроков не влияют)
+	local names = table.clone(Config.BOTS)
+	for i = 1, math.random(3, 6) do
+		local name = table.remove(names, math.random(#names))
+		cr.bets["bot" .. i] = {
+			name = name,
+			bet = math.floor(10 ^ (1.5 + rand() * 2.3)),
+			auto = 0,
+			cashed = 0,
+			bot = true,
+			target = math.max(1.05, math.floor(math.exp(0.15 + rand() * 1.8) * 100) / 100),
+		}
+	end
+	broadcast()
+end
+
+local function cashOut(player: Player, b: Bet, m: number)
+	if b.cashed > 0 then
+		return
+	end
+	b.cashed = math.floor(m * 100) / 100
+	local data = DataService.get(player)
+	if data then
+		data.balance += math.floor(b.bet * b.cashed)
+		data.stats.crashBest = math.max(data.stats.crashBest, b.cashed)
+		Ctx.sync(player, true)
+	end
+end
+
+CrashBet.OnServerInvoke = function(player, bet: any, auto: any)
+	local data = DataService.get(player)
+	if not data then
+		return { ok = false }
+	end
+	if cr.phase ~= "bet" then
+		return { ok = false, err = "not_bet" }
+	end
+	if cr.bets[player] then
+		return { ok = false, err = "already" }
+	end
+	bet = math.floor(tonumber(bet) or 0)
+	auto = tonumber(auto) or 0
+	if bet < 1 then
+		return { ok = false, err = "bad" }
+	end
+	if bet > data.balance then
+		return { ok = false, err = "no_money" }
+	end
+	if auto > 0 then
+		auto = math.clamp(math.floor(auto * 100) / 100, 1.01, Config.CRASH_MAX)
+	else
+		auto = 0
+	end
+	data.balance -= bet
+	cr.bets[player] = { name = player.DisplayName, bet = bet, auto = auto, cashed = 0 }
+	Ctx.sync(player, true)
+	broadcast()
+	return { ok = true, balance = data.balance }
+end
+
+CrashCashout.OnServerInvoke = function(player)
+	local b = cr.bets[player]
+	if cr.phase ~= "fly" or not b or b.cashed > 0 then
+		return { ok = false }
+	end
+	local m = mult()
+	if m >= cr.crashAt then
+		return { ok = false }
+	end
+	cashOut(player, b, m)
+	broadcast()
+	return { ok = true, cashed = b.cashed, win = math.floor(b.bet * b.cashed) }
+end
+
+Players.PlayerRemoving:Connect(function(player)
+	-- если вышел во время полёта с автовыводом — ставка остаётся в раунде и может выстрелить
+	local b = cr.bets[player]
+	if b and cr.phase == "bet" then
+		local data = DataService.get(player)
+		if data then
+			data.balance += b.bet -- раунд ещё не начался — вернём ставку
+		end
+		cr.bets[player] = nil
+	end
+end)
+
+task.spawn(function()
+	newRound()
+	local lastBroadcast = 0
+	while true do
+		RunService.Heartbeat:Wait()
+		local now = workspace:GetServerTimeNow()
+		if cr.phase == "bet" then
+			if now - cr.t0 >= Config.CRASH_BET_TIME then
+				cr.phase = "fly"
+				cr.t0 = now
+				broadcast()
+			end
+		elseif cr.phase == "fly" then
+			local m = mult()
+			local changed = false
+			if m >= cr.crashAt then
+				cr.phase = "after"
+				cr.t0 = now
+				table.insert(cr.hist, 1, cr.crashAt)
+				if #cr.hist > 16 then
+					table.remove(cr.hist)
+				end
+				broadcast()
+			else
+				for key, b in cr.bets do
+					if b.cashed == 0 then
+						if b.bot and b.target and m >= b.target then
+							b.cashed = b.target
+							changed = true
+						elseif typeof(key) == "Instance" and b.auto > 0 and m >= b.auto then
+							cashOut(key :: Player, b, b.auto)
+							changed = true
+						end
+					end
+				end
+				if changed and now - lastBroadcast > 0.2 then
+					lastBroadcast = now
+					broadcast()
+				end
+			end
+		elseif cr.phase == "after" then
+			if now - cr.t0 >= Config.CRASH_AFTER_TIME then
+				newRound()
+			end
+		end
+	end
+end)
+
+return {}
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="StarterPlayer" referent="11">
+    <Properties>
+      <string name="Name">StarterPlayer</string>
+    </Properties>
+    <Item class="StarterPlayerScripts" referent="12">
+      <Properties>
+        <string name="Name">StarterPlayerScripts</string>
+      </Properties>
+      <Item class="Folder" referent="13">
+        <Properties>
+          <string name="Name">Client</string>
+        </Properties>
+        <Item class="ModuleScript" referent="14">
+          <Properties>
+            <string name="Name">Core</string>
+            <string name="Source"><![CDATA[-- Общее для всех экранов клиента: состояние, сервер, язык, звуки, карточки аур, окна
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalizationService = game:GetService("LocalizationService")
+local SoundService = game:GetService("SoundService")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Format = require(Shared:WaitForChild("Format"))
+local Ui = require(script.Parent:WaitForChild("Ui"))
+local C = Ui.C
+local new = Ui.new
+
+local Core = {}
+Core.Config = Config
+Core.Ui = Ui
+Core.player = Players.LocalPlayer
+
+-- ===== язык =====
+Core.RU = false
+pcall(function()
+	Core.RU = string.sub(LocalizationService.RobloxLocaleId, 1, 2) == "ru"
+end)
+function Core.L(en: string, ru: string): string
+	return if Core.RU then ru else en
+end
+local L = Core.L
+
+-- ===== сервер =====
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+Core.R = setmetatable({}, {
+	__index = function(t, name)
+		local r = Remotes:WaitForChild(name)
+		rawset(t, name, r)
+		return r
+	end,
+}) :: any
+
+-- ===== состояние =====
+Core.state = {
+	balance = 0,
+	inv = {} :: { { u: number, id: string, v: number } },
+	collected = {} :: { [string]: boolean },
+	lastWheel = 0,
+	luckUntil = 0,
+	speedUntil = 0,
+	tickets = {} :: { [string]: number },
+	stats = {} :: { [string]: number },
+	infinite = false,
+}
+Core.busy = false
+local timeOffset = 0
+function Core.now(): number
+	return os.time() + timeOffset
+end
+
+local listeners: { () -> () } = {}
+function Core.onChange(fn: () -> ())
+	table.insert(listeners, fn)
+end
+function Core.changed()
+	for _, fn in listeners do
+		task.spawn(fn)
+	end
+end
+function Core.apply(s)
+	if not s then
+		return
+	end
+	for k, v in s do
+		if k == "now" then
+			timeOffset = v - os.time()
+		else
+			(Core.state :: any)[k] = v
+		end
+	end
+	Core.changed()
+end
+
+function Core.fmt(n: number): string
+	return Format.coins(n)
+end
+function Core.balanceText(): string
+	return if Core.state.infinite then "∞" else Format.coins(Core.state.balance)
+end
+
+-- ===== звуки =====
+local soundCache: { [string]: Sound } = {}
+Core.soundOn = true
+function Core.sound(name: string, volume: number?)
+	if not Core.soundOn then
+		return
+	end
+	local id = Config.SOUNDS[name]
+	if not id or id == "" then
+		return
+	end
+	local s = soundCache[name] or Core.makeSound(name)
+	s.Volume = volume or 0.5
+	SoundService:PlayLocalSound(s)
+end
+
+function Core.makeSound(name: string): Sound
+	local s = Instance.new("Sound")
+	s.Name = "snd_" .. name
+	s.SoundId = Config.SOUNDS[name]
+	s.Parent = SoundService
+	soundCache[name] = s
+	return s
+end
+
+-- ===== загрузка картинок и звуков заранее + понятный отчёт, если что-то не загрузилось =====
+Core.failed = {} :: { [string]: boolean }
+local failWatchers: { [string]: { () -> () } } = {}
+function Core.onFail(key: string, fn: () -> ())
+	if Core.failed[key] then
+		fn()
+		return
+	end
+	failWatchers[key] = failWatchers[key] or {}
+	table.insert(failWatchers[key], fn)
+end
+function Core.preload()
+	local ContentProvider = game:GetService("ContentProvider")
+	local byId: { [string]: string } = {}
+	local list = {}
+	for key, id in Config.IMAGES do
+		if id ~= "" then
+			byId[id] = "img_" .. key
+			table.insert(list, id)
+		end
+	end
+	for key, id in Config.SOUNDS do
+		if id ~= "" then
+			byId[id] = "snd_" .. key
+			table.insert(list, (soundCache[key] or Core.makeSound(key)) :: any)
+		end
+	end
+	local bad = {}
+	pcall(function()
+		ContentProvider:PreloadAsync(list, function(contentId: string, status: Enum.AssetFetchStatus)
+			local name = byId[contentId] or contentId
+			if status ~= Enum.AssetFetchStatus.Success then
+				warn(("[AuraBattle] не загрузилось: %s (%s) — статус %s. Проверь в Asset Manager, прошёл ли файл модерацию."):format(name, contentId, status.Name))
+				table.insert(bad, name)
+				local key = string.sub(name, 5)
+				Core.failed[key] = true
+				local watchers: { () -> () } = failWatchers[key] or {}
+				for _, fn in watchers do
+					task.spawn(fn)
+				end
+			end
+		end)
+	end)
+	if #bad > 0 then
+		Core.toast(L("Not loaded: ", "Не загрузилось: ") .. table.concat(bad, ", ") .. L(" — see Output", " — смотри Output"))
+	else
+		print("[AuraBattle] все картинки и звуки загружены ✓")
+	end
+end
+
+-- картинка с запасным вариантом: если файл не загрузился, показываем цветной круг
+local function withFallback(img: ImageLabel, key: string, c1: Color3, c2: Color3, letter: string?)
+	local fb = new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(1, 1, 1), Visible = false, Parent = img }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(c1, c2, 45),
+	})
+	if letter then
+		Ui.label(letter, 30, Color3.new(1, 1, 1), { Font = Enum.Font.GothamBlack, Size = UDim2.fromScale(1, 1), TextScaled = true, Parent = fb })
+	end
+	Core.onFail(key, function()
+		fb.Visible = true
+	end)
+	return img
+end
+
+-- ===== ауры =====
+function Core.tierOf(id: string)
+	local a = Config.AURA_BY_ID[id]
+	return Config.TIERS[Config.TIER_INDEX[a.tier]]
+end
+
+-- сфера ауры: картинка, если загружена, иначе цветной шар по цветам ауры
+function Core.auraOrb(id: string, size: number): GuiObject
+	local a = Config.AURA_BY_ID[id]
+	local pos = Config.ATLAS.auras[id]
+	if Config.IMAGES.auras ~= "" and pos then -- картинка из листа аур
+		local cell = Config.ATLAS.auraCell
+		return withFallback(new("ImageLabel", {
+			BackgroundTransparency = 1,
+			Image = Config.IMAGES.auras,
+			ImageRectOffset = Vector2.new(pos[1], pos[2]),
+			ImageRectSize = Vector2.new(cell, cell),
+			Size = UDim2.fromOffset(size, size),
+			ScaleType = Enum.ScaleType.Fit,
+		}), "auras", a.colors[1], a.colors[2] or a.colors[1])
+	end
+	if a.image ~= "" then
+		return new("ImageLabel", { BackgroundTransparency = 1, Image = a.image, Size = UDim2.fromOffset(size, size), ScaleType = Enum.ScaleType.Fit })
+	end
+	local c1 = a.colors[1]
+	local c2 = a.colors[2] or c1
+	local orb = new("Frame", { Size = UDim2.fromOffset(size, size), BackgroundColor3 = Color3.new(1, 1, 1) }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(c1, c2, 45),
+		Ui.stroke(Core.tierOf(id).color, 2, 0.2),
+	})
+	new("Frame", { -- блик
+		Size = UDim2.fromScale(0.42, 0.22),
+		Position = UDim2.fromScale(0.2, 0.14),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0.55,
+		Parent = orb,
+	}, { Ui.corner(UDim.new(1, 0)) })
+	return orb
+end
+
+-- картинка разлома (из листа разломов) или цветной круг с буквой
+function Core.riftArt(rf, size: number): GuiObject
+	local pos = Config.ATLAS.rifts[rf.id]
+	if Config.IMAGES.rifts ~= "" and pos then
+		local cell = Config.ATLAS.riftCell
+		return withFallback(new("ImageLabel", {
+			BackgroundTransparency = 1,
+			Image = Config.IMAGES.rifts,
+			ImageRectOffset = Vector2.new(pos[1], pos[2]),
+			ImageRectSize = Vector2.new(cell, cell),
+			Size = UDim2.fromOffset(size, size),
+			ScaleType = Enum.ScaleType.Fit,
+		}), "rifts", rf.c1, rf.c2, string.sub(rf.en, 1, 1))
+	end
+	local f = new("Frame", { Size = UDim2.fromOffset(size, size), BackgroundColor3 = Color3.new(1, 1, 1) }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(rf.c1, rf.c2, 45),
+		Ui.stroke(rf.c1, 3, 0.1),
+	})
+	Ui.label(string.sub(rf.en, 1, 1), math.floor(size * 0.4), Color3.new(1, 1, 1), { Size = UDim2.fromScale(1, 1), Font = Enum.Font.GothamBlack, Parent = f })
+	return f
+end
+
+-- карточка ауры; opts.button — сделать карточку кнопкой, opts.selected — подсветка выбора
+function Core.auraCard(id: string, value: number?, w: number, h: number, opts: { [string]: any }?): GuiObject
+	local o: { [string]: any } = opts or {}
+	local a = Config.AURA_BY_ID[id]
+	local tier = Core.tierOf(id)
+	local card = new(if o.button then "TextButton" else "Frame", {
+		Size = UDim2.fromOffset(w, h),
+		BackgroundColor3 = Color3.fromRGB(14, 11, 44),
+	}, {
+		Ui.corner(12),
+		Ui.stroke(if o.selected then C.cyan else tier.color, if o.selected then 3 else 2, if o.selected then 0 else 0.25),
+		new("UIGradient", {
+			Color = ColorSequence.new(tier.color:Lerp(Color3.fromRGB(14, 11, 44), 0.7), Color3.fromRGB(14, 11, 44)),
+			Rotation = 90,
+		}),
+	})
+	if o.button then
+		(card :: TextButton).Text = ""
+		;(card :: TextButton).AutoButtonColor = true
+	end
+	local small = h < 130
+	local orbSize = math.floor(math.min(w * 0.62, h * (if small then 0.42 else 0.48)))
+	local orb = Core.auraOrb(id, orbSize)
+	orb.AnchorPoint = Vector2.new(0.5, 0)
+	orb.Position = UDim2.new(0.5, 0, 0, if small then 6 else 8)
+	orb.Parent = card
+	local y = orbSize + (if small then 8 else 12)
+	Ui.label(string.upper(a.en), if small then 11 else 13, C.text, {
+		Font = Enum.Font.GothamBlack,
+		Position = UDim2.fromOffset(4, y),
+		Size = UDim2.new(1, -8, 0, 15),
+		TextWrapped = false,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Parent = card,
+	})
+	if not small then
+		Ui.label(L(tier.en, tier.ru), 11, tier.color, { Position = UDim2.fromOffset(4, y + 17), Size = UDim2.new(1, -8, 0, 14), Parent = card })
+		y += 16
+	end
+	Ui.label(Format.coins(value or a.price), if small then 11 else 13, C.text, { Font = Enum.Font.Code, Position = UDim2.fromOffset(4, y + 17), Size = UDim2.new(1, -8, 0, 15), Parent = card })
+	if o.selected then
+		Ui.label("✓", 16, C.cyan, { Font = Enum.Font.GothamBlack, Position = UDim2.new(1, -24, 0, 4), Size = UDim2.fromOffset(20, 20), Parent = card })
+	end
+	return card
+end
+
+-- ===== всплывающие уведомления и окна (создаются в Main) =====
+Core.root = nil :: Frame?
+Core.W = 1000
+Core.H = 700
+local toastLabel: TextLabel? = nil
+local toastId = 0
+function Core.toast(text: string)
+	if not toastLabel then
+		toastLabel = Ui.label("", 16, C.text, {
+			AnchorPoint = Vector2.new(0.5, 1),
+			Position = UDim2.new(0.5, 0, 1, -16),
+			AutomaticSize = Enum.AutomaticSize.X,
+			Size = UDim2.fromOffset(0, 40),
+			BackgroundColor3 = C.panel2,
+			BackgroundTransparency = 0,
+			TextWrapped = false,
+			Visible = false,
+			ZIndex = 100,
+			Parent = Core.root,
+		})
+		Ui.corner(20).Parent = toastLabel
+		Ui.pad(0, 18).Parent = toastLabel
+		Ui.stroke(C.violet, 1.5, 0.3).Parent = toastLabel
+	end
+	local t = toastLabel :: TextLabel
+	toastId += 1
+	local id = toastId
+	t.Text = text
+	t.Visible = true
+	task.delay(2.4, function()
+		if id == toastId then
+			t.Visible = false
+		end
+	end)
+end
+
+-- модальное окно поверх всего экрана
+local overlay: Frame? = nil
+local panel: Frame? = nil
+function Core.openPanel(w: number, h: number): Frame
+	if not overlay then
+		overlay = new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.35, Visible = false, ZIndex = 60, Active = true, Parent = Core.root })
+		panel = new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundColor3 = C.bg2, ZIndex = 61, Parent = overlay }, {
+			Ui.corner(20),
+			Ui.stroke(C.violet, 2, 0.3),
+		})
+	end
+	local p = panel :: Frame
+	for _, ch in p:GetChildren() do
+		if not ch:IsA("UICorner") and not ch:IsA("UIStroke") then
+			ch:Destroy()
+		end
+	end
+	p.Size = UDim2.fromOffset(math.min(w, Core.W - 24), math.min(h, Core.H - 24))
+	;(overlay :: Frame).Visible = true
+	return p
+end
+function Core.closePanel()
+	if overlay then
+		overlay.Visible = false
+	end
+end
+
+-- все элементы внутри окна должны быть выше затемнения
+function Core.lift(inst: Instance, z: number?)
+	local zz = z or 62
+	if inst:IsA("GuiObject") then
+		inst.ZIndex = zz
+	end
+	for _, d in inst:GetDescendants() do
+		if d:IsA("GuiObject") then
+			d.ZIndex = zz
+		end
+	end
+end
+
+-- окно результата: заголовок, карточки, кнопки «Продать» / «Забрать»
+function Core.showPrize(titleText: string, titleColor: Color3, items, subText: string?, onClose: (() -> ())?)
+	local n = #items
+	local cw, ch = 150, 200
+	local pw = math.max(440, math.min(Core.W - 24, n * (cw + 12) + 40))
+	local p = Core.openPanel(pw, ch + 210)
+	pw = p.Size.X.Offset
+	local total = 0
+	for _, it in items do
+		total += it.v
+	end
+	Ui.label(titleText, 24, titleColor, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(0, 16), Size = UDim2.new(1, 0, 0, 30), Parent = p })
+	Ui.label(subText or (L("Total: ", "Всего: ") .. Format.coins(total)), 15, C.muted, { Position = UDim2.fromOffset(12, 50), Size = UDim2.new(1, -24, 0, 34), Parent = p })
+	local row = new("ScrollingFrame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(12, 90),
+		Size = UDim2.new(1, -24, 0, ch + 10),
+		ScrollBarThickness = 4,
+		ScrollingDirection = Enum.ScrollingDirection.X,
+		AutomaticCanvasSize = Enum.AutomaticSize.X,
+		CanvasSize = UDim2.new(),
+		Parent = p,
+	})
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, Padding = UDim.new(0, 10), Parent = row })
+	table.sort(items, function(a, b)
+		return a.v > b.v
+	end)
+	for i, it in items do
+		local c = Core.auraCard(it.id, it.v, cw, ch)
+		c.LayoutOrder = i
+		c.Parent = row
+	end
+	local function close()
+		Core.closePanel()
+		Core.busy = false
+		Core.changed()
+		if onClose then
+			onClose()
+		end
+	end
+	if n > 0 then
+		local sell = Ui.button(L("Sell for ", "Продать за ") .. Format.coins(total), "gold", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(0.5, -8, 1, -18), Size = UDim2.fromOffset(math.min(210, pw / 2 - 20), 50), Parent = p })
+		sell.Activated:Connect(function()
+			local uids = {}
+			for _, it in items do
+				table.insert(uids, it.u)
+			end
+			local res = Core.R.SellItems:InvokeServer(uids)
+			if res and res.ok then
+				Core.toast(L("Sold for ", "Продано за ") .. Format.coins(res.total))
+				Core.sound("coin")
+			end
+			close()
+		end)
+	end
+	local keep = Ui.button(if n > 0 then L("Keep", "Забрать") else L("OK", "Ок"), "green", {
+		AnchorPoint = Vector2.new(if n > 0 then 0 else 0.5, 1),
+		Position = UDim2.new(0.5, if n > 0 then 8 else 0, 1, -18),
+		Size = UDim2.fromOffset(math.min(210, pw / 2 - 20), 50),
+		Parent = p,
+	})
+	keep.Activated:Connect(close)
+	Core.lift(p)
+end
+
+-- выбор ауры из инвентаря (сетка карточек-кнопок), используется в апгрейде и контракте
+function Core.fillInvGrid(scroll: ScrollingFrame, list, isSelected: (number) -> boolean, onPick: (any) -> (), cw: number?, ch: number?)
+	for _, c in scroll:GetChildren() do
+		if c:IsA("GuiObject") then
+			c:Destroy()
+		end
+	end
+	if #list == 0 then
+		Ui.label(L("No auras yet — open a rift.", "Аур пока нет — открой разлом."), 14, C.muted, { Size = UDim2.fromOffset(260, 40), Parent = scroll })
+		return
+	end
+	for i, it in list do
+		local card = Core.auraCard(it.id, it.v, cw or 110, ch or 120, { button = true, selected = isSelected(it.u) })
+		card.LayoutOrder = i
+		card.Parent = scroll
+		;(card :: TextButton).Activated:Connect(function()
+			onPick(it)
+		end)
+	end
+end
+
+return Core
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="15">
+          <Properties>
+            <string name="Name">Main</string>
+            <string name="Source"><![CDATA[-- Клиент «Битвы Аур»: собирает экран (шапка, вкладки, страницы). Все шансы и баланс считает сервер.
+local StarterGui = game:GetService("StarterGui")
+
+local Core = require(script.Parent:WaitForChild("Core"))
+local Pages = script.Parent:WaitForChild("Pages")
+local Config, Ui, L = Core.Config, Core.Ui, Core.L
+local C, new = Ui.C, Ui.new
+local state = Core.state
+
+pcall(function()
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+end)
+
+-- ===== корень =====
+local gui = new("ScreenGui", { Name = "AuraBattle", ResetOnSpawn = false, IgnoreGuiInset = true, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = Core.player:WaitForChild("PlayerGui") })
+new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, Parent = gui }, {
+	new("UIGradient", {
+		Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(34, 20, 96)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 9, 40)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 4, 18)),
+		}),
+		Rotation = 90,
+	}),
+})
+if Config.IMAGES.background ~= "" then
+	new("ImageLabel", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Image = Config.IMAGES.background, ScaleType = Enum.ScaleType.Crop, ZIndex = 2, Parent = gui }, {
+		new("UIGradient", { -- затемнение книзу, чтобы текст читался
+			Color = ColorSequence.new(Color3.fromRGB(180, 170, 220), Color3.fromRGB(40, 36, 70)),
+			Rotation = 90,
+		}),
+	})
+end
+local root = new("Frame", { BackgroundTransparency = 1, ZIndex = 3, Parent = gui })
+local uiScale = new("UIScale", { Parent = root })
+Core.root = root
+
+-- ===== шапка =====
+local header = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, -32, 0, 52), Position = UDim2.fromOffset(16, 8), Parent = root })
+local title = Ui.label("AURA BATTLE", 28, Color3.new(1, 1, 1), { Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0, 260, 1, 0), Parent = header })
+Ui.grad(C.cyan, C.pink, 0).Parent = title
+
+local right = new("Frame", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.new(1, -440, 1, 0), Parent = header })
+new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Right, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = right })
+
+local function chip(order: number, color: Color3): TextLabel
+	local c = Ui.label("", 13, color, {
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 36),
+		BackgroundColor3 = C.panel,
+		BackgroundTransparency = 0,
+		TextWrapped = false,
+		LayoutOrder = order,
+		Visible = false,
+		Parent = right,
+	})
+	Ui.corner(18).Parent = c
+	Ui.pad(0, 12).Parent = c
+	Ui.stroke(color, 1.5, 0.4).Parent = c
+	return c
+end
+local luckChip = chip(1, C.win)
+local speedChip = chip(2, C.cyan)
+
+local wheelBtn = Ui.button("🎡 " .. L("Wheel", "Колесо"), "purple", { AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 38), TextSize = 14, LayoutOrder = 3, Parent = right })
+Ui.pad(0, 14).Parent = wheelBtn
+local sndBtn = new("TextButton", { Text = "🔊", TextSize = 18, Size = UDim2.fromOffset(38, 38), BackgroundColor3 = C.panel, LayoutOrder = 4, Parent = right }, { Ui.corner(19), Ui.stroke(C.violet, 1.5, 0.5) })
+sndBtn.Activated:Connect(function()
+	Core.soundOn = not Core.soundOn
+	sndBtn.Text = if Core.soundOn then "🔊" else "🔇"
+end)
+local balPill = new("Frame", { AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 42), BackgroundColor3 = C.panel, LayoutOrder = 5, Parent = right }, {
+	Ui.corner(21),
+	Ui.stroke(C.cyan, 2, 0.35),
+	Ui.pad(0, 16, 0, 12),
+})
+new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 8), Parent = balPill })
+Ui.coin(20).Parent = balPill
+local balLabel = Ui.label("…", 20, C.text, { Font = Enum.Font.Code, AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 42), TextWrapped = false, Parent = balPill })
+
+-- ===== вкладки =====
+local tabsBar = new("ScrollingFrame", {
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(16, 64),
+	Size = UDim2.new(1, -32, 0, 48),
+	ScrollBarThickness = 0,
+	ScrollingDirection = Enum.ScrollingDirection.X,
+	AutomaticCanvasSize = Enum.AutomaticSize.X,
+	CanvasSize = UDim2.new(),
+	Parent = root,
+})
+new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), VerticalAlignment = Enum.VerticalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder, Parent = tabsBar })
+local feedLabel = Ui.label("", 13, C.muted, { Position = UDim2.fromOffset(16, 114), Size = UDim2.new(1, -32, 0, 18), TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = root })
+local pagesHolder = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(16, 136), Size = UDim2.new(1, -32, 1, -148), Parent = root })
+
+local TABS = {
+	{ key = "Rifts", en = "Rifts", ru = "Разломы", color = C.cyan },
+	{ key = "Clicker", en = "Tom Aura Clicker", ru = "Том Аура Кликер", color = Color3.fromRGB(45, 212, 191) },
+	{ key = "Battle", en = "Aura Battle", ru = "Битва аур", color = C.pink },
+	{ key = "Upgrade", en = "Upgrade", ru = "Апгрейд", color = C.win },
+	{ key = "Contract", en = "Contract", ru = "Контракт", color = C.gold },
+	{ key = "Crash", en = "Crash", ru = "Краш", color = Color3.fromRGB(255, 106, 43) },
+	{ key = "Collection", en = "Collection", ru = "Коллекция", color = Color3.fromRGB(176, 77, 255) },
+	{ key = "Inventory", en = "Inventory", ru = "Инвентарь", color = Color3.fromRGB(75, 139, 255) },
+}
+local pages: { [string]: Frame } = {}
+local renderers: { [string]: () -> () } = {}
+local tabButtons: { [string]: TextButton } = {}
+local current = "Rifts"
+
+local function setTab(key: string)
+	if Core.busy then
+		Core.toast(L("Wait until it finishes", "Дождись окончания"))
+		return
+	end
+	current = key
+	for k, pg in pages do
+		pg.Visible = k == key
+	end
+	for _, t in TABS do
+		local b = tabButtons[t.key]
+		local on = t.key == key
+		b.BackgroundColor3 = if on then t.color else C.panel
+		b.TextColor3 = if on then Color3.fromRGB(10, 8, 30) else C.text
+		;(b:FindFirstChildOfClass("UIStroke") :: UIStroke).Transparency = if on then 0 else 0.55
+	end
+	if renderers[key] then
+		renderers[key]()
+	end
+end
+
+for i, t in TABS do
+	local b = new("TextButton", {
+		Text = L(t.en, t.ru),
+		TextSize = 15,
+		Font = Enum.Font.GothamBold,
+		TextColor3 = C.text,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 40),
+		BackgroundColor3 = C.panel,
+		LayoutOrder = i,
+		Parent = tabsBar,
+	}, { Ui.corner(12), Ui.stroke(t.color, 1.5, 0.55), Ui.pad(0, 14) })
+	tabButtons[t.key] = b
+	local pg = new("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Visible = false, Parent = pagesHolder })
+	pages[t.key] = pg
+	local ok, res = pcall(function()
+		return require(Pages:WaitForChild(t.key))(pg, Core)
+	end)
+	if ok then
+		renderers[t.key] = res
+	else
+		warn("[AuraBattle] экран " .. t.key .. " не загрузился:", res)
+		Ui.label(L("This screen failed to load — see Output", "Экран не загрузился — смотри Output"), 18, C.lose, { Size = UDim2.fromScale(1, 1), Parent = pg })
+	end
+	b.Activated:Connect(function()
+		setTab(t.key)
+	end)
+end
+
+local openWheel = require(Pages:WaitForChild("Wheel"))(Core)
+wheelBtn.Activated:Connect(openWheel)
+
+-- ===== живое обновление шапки =====
+local function hms(sec: number): string
+	local h, m, s = math.floor(sec / 3600), math.floor(sec % 3600 / 60), math.floor(sec % 60)
+	return if h > 0 then string.format("%d:%02d:%02d", h, m, s) else string.format("%d:%02d", m, s)
+end
+local function renderHeader()
+	balLabel.Text = Core.balanceText()
+	local now = Core.now()
+	local luck = (state.luckUntil or 0) - now
+	luckChip.Visible = luck > 0
+	luckChip.Text = "🍀 " .. L("Luck +15% · ", "Удача +15% · ") .. hms(math.max(0, luck))
+	local sp = (state.speedUntil or 0) - now
+	speedChip.Visible = sp > 0
+	speedChip.Text = "⚡ " .. L("AFK x2 · ", "AFK x2 · ") .. hms(math.max(0, sp))
+	local wl = (state.lastWheel or 0) + Config.WHEEL_COOLDOWN - now
+	wheelBtn.Text = "🎡 " .. (if wl > 0 then hms(wl) else L("Wheel", "Колесо"))
+end
+task.spawn(function()
+	while true do
+		renderHeader()
+		task.wait(1)
+	end
+end)
+
+Core.onChange(function()
+	renderHeader()
+	if not Core.busy and renderers[current] then
+		renderers[current]()
+	end
+end)
+
+-- ===== масштаб под экран =====
+local function relayout()
+	local cam = workspace.CurrentCamera
+	local vp = if cam then cam.ViewportSize else Vector2.new(1280, 720)
+	local s = math.clamp(math.min(vp.X / 1080, vp.Y / 720), 0.45, 1.3)
+	uiScale.Scale = s
+	Core.W, Core.H = vp.X / s, vp.Y / s
+	root.Size = UDim2.fromOffset(Core.W, Core.H)
+	-- слева вверху у Roblox свои кнопки (меню, чат) — сдвигаем заголовок правее
+	title.Position = UDim2.fromOffset(math.floor(150 / s), 0)
+	title.Size = UDim2.new(0, 260, 1, 0)
+end
+relayout()
+if workspace.CurrentCamera then
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(relayout)
+end
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	relayout()
+	if workspace.CurrentCamera then
+		workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(relayout)
+	end
+end)
+
+-- ===== сервер =====
+Core.R.StateChanged.OnClientEvent:Connect(function(s)
+	Core.apply(s)
+end)
+Core.R.Feed.OnClientEvent:Connect(function(f)
+	local a = Config.AURA_BY_ID[f.id]
+	if a then
+		local tier = Config.TIERS[Config.TIER_INDEX[a.tier]]
+		feedLabel.Text = "🔴 LIVE  " .. f.name .. L(" got ", " выбил ") .. a.en .. " · " .. L(tier.en, tier.ru) .. " · " .. Core.fmt(a.price)
+		feedLabel.TextColor3 = tier.color
+	end
+end)
+
+setTab("Rifts")
+task.spawn(Core.preload)
+task.spawn(function()
+	Core.apply(Core.R.GetState:InvokeServer())
+end)
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="Folder" referent="16">
+          <Properties>
+            <string name="Name">Pages</string>
+          </Properties>
+          <Item class="ModuleScript" referent="17">
+            <Properties>
+              <string name="Name">Battle</string>
+              <string name="Source"><![CDATA[-- Битва аур 1 на 1 с ботом: одинаковые разломы, у кого дроп дороже — забирает всё
+local TweenService = game:GetService("TweenService")
+
+return function(page: Frame, Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local state = Core.state
+	local picked: { string } = {}
+	local lobbies = {}
+
+	local function cost(list: { string }): number
+		local s = 0
+		for _, id in list do
+			s += Config.RIFT_BY_ID[id].price
+		end
+		return s
+	end
+	local function riftIcon(rf, size: number): GuiObject
+		return Core.riftArt(rf, size)
+	end
+	local function newLobby()
+		local cap = math.max(state.balance / 2, Config.RIFTS[1].price)
+		local ok = {}
+		for _, rf in Config.RIFTS do
+			if rf.price <= cap then
+				table.insert(ok, rf.id)
+			end
+		end
+		local pool = { table.unpack(ok, math.max(1, #ok - 2)) }
+		local rifts = {}
+		for _ = 1, math.random(1, 4) do
+			table.insert(rifts, pool[math.random(#pool)])
+		end
+		return { bot = Config.BOTS[math.random(#Config.BOTS)], rifts = rifts }
+	end
+
+	-- ===== лобби =====
+	local left = new("Frame", { BackgroundColor3 = Color3.fromRGB(16, 12, 52), Size = UDim2.new(0.5, -6, 1, 0), Parent = page }, { Ui.corner(16), Ui.stroke(C.violet, 2, 0.5), Ui.pad(12) })
+	Ui.label(L("OPEN LOBBIES", "ОТКРЫТЫЕ ЗАЯВКИ"), 13, C.muted, { TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, 18), Parent = left })
+	local lobbyList = new("ScrollingFrame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 24), Size = UDim2.new(1, 0, 1, -24), ScrollBarThickness = 4, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), Parent = left })
+	new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = lobbyList })
+
+	local right = new("Frame", { BackgroundColor3 = Color3.fromRGB(16, 12, 52), AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.new(0.5, -6, 1, 0), Parent = page }, { Ui.corner(16), Ui.stroke(C.pink, 2, 0.5), Ui.pad(12) })
+	local createTitle = Ui.label("", 13, C.muted, { TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, 18), Parent = right })
+	local slotRow = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 24), Size = UDim2.new(1, 0, 0, 50), Parent = right })
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), Parent = slotRow })
+	local pickGrid = new("ScrollingFrame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 82), Size = UDim2.new(1, 0, 1, -140), ScrollBarThickness = 4, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), Parent = right })
+	new("UIGridLayout", { CellSize = UDim2.fromOffset(96, 96), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = pickGrid })
+	local createBtn = Ui.button("", "green", { AnchorPoint = Vector2.new(0, 1), Position = UDim2.fromScale(0, 1), Size = UDim2.new(1, 0, 0, 48), Parent = right })
+
+	local render: () -> ()
+	local runBattle: (rifts: { string }, bot: string?) -> ()
+
+	for i, rf in Config.RIFTS do
+		local b = new("TextButton", { Text = "", BackgroundColor3 = C.panel, LayoutOrder = i, Parent = pickGrid }, { Ui.corner(12), Ui.stroke(rf.c1, 1.5, 0.5) })
+		local ic = riftIcon(rf, 44)
+		ic.AnchorPoint = Vector2.new(0.5, 0)
+		ic.Position = UDim2.new(0.5, 0, 0, 6)
+		ic.Parent = b
+		Ui.label(L(rf.en, rf.ru), 11, C.text, { Position = UDim2.fromOffset(2, 52), Size = UDim2.new(1, -4, 0, 14), TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = b })
+		Ui.label(Core.fmt(rf.price), 11, C.muted, { Font = Enum.Font.Code, Position = UDim2.fromOffset(2, 68), Size = UDim2.new(1, -4, 0, 14), Parent = b })
+		b.Activated:Connect(function()
+			if Core.busy or #picked >= Config.BATTLE_MAX_RIFTS then
+				return
+			end
+			table.insert(picked, rf.id)
+			render()
+		end)
+	end
+
+	createBtn.Activated:Connect(function()
+		if Core.busy or #picked == 0 then
+			return
+		end
+		if state.balance < cost(picked) then
+			Core.toast(L("Not enough coins", "Не хватает монет"))
+			return
+		end
+		createBtn.Text = L("Finding an opponent…", "Ищем соперника…")
+		Core.busy = true
+		task.wait(1.5 + math.random() * 2)
+		Core.busy = false
+		runBattle(table.clone(picked), nil)
+	end)
+
+	render = function()
+		if Core.busy then
+			return
+		end
+		while #lobbies < 5 do
+			table.insert(lobbies, newLobby())
+		end
+		for _, c in lobbyList:GetChildren() do
+			if c:IsA("GuiObject") then
+				c:Destroy()
+			end
+		end
+		for i, lb in lobbies do
+			local c = cost(lb.rifts)
+			local row = new("Frame", { BackgroundColor3 = C.panel, Size = UDim2.new(1, -6, 0, 70), LayoutOrder = i, Parent = lobbyList }, { Ui.corner(12), Ui.stroke(C.line, 1.5, 0) })
+			Ui.label(lb.bot, 15, C.text, { Position = UDim2.fromOffset(12, 8), Size = UDim2.new(1, -150, 0, 18), TextXAlignment = Enum.TextXAlignment.Left, Parent = row })
+			local icons = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 32), Size = UDim2.new(1, -150, 0, 30), Parent = row })
+			new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), Parent = icons })
+			for _, id in lb.rifts do
+				riftIcon(Config.RIFT_BY_ID[id], 28).Parent = icons
+			end
+			Ui.label(Core.fmt(c), 14, C.gold, { Font = Enum.Font.Code, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 8), Size = UDim2.fromOffset(120, 18), TextXAlignment = Enum.TextXAlignment.Right, Parent = row })
+			local join = Ui.button(L("Join", "Войти"), "green", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -10, 1, -8), Size = UDim2.fromOffset(100, 32), TextSize = 14, Parent = row })
+			join.TextTransparency = if state.balance >= c then 0 else 0.5
+			join.Activated:Connect(function()
+				if Core.busy then
+					return
+				end
+				if state.balance < c then
+					Core.toast(L("Not enough coins", "Не хватает монет"))
+					return
+				end
+				table.remove(lobbies, table.find(lobbies, lb) :: number)
+				runBattle(lb.rifts, lb.bot)
+			end)
+		end
+		createTitle.Text = L("CREATE A LOBBY", "СОЗДАТЬ ЗАЯВКУ") .. "  " .. #picked .. " / " .. Config.BATTLE_MAX_RIFTS
+		for _, c in slotRow:GetChildren() do
+			if c:IsA("GuiObject") then
+				c:Destroy()
+			end
+		end
+		for i = 1, Config.BATTLE_MAX_RIFTS do
+			local id = picked[i]
+			if id then
+				local b = new("TextButton", { Text = "", BackgroundTransparency = 1, Size = UDim2.fromOffset(46, 46), LayoutOrder = i, Parent = slotRow })
+				riftIcon(Config.RIFT_BY_ID[id], 46).Parent = b
+				b.Activated:Connect(function()
+					if not Core.busy then
+						table.remove(picked, i)
+						render()
+					end
+				end)
+			else
+				new("Frame", { BackgroundColor3 = C.panel, Size = UDim2.fromOffset(46, 46), LayoutOrder = i, Parent = slotRow }, { Ui.corner(10), Ui.stroke(C.line, 1.5, 0) })
+			end
+		end
+		local c = cost(picked)
+		createBtn.Text = if #picked == 0 then L("Pick rifts above", "Выбери разломы выше") elseif state.balance < c then L("Need ", "Не хватает ") .. Core.fmt(c - state.balance) else L("Create for ", "Создать за ") .. Core.fmt(c)
+	end
+
+	-- обновляем лобби время от времени
+	task.spawn(function()
+		while true do
+			task.wait(9)
+			if #lobbies > 0 and math.random() < 0.5 then
+				table.remove(lobbies, 1)
+			end
+			if page.Visible then
+				render()
+			end
+		end
+	end)
+
+	-- ===== арена =====
+	runBattle = function(rifts, bot)
+		if Core.busy then
+			return
+		end
+		Core.busy = true
+		local res = Core.R.Battle:InvokeServer(rifts, bot)
+		if not res or not res.ok then
+			Core.busy = false
+			Core.toast(if res and res.err == "no_money" then L("Not enough coins", "Не хватает монет") else L("Try again", "Попробуй ещё раз"))
+			return
+		end
+		picked = {}
+		local p = Core.openPanel(900, 520)
+		local roundLabel = Ui.label("", 20, C.text, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(0, 12), Size = UDim2.new(1, 0, 0, 26), Parent = p })
+		Ui.label(L("Pool ", "Пул ") .. Core.fmt(res.cost * 2), 14, C.gold, { Font = Enum.Font.Code, Position = UDim2.fromOffset(0, 40), Size = UDim2.new(1, 0, 0, 18), Parent = p })
+		local meter = new("Frame", { BackgroundColor3 = C.pink, Position = UDim2.fromOffset(20, 64), Size = UDim2.new(1, -40, 0, 10), Parent = p }, { Ui.corner(5) })
+		local meterA = new("Frame", { BackgroundColor3 = C.cyan, Size = UDim2.fromScale(0.5, 1), Parent = meter }, { Ui.corner(5) })
+		local function side(x: number, name: string, color: Color3)
+			local f = new("Frame", { BackgroundColor3 = Color3.fromRGB(14, 11, 44), Position = UDim2.new(x, if x > 0 then 10 else 20, 0, 86), Size = UDim2.new(0.5, -30, 1, -106), Parent = p }, {
+				Ui.corner(16),
+				Ui.stroke(color, 2, 0.3),
+			})
+			Ui.label(name, 16, C.text, { Position = UDim2.fromOffset(12, 10), Size = UDim2.new(1, -60, 0, 20), TextXAlignment = Enum.TextXAlignment.Left, Parent = f })
+			local total = Ui.label("0", 20, color, { Font = Enum.Font.Code, Position = UDim2.fromOffset(12, 32), Size = UDim2.new(1, -60, 0, 24), TextXAlignment = Enum.TextXAlignment.Left, Parent = f })
+			local crown = Ui.label("👑", 28, C.gold, { Position = UDim2.new(1, -46, 0, 8), Size = UDim2.fromOffset(36, 36), Visible = false, Parent = f })
+			local slot = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 62), Size = UDim2.new(1, 0, 0, 170), Parent = f })
+			local won = new("ScrollingFrame", { BackgroundTransparency = 1, Position = UDim2.new(0, 8, 0, 238), Size = UDim2.new(1, -16, 1, -246), ScrollBarThickness = 3, AutomaticCanvasSize = Enum.AutomaticSize.X, CanvasSize = UDim2.new(), ScrollingDirection = Enum.ScrollingDirection.X, Parent = f })
+			new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = won })
+			return { frame = f, total = total, crown = crown, slot = slot, won = won }
+		end
+		local A = side(0, Core.player.DisplayName, C.cyan)
+		local B = side(0.5, res.bot, C.pink)
+		Core.lift(p)
+		local tA, tB = 0, 0
+		for r, R in res.rounds do
+			local rf = Config.RIFT_BY_ID[R.rf]
+			roundLabel.Text = if R.extra then L("⚡ Tie! Extra round", "⚡ Ничья! Доп. раунд") else L("Round ", "Раунд ") .. r .. " / " .. #rifts .. " · " .. L(rf.en, rf.ru)
+			-- быстро мелькают ауры этого разлома, потом выпадение
+			local Economy = require(game:GetService("ReplicatedStorage").Shared.Economy)
+			local show = Economy.RIFT[R.rf].items
+			for k = 1, 12 do
+				for _, S in { A, B } do
+					for _, c in S.slot:GetChildren() do
+						c:Destroy()
+					end
+					local card = Core.auraCard(show[math.random(#show)], nil, 130, 165)
+					card.AnchorPoint = Vector2.new(0.5, 0)
+					card.Position = UDim2.new(0.5, 0, 0, 0)
+					card.Parent = S.slot
+					Core.lift(card)
+				end
+				Core.sound("tick", 0.2)
+				task.wait(0.05 + k * 0.012)
+			end
+			for i, S in { A, B } do
+				local id = if i == 1 then R.a else R.b
+				for _, c in S.slot:GetChildren() do
+					c:Destroy()
+				end
+				local card = Core.auraCard(id, nil, 130, 165)
+				card.AnchorPoint = Vector2.new(0.5, 0)
+				card.Position = UDim2.new(0.5, 0, 0, 0)
+				card.Parent = S.slot
+				local mini = Core.auraCard(id, nil, 64, 72)
+				mini.LayoutOrder = -r
+				mini.Parent = S.won
+				Core.lift(card)
+				Core.lift(mini)
+			end
+			tA += Config.AURA_BY_ID[R.a].price
+			tB += Config.AURA_BY_ID[R.b].price
+			A.total.Text = Core.fmt(tA)
+			B.total.Text = Core.fmt(tB)
+			TweenService:Create(meterA, TweenInfo.new(0.5, Enum.EasingStyle.Quad), { Size = UDim2.fromScale(if tA + tB > 0 then tA / (tA + tB) else 0.5, 1) }):Play()
+			task.wait(0.9)
+		end
+		local winner = if res.won then A else B
+		winner.crown.Visible = true
+		;(winner.frame:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = C.win
+		task.wait(1)
+		if res.won then
+			Core.sound("win_big")
+			local pot = res.A + res.B
+			Core.showPrize(L("Victory!", "Победа!"), C.win, res.prize, L("Spent ", "Потрачено ") .. Core.fmt(res.cost) .. L(" · pool ", " · пул ") .. Core.fmt(pot))
+		else
+			Core.sound("lose")
+			Core.showPrize(res.bot .. L(" wins", " побеждает"), C.lose, {}, L("Their drop ", "Его дроп ") .. Core.fmt(res.B) .. L(", yours ", ", твой ") .. Core.fmt(res.A) .. L(". The pool goes to them.", ". Пул ушёл сопернику."))
+		end
+	end
+
+	return render
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="18">
+            <Properties>
+              <string name="Name">Clicker</string>
+              <string name="Source"><![CDATA[-- Аура Кликер: тап → +150 монет (сервер не даёт больше 12 тапов в секунду)
+local TweenService = game:GetService("TweenService")
+
+return function(page: Frame, Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+
+	Ui.label(L("Tom Aura Clicker", "Том Аура Кликер"), 26, C.text, { Font = Enum.Font.GothamBlack, Size = UDim2.new(1, 0, 0, 34), Parent = page })
+	Ui.label(L("Tap Tom and get coins on your balance — +150 for every tap!", "Тапай Тома и получай монеты на баланс — +150 за каждый тап!"), 15, C.muted, { Position = UDim2.fromOffset(0, 36), Size = UDim2.new(1, 0, 0, 20), Parent = page })
+	local stage = new("Frame", { BackgroundColor3 = Color3.fromRGB(12, 10, 40), Position = UDim2.fromOffset(0, 66), Size = UDim2.new(1, 0, 1, -66), ClipsDescendants = true, Parent = page }, {
+		Ui.corner(20),
+		Ui.stroke(C.gold, 2, 0.5),
+	})
+	local btn = new("TextButton", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(260, 260),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		Text = "TAP",
+		TextSize = 44,
+		Font = Enum.Font.GothamBlack,
+		TextColor3 = Color3.new(1, 1, 1),
+		AutoButtonColor = false,
+		Parent = stage,
+	}, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(Color3.fromRGB(127, 251, 230), Color3.fromRGB(109, 60, 255), 60),
+		Ui.stroke(C.gold, 4, 0.2),
+		Ui.textStroke(Color3.fromRGB(40, 20, 80), 2, 0.3),
+	})
+	local scale = new("UIScale", { Parent = btn })
+	if Config.IMAGES.tom ~= "" then
+		btn.Text = ""
+		btn.BackgroundTransparency = 1
+		btn.Size = UDim2.new(0, 300, 1, -24)
+		for _, ch in btn:GetChildren() do
+			if ch:IsA("UICorner") or ch:IsA("UIGradient") or ch:IsA("UIStroke") then
+				ch:Destroy()
+			end
+		end
+		local img = new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.tom, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Fit, Parent = btn })
+		Core.onFail("tom", function() -- картинка Тома не загрузилась — возвращаем светящуюся сферу
+			img:Destroy()
+			btn.Size = UDim2.fromOffset(260, 260)
+			btn.BackgroundTransparency = 0
+			btn.Text = "TAP"
+			Ui.corner(UDim.new(1, 0)).Parent = btn
+			Ui.grad(Color3.fromRGB(127, 251, 230), Color3.fromRGB(109, 60, 255), 60).Parent = btn
+		end)
+	end
+
+	local lastTap = 0
+	btn.Activated:Connect(function()
+		local now = os.clock()
+		if now - lastTap < 1 / Config.CLICK_MAX_PER_SEC then
+			return
+		end
+		lastTap = now
+		Core.R.Tap:FireServer()
+		Core.state.balance += Config.CLICK_GAIN -- сразу показываем, сервер пришлёт точное значение
+		Core.changed()
+		Core.sound("tap", 0.6)
+		local pop = Ui.label("+" .. Config.CLICK_GAIN, 30, C.gold, {
+			Font = Enum.Font.GothamBlack,
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, math.random(-70, 70), 0.5, math.random(-90, -30)),
+			Size = UDim2.fromOffset(140, 40),
+			ZIndex = 5,
+			Parent = stage,
+		})
+		Ui.textStroke(Color3.fromRGB(90, 40, 0), 2, 0.2).Parent = pop
+		TweenService:Create(pop, TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = pop.Position - UDim2.fromOffset(0, 100), TextTransparency = 1 }):Play()
+		task.delay(1.15, function()
+			pop:Destroy()
+		end)
+		scale.Scale = 0.93
+		TweenService:Create(scale, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	end)
+
+	return function() end
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="19">
+            <Properties>
+              <string name="Name">Collection</string>
+              <string name="Source"><![CDATA[-- Коллекция: все ауры игры, собранные подсвечены
+return function(page: Frame, Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local title = Ui.label("", 18, C.text, { TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, 30), Parent = page })
+	local bar = new("Frame", { BackgroundColor3 = C.panel, Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 0, 10), Parent = page }, { Ui.corner(5) })
+	local fill = new("Frame", { BackgroundColor3 = Color3.new(1, 1, 1), Size = UDim2.fromScale(0, 1), Parent = bar }, { Ui.corner(5), Ui.grad(C.cyan, C.pink, 0) })
+	local scroll = new("ScrollingFrame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, 56),
+		Size = UDim2.new(1, 0, 1, -56),
+		ScrollBarThickness = 6,
+		ScrollBarImageColor3 = C.violet,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		Parent = page,
+	})
+	new("UIGridLayout", { CellSize = UDim2.fromOffset(140, 190), CellPadding = UDim2.fromOffset(10, 10), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+	local sorted = table.clone(Config.AURAS)
+	table.sort(sorted, function(a, b)
+		return a.price > b.price
+	end)
+	return function()
+		for _, ch in scroll:GetChildren() do
+			if ch:IsA("GuiObject") then
+				ch:Destroy()
+			end
+		end
+		local have = 0
+		for i, a in sorted do
+			local got = Core.state.collected[a.id] == true
+			if got then
+				have += 1
+			end
+			local card = Core.auraCard(a.id, nil, 140, 190)
+			card.LayoutOrder = i
+			if not got then
+				for _, d in card:GetDescendants() do
+					if d:IsA("TextLabel") then
+						d.TextTransparency = 0.6
+					elseif d:IsA("Frame") or d:IsA("ImageLabel") then
+						d.BackgroundTransparency = math.max(d.BackgroundTransparency, 0.75)
+					end
+				end
+			else
+				Ui.label("✓", 18, C.win, { Font = Enum.Font.GothamBlack, Position = UDim2.new(1, -26, 0, 4), Size = UDim2.fromOffset(22, 22), Parent = card })
+			end
+			card.Parent = scroll
+		end
+		title.Text = L("Collection: ", "Коллекция: ") .. have .. " / " .. #sorted
+		fill.Size = UDim2.fromScale(have / #sorted, 1)
+	end
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="20">
+            <Properties>
+              <string name="Name">Contract</string>
+              <string name="Source"><![CDATA[-- Контракт: от 3 до 10 любых аур → одна новая (чаще — тиром выше)
+return function(page: Frame, Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local state = Core.state
+	local MIN, MAX = Config.CONTRACT_MIN, Config.CONTRACT_MAX
+	local sel: { [number]: boolean } = {}
+
+	Ui.label(L("Contract", "Контракт"), 24, C.text, { Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, 30), Parent = page })
+	Ui.label(L("Put in 3 to 10 of any auras — get one new aura. The more you put in, the better the chance of a rarer tier.", "Положи от 3 до 10 любых аур — получишь одну новую. Чем больше вложишь, тем выше шанс на тир редче."), 14, C.muted, {
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(0, 32),
+		Size = UDim2.new(1, 0, 0, 36),
+		Parent = page,
+	})
+	local bar = new("Frame", { BackgroundColor3 = Color3.fromRGB(16, 12, 52), Position = UDim2.fromOffset(0, 74), Size = UDim2.new(1, 0, 0, 110), Parent = page }, {
+		Ui.corner(16),
+		Ui.stroke(C.gold, 2, 0.5),
+	})
+	local slots = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(12, 12), Size = UDim2.new(1, -260, 1, -24), Parent = bar })
+	new("UIGridLayout", { CellSize = UDim2.fromOffset(40, 40), CellPadding = UDim2.fromOffset(6, 6), Parent = slots })
+	local info = Ui.label("", 14, C.text, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 10), Size = UDim2.fromOffset(230, 44), TextXAlignment = Enum.TextXAlignment.Right, Parent = bar })
+	local craft = Ui.button("", "gold", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -12, 1, -10), Size = UDim2.fromOffset(230, 46), Parent = bar })
+
+	local scroll = new("ScrollingFrame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, 194),
+		Size = UDim2.new(1, 0, 1, -194),
+		ScrollBarThickness = 5,
+		ScrollBarImageColor3 = C.violet,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		Parent = page,
+	})
+	new("UIGridLayout", { CellSize = UDim2.fromOffset(110, 120), CellPadding = UDim2.fromOffset(6, 6), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+
+	local function selected()
+		local list, sum, base = {}, 0, 1
+		for _, it in state.inv do
+			if sel[it.u] then
+				table.insert(list, it)
+				sum += it.v
+				base = math.max(base, Config.TIER_INDEX[Config.AURA_BY_ID[it.id].tier])
+			end
+		end
+		return list, sum, base
+	end
+
+	local render: () -> ()
+	render = function()
+		if Core.busy then
+			return
+		end
+		local exists = {}
+		for _, it in state.inv do
+			exists[it.u] = true
+		end
+		for u in sel do
+			if not exists[u] then
+				sel[u] = nil
+			end
+		end
+		local list, sum, base = selected()
+		for _, c in slots:GetChildren() do
+			if c:IsA("GuiObject") then
+				c:Destroy()
+			end
+		end
+		for i = 1, MAX do
+			local it = list[i]
+			if it then
+				local o = Core.auraOrb(it.id, 40)
+				o.LayoutOrder = i
+				o.Parent = slots
+			else
+				new("Frame", { BackgroundColor3 = C.panel, LayoutOrder = i, Parent = slots }, { Ui.corner(10), Ui.stroke(if i <= MIN then C.gold else C.line, 1.5, 0.4) })
+			end
+		end
+		local tier = Config.TIERS[base]
+		info.Text = if #list > 0 then (#list .. " / " .. MAX .. L(" auras · worth ", " аур · на ") .. Core.fmt(sum) .. "\n" .. L("rarest: ", "самая редкая: ") .. L(tier.en, tier.ru)) else L("Pick auras below", "Выбери ауры ниже")
+		craft.Text = if #list < MIN then L("Add ", "Добавь ещё ") .. (MIN - #list) else L("Craft", "Синтез")
+		craft.TextTransparency = if #list < MIN then 0.45 else 0
+		local inv = table.clone(state.inv)
+		table.sort(inv, function(a, b)
+			return a.v < b.v
+		end)
+		Core.fillInvGrid(scroll, inv, function(u)
+			return sel[u] == true
+		end, function(it)
+			if Core.busy then
+				return
+			end
+			if sel[it.u] then
+				sel[it.u] = nil
+			elseif #list >= MAX then
+				Core.toast(L("Up to 10 auras", "Не больше 10 аур"))
+				return
+			else
+				sel[it.u] = true
+			end
+			render()
+		end)
+	end
+
+	craft.Activated:Connect(function()
+		if Core.busy then
+			return
+		end
+		local list, sum = selected()
+		if #list < MIN then
+			return
+		end
+		local uids = {}
+		for _, it in list do
+			table.insert(uids, it.u)
+		end
+		Core.busy = true
+		local res = Core.R.Contract:InvokeServer(uids)
+		table.clear(sel)
+		if not res or not res.ok then
+			Core.busy = false
+			Core.toast(L("Something changed — try again", "Что-то изменилось — попробуй ещё раз"))
+			render()
+			return
+		end
+		-- «синтез»: мелькают ауры, потом результат
+		local p = Core.openPanel(320, 300)
+		Ui.label(L("Crafting…", "Синтез…"), 22, C.gold, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(0, 14), Size = UDim2.new(1, 0, 0, 30), Parent = p })
+		Core.lift(p)
+		local show = {}
+		for _, a in Config.AURAS do
+			if a.tier ~= "unique" and a.price >= sum * 0.4 and a.price <= sum * 2.5 then
+				table.insert(show, a.id)
+			end
+		end
+		if #show == 0 then
+			show = { res.item.id }
+		end
+		local card
+		for k = 1, 16 do
+			if card then
+				card:Destroy()
+			end
+			card = Core.auraCard(show[math.random(#show)], nil, 150, 200)
+			card.AnchorPoint = Vector2.new(0.5, 0)
+			card.Position = UDim2.new(0.5, 0, 0, 60)
+			card.Parent = p
+			Core.lift(card)
+			Core.sound("tick", 0.25)
+			task.wait(0.09 + k * 0.01)
+		end
+		local good = res.up or res.item.v >= sum
+		Core.sound(if res.up then "win_big" elseif good then "win" else "lose")
+		local tier = Core.tierOf(res.item.id)
+		Core.showPrize(
+			if res.up then L("Rarer: ", "Редче: ") .. L(tier.en, tier.ru) .. "!" else L("New aura", "Новая аура"),
+			if good then C.win else C.lose,
+			{ res.item },
+			L("Put in ", "Вложено ") .. #list .. L(" auras worth ", " аур на ") .. Core.fmt(sum)
+		)
+	end)
+
+	return render
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="21">
+            <Properties>
+              <string name="Name">Crash</string>
+              <string name="Source"><![CDATA[-- Краш: общий раунд для всех игроков сервера. Ставь до старта, выводи до взрыва.
+local RunService = game:GetService("RunService")
+
+return function(page: Frame, Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local st = nil :: any -- состояние раунда от сервера
+	local myId = Core.player.UserId
+
+	local function mcol(m: number): Color3
+		return if m < 2 then C.cyan elseif m < 5 then C.win elseif m < 10 then C.gold else C.pink
+	end
+
+	-- история
+	local hist = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, -290, 0, 28), Parent = page })
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = hist })
+
+	-- сцена
+	local stage = new("Frame", { BackgroundColor3 = Color3.new(1, 1, 1), Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, -290, 1, -150), ClipsDescendants = true, Parent = page }, {
+		Ui.corner(18),
+		Ui.stroke(C.violet, 2, 0.4),
+		new("UIGradient", {
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(26, 16, 80)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(4, 4, 16)),
+			}),
+			Rotation = 90,
+		}),
+	})
+	-- звёзды
+	local stars = {}
+	for i = 1, 60 do
+		local s = new("Frame", {
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = 0.3 + math.random() * 0.5,
+			BorderSizePixel = 0,
+			Size = UDim2.fromOffset(2, 2),
+			Position = UDim2.fromScale(math.random(), math.random()),
+			Parent = stage,
+		})
+		stars[i] = { f = s, x = math.random(), y = math.random(), v = 0.3 + math.random() * 0.9 }
+	end
+	-- планета
+	new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.92, 1.05), Size = UDim2.fromOffset(260, 260), BackgroundColor3 = Color3.new(1, 1, 1), Parent = stage }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(Color3.fromRGB(122, 92, 255), Color3.fromRGB(18, 10, 58), 45),
+		Ui.stroke(Color3.fromRGB(140, 180, 255), 2, 0.5),
+	})
+	-- кривая из отрезков
+	local SEGS = 40
+	local segs = {}
+	for i = 1, SEGS do
+		segs[i] = new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, BackgroundColor3 = C.cyan, Size = UDim2.fromOffset(0, 4), Visible = false, Parent = stage })
+	end
+	local rocketImg = new("ImageLabel", { BackgroundTransparency = 1, Image = Config.IMAGES.rocket, AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(190, 133), ScaleType = Enum.ScaleType.Fit, ZIndex = 3, Visible = Config.IMAGES.rocket ~= "", Parent = stage })
+	local rocketEmoji = Ui.label("🚀", 46, C.text, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(60, 60), ZIndex = 3, Visible = Config.IMAGES.rocket == "", Parent = stage })
+	local rocket: GuiObject = if Config.IMAGES.rocket ~= "" then rocketImg else rocketEmoji
+	Core.onFail("rocket", function()
+		rocketImg.Visible = false
+		rocket = rocketEmoji
+		rocketEmoji.Visible = true
+	end)
+	local boom = Ui.label("💥", 64, C.text, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(90, 90), ZIndex = 3, Visible = false, Parent = stage })
+	local multLabel = Ui.label("1.00×", 52, C.text, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(20, 12), Size = UDim2.fromOffset(300, 60), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = stage })
+	local statusLabel = Ui.label("", 14, Color3.fromRGB(216, 213, 255), { Position = UDim2.fromOffset(20, 74), Size = UDim2.fromOffset(360, 20), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = stage })
+
+	-- управление
+	local ctl = new("Frame", { BackgroundColor3 = Color3.fromRGB(12, 10, 40), AnchorPoint = Vector2.new(0, 1), Position = UDim2.fromScale(0, 1), Size = UDim2.new(1, -290, 0, 106), Parent = page }, {
+		Ui.corner(16),
+		Ui.stroke(C.violet, 2, 0.5),
+	})
+	local function field(x: number, labelText: string, default: string)
+		Ui.label(labelText, 11, C.muted, { Position = UDim2.new(x, 12, 0, 8), Size = UDim2.new(0.33, -16, 0, 14), TextXAlignment = Enum.TextXAlignment.Left, Parent = ctl })
+		return new("TextBox", {
+			Text = default,
+			PlaceholderText = L("off", "выкл"),
+			ClearTextOnFocus = false,
+			Font = Enum.Font.Code,
+			TextSize = 18,
+			TextColor3 = C.text,
+			PlaceholderColor3 = C.muted,
+			BackgroundColor3 = Color3.fromRGB(8, 6, 30),
+			Position = UDim2.new(x, 12, 0, 26),
+			Size = UDim2.new(0.33, -16, 0, 38),
+			Parent = ctl,
+		}, { Ui.corner(10), Ui.stroke(C.line, 1.5, 0) })
+	end
+	local betBox = field(0, L("BET", "СТАВКА"), "1000")
+	local autoBox = field(0.33, L("AUTO CASH-OUT ×", "АВТОВЫВОД ×"), "")
+	local quick = new("Frame", { BackgroundTransparency = 1, Position = UDim2.new(0, 12, 0, 70), Size = UDim2.new(0.66, -20, 0, 28), Parent = ctl })
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), Parent = quick })
+	for i, q in { "½", "×2", "Max", "1.5×", "2×", "5×" } do
+		local b = new("TextButton", { Text = q, TextSize = 12, Font = Enum.Font.GothamBold, TextColor3 = C.muted, BackgroundColor3 = C.panel2, Size = UDim2.fromOffset(52, 28), LayoutOrder = i, Parent = quick }, { Ui.corner(8) })
+		b.Activated:Connect(function()
+			local v = tonumber(betBox.Text) or 0
+			if q == "½" then
+				betBox.Text = tostring(math.max(1, math.floor(v / 2)))
+			elseif q == "×2" then
+				betBox.Text = tostring(math.max(1, math.floor(math.min(Core.state.balance, v * 2))))
+			elseif q == "Max" then
+				betBox.Text = tostring(math.floor(math.min(Core.state.balance, 1e12)))
+			else
+				autoBox.Text = string.gsub(q, "×", "")
+			end
+		end)
+	end
+	local go = Ui.button("", "green", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.new(0.33, -16, 0, 70), Parent = ctl })
+
+	-- игроки
+	local players = new("Frame", { BackgroundColor3 = Color3.fromRGB(12, 10, 40), AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.new(0, 280, 1, 0), Parent = page }, {
+		Ui.corner(16),
+		Ui.stroke(C.violet, 2, 0.5),
+		Ui.pad(10),
+	})
+	local potLabel = Ui.label(L("PLAYERS", "ИГРОКИ"), 13, C.muted, { Size = UDim2.new(1, 0, 0, 18), TextXAlignment = Enum.TextXAlignment.Left, Parent = players })
+	local plist = new("ScrollingFrame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 24), Size = UDim2.new(1, 0, 1, -24), ScrollBarThickness = 3, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), Parent = players })
+	new("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = plist })
+
+	local function mine()
+		if not st then
+			return nil
+		end
+		for _, p in st.players do
+			if p.me == myId then
+				return p
+			end
+		end
+		return nil
+	end
+
+	local function renderStatic()
+		if not st then
+			return
+		end
+		for _, c in hist:GetChildren() do
+			if c:IsA("GuiObject") then
+				c:Destroy()
+			end
+		end
+		for i, v in st.hist do
+			local col = if v < 1.5 then C.lose elseif v < 3 then C.cyan elseif v < 10 then C.win else C.gold
+			Ui.label(string.format("%.2f×", v), 12, col, { Font = Enum.Font.Code, AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 24), BackgroundColor3 = C.panel, BackgroundTransparency = 0, TextWrapped = false, LayoutOrder = i, Parent = hist })
+		end
+		for _, c in hist:GetChildren() do
+			if c:IsA("TextLabel") then
+				Ui.corner(12).Parent = c
+				Ui.pad(0, 8).Parent = c
+			end
+		end
+		for _, c in plist:GetChildren() do
+			if c:IsA("GuiObject") then
+				c:Destroy()
+			end
+		end
+		local pot = 0
+		for i, p in st.players do
+			pot += p.bet
+			local row = new("Frame", { BackgroundColor3 = if p.me == myId then Color3.fromRGB(20, 40, 70) else C.panel, Size = UDim2.new(1, -4, 0, 30), LayoutOrder = i, Parent = plist }, { Ui.corner(8) })
+			Ui.label(p.name, 13, C.text, { Position = UDim2.fromOffset(8, 0), Size = UDim2.new(0.45, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = row })
+			Ui.label(Core.fmt(p.bet), 12, C.muted, { Font = Enum.Font.Code, Position = UDim2.new(0.45, 0, 0, 0), Size = UDim2.new(0.3, 0, 1, 0), Parent = row })
+			local s, col
+			if p.cashed > 0 then
+				s, col = string.format("%.2f×", p.cashed), C.win
+			elseif st.phase == "after" then
+				s, col = L("busted", "сгорел"), C.lose
+			elseif st.phase == "fly" then
+				s, col = "…", C.muted
+			else
+				s, col = L("waiting", "ждёт"), C.muted
+			end
+			Ui.label(s, 12, col, { Font = Enum.Font.Code, Position = UDim2.new(0.75, 0, 0, 0), Size = UDim2.new(0.25, -8, 1, 0), TextXAlignment = Enum.TextXAlignment.Right, Parent = row })
+		end
+		potLabel.Text = L("PLAYERS · pot ", "ИГРОКИ · банк ") .. Core.fmt(pot)
+	end
+
+	local lastQ = -1
+	local function frame()
+		if not st or not page.Visible then
+			return
+		end
+		local now = workspace:GetServerTimeNow()
+		local me = mine()
+		-- размеры сцены в логических единицах (AbsoluteSize уже умножен на UIScale)
+		local k = 1
+		local anc: Instance? = stage
+		while anc and anc:IsA("GuiObject") do
+			local us = anc:FindFirstChildOfClass("UIScale")
+			if us then
+				k *= us.Scale
+			end
+			anc = anc.Parent
+		end
+		local w, h = stage.AbsoluteSize.X / k, stage.AbsoluteSize.Y / k
+		if st.phase == "bet" then
+			local left = math.max(0, st.betTime - (now - st.t0))
+			multLabel.Text = string.format("%.1f", left) .. L("s", " с")
+			multLabel.TextColor3 = C.text
+			statusLabel.Text = L("Taking bets — launch in", "Приём ставок — старт через")
+			for _, s in segs do
+				s.Visible = false
+			end
+			rocket.Visible = true
+			boom.Visible = false
+			rocket.Position = UDim2.fromOffset(w * 0.06 + rocket.AbsoluteSize.X / 2 / math.max(k, 0.01) + (if left < 1.5 then math.random(-2, 2) else 0), h * 0.8)
+			rocket.Rotation = 0
+			go.Text = if me then L("Bet ", "Ставка ") .. Core.fmt(me.bet) .. L(" placed", " принята") else L("Place bet", "Поставить")
+			go.TextTransparency = if me then 0.4 else 0
+			return
+		end
+		local t = if st.phase == "fly" then now - st.t0 else math.log(st.crashAt or 1) / st.speed
+		local m = if st.phase == "fly" then math.exp(st.speed * t) else (st.crashAt or 1)
+		local maxT, maxM = math.max(8, t * 1.15), math.max(2, m * 1.25)
+		local function X(tt: number): number
+			return tt / maxT * w * 0.86 + w * 0.06
+		end
+		local function Y(mm: number): number
+			return h - (mm - 1) / (maxM - 1) * h * 0.7 - h * 0.12
+		end
+		local col = if st.phase == "after" then C.lose else mcol(m)
+		local px, py = X(0), Y(1)
+		for i = 1, SEGS do
+			local tt = t * i / SEGS
+			local nx, ny = X(tt), Y(math.exp(st.speed * tt))
+			local s = segs[i]
+			local dx, dy = nx - px, ny - py
+			s.Visible = true
+			s.BackgroundColor3 = col
+			s.Position = UDim2.fromOffset((px + nx) / 2, (py + ny) / 2)
+			s.Size = UDim2.fromOffset(math.sqrt(dx * dx + dy * dy) + 2, 4)
+			s.Rotation = math.deg(math.atan2(dy, dx))
+			px, py = nx, ny
+		end
+		multLabel.Text = string.format("%.2f×", m)
+		multLabel.TextColor3 = col
+		if st.phase == "fly" then
+			rocket.Visible = true
+			boom.Visible = false
+			rocket.Position = UDim2.fromOffset(px, py)
+			rocket.Rotation = 0
+			statusLabel.Text = if me then (if me.cashed > 0 then L("Cashed out at ", "Выведено на ") .. string.format("%.2f×", me.cashed) else L("Your bet ", "Твоя ставка ") .. Core.fmt(me.bet)) else L("The rocket is flying…", "Ракета летит…")
+			go.Text = if me and me.cashed == 0 then L("Cash out ", "Вывести ") .. Core.fmt(math.floor(me.bet * m)) else L("Round in progress", "Раунд идёт")
+			go.TextTransparency = if me and me.cashed == 0 then 0 else 0.4
+			-- звёзды летят навстречу
+			for _, s in stars do
+				s.x -= 0.004 * s.v * (1 + math.log(m))
+				s.y += 0.002 * s.v * (1 + math.log(m))
+				if s.x < 0 then
+					s.x += 1
+				end
+				if s.y > 1 then
+					s.y -= 1
+				end
+				s.f.Position = UDim2.fromScale(s.x, s.y)
+			end
+			local q = math.floor(m * 4)
+			if q ~= lastQ then
+				lastQ = q
+				if me and me.cashed == 0 then
+					Core.sound("tick", 0.2)
+				end
+			end
+		else
+			rocket.Visible = false
+			boom.Visible = true
+			boom.Position = UDim2.fromOffset(px, py)
+			statusLabel.Text = L("Exploded at ", "Взрыв на ") .. string.format("%.2f×", st.crashAt or 1)
+			go.Text = if me and me.cashed > 0 then L("Cashed out ✓", "Выведено ✓") else L("New round soon", "Новый раунд скоро")
+			go.TextTransparency = 0.4
+		end
+	end
+	RunService.RenderStepped:Connect(frame)
+
+	local lastPhase = nil
+	local manualCash = false
+	Core.R.CrashState.OnClientEvent:Connect(function(s)
+		local me0 = mine()
+		st = s
+		-- автовывод сработал на сервере — тоже радуемся
+		local me1 = mine()
+		if me0 and me1 and me0.cashed == 0 and me1.cashed > 0 and not manualCash then
+			Core.sound(if me1.cashed >= 3 then "win_big" else "win")
+			Core.toast(L("Auto cash-out at ", "Автовывод на ") .. string.format("%.2f×", me1.cashed))
+		end
+		if lastPhase == "fly" and s.phase == "after" then
+			local me = mine()
+			if me0 and me and me.cashed == 0 then
+				Core.sound("lose")
+			end
+		end
+		lastPhase = s.phase
+		if page.Visible then
+			renderStatic()
+		end
+	end)
+	task.spawn(function()
+		st = Core.R.GetCrash:InvokeServer()
+		lastPhase = st and st.phase
+		renderStatic()
+	end)
+
+	go.Activated:Connect(function()
+		if not st then
+			return
+		end
+		local me = mine()
+		if st.phase == "fly" and me and me.cashed == 0 then
+			manualCash = true
+			local res = Core.R.CrashCashout:InvokeServer()
+			task.delay(1, function()
+				manualCash = false
+			end)
+			if res and res.ok then
+				Core.sound(if res.cashed >= 3 then "win_big" else "win")
+				Core.toast(L("Cashed out ", "Выведено ") .. Core.fmt(res.win) .. L(" at ", " на ") .. string.format("%.2f×", res.cashed))
+			end
+			return
+		end
+		if st.phase ~= "bet" or me then
+			return
+		end
+		local bet = math.floor(tonumber(betBox.Text) or 0)
+		if bet < 1 then
+			Core.toast(L("Enter a bet", "Введи ставку"))
+			return
+		end
+		if bet > Core.state.balance then
+			Core.toast(L("Not enough coins", "Не хватает монет"))
+			return
+		end
+		local res = Core.R.CrashBet:InvokeServer(bet, tonumber(autoBox.Text) or 0)
+		if not res or not res.ok then
+			Core.toast(if res and res.err == "not_bet" then L("Bets are closed — wait for the next round", "Ставки закрыты — жди следующий раунд") else L("Bet not accepted", "Ставка не принята"))
+		end
+	end)
+
+	return renderStatic
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="22">
+            <Properties>
+              <string name="Name">Inventory</string>
+              <string name="Source"><![CDATA[-- Инвентарь: продажа по одной и «продать всё», промокоды, статистика
+return function(page: Frame, Core)
+	local Ui, L = Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local state = Core.state
+
+	local head = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44), Parent = page })
+	local title = Ui.label("", 18, C.text, { TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, -200, 1, 0), Parent = head })
+	local sellAll = Ui.button("", "red", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, 0, 0.5, 0), Size = UDim2.fromOffset(190, 40), TextSize = 14, Parent = head })
+
+	-- промокод
+	local promo = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 50), Size = UDim2.new(1, 0, 0, 40), Parent = page })
+	local box = new("TextBox", {
+		PlaceholderText = L("Promo code", "Промокод"),
+		Text = "",
+		ClearTextOnFocus = false,
+		Font = Enum.Font.GothamBold,
+		TextSize = 15,
+		TextColor3 = C.text,
+		PlaceholderColor3 = C.muted,
+		BackgroundColor3 = C.panel,
+		Size = UDim2.fromOffset(240, 40),
+		Parent = promo,
+	}, { Ui.corner(10), Ui.stroke(C.line, 1.5, 0) })
+	local redeem = Ui.button(L("Redeem", "Активировать"), "purple", { Position = UDim2.fromOffset(250, 0), Size = UDim2.fromOffset(150, 40), TextSize = 14, Parent = promo })
+	redeem.Activated:Connect(function()
+		local res = Core.R.Redeem:InvokeServer(box.Text)
+		if res and res.ok then
+			box.Text = ""
+			if res.gain then
+				Core.toast("+" .. Core.fmt(res.gain) .. L(" coins!", " монет!"))
+				Core.sound("win")
+			else
+				Core.toast(if res.infinite then L("Infinite coins on ∞", "Бесконечные монеты включены ∞") else L("Infinite coins off", "Бесконечные монеты выключены"))
+			end
+		else
+			local err = res and res.err
+			Core.toast(if err == "used" then L("Promo code already redeemed", "Промокод уже активирован") else L("No such promo code", "Такого промокода нет"))
+		end
+	end)
+	local statsLabel = Ui.label("", 13, C.muted, { Position = UDim2.fromOffset(410, 0), Size = UDim2.new(1, -410, 1, 0), TextXAlignment = Enum.TextXAlignment.Left, Parent = promo })
+
+	local scroll = new("ScrollingFrame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, 100),
+		Size = UDim2.new(1, 0, 1, -100),
+		ScrollBarThickness = 6,
+		ScrollBarImageColor3 = C.violet,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		Parent = page,
+	})
+	new("UIGridLayout", { CellSize = UDim2.fromOffset(150, 250), CellPadding = UDim2.fromOffset(10, 10), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+
+	local armed = false
+	local render: () -> ()
+
+	sellAll.Activated:Connect(function()
+		if not armed then
+			armed = true
+			render()
+			task.delay(3, function()
+				if armed then
+					armed = false
+					render()
+				end
+			end)
+			return
+		end
+		armed = false
+		local res = Core.R.SellAll:InvokeServer()
+		if res and res.ok then
+			Core.toast(L("Sold everything for ", "Продано всё за ") .. Core.fmt(res.total))
+			Core.sound("coin")
+		end
+	end)
+
+	render = function()
+		for _, ch in scroll:GetChildren() do
+			if ch:IsA("GuiObject") then
+				ch:Destroy()
+			end
+		end
+		local total = 0
+		for _, it in state.inv do
+			total += it.v
+		end
+		title.Text = L("Inventory", "Инвентарь") .. " · " .. #state.inv .. " · " .. Core.fmt(total)
+		sellAll.Visible = #state.inv > 0
+		sellAll.Text = if armed then L("Sure? Tap again", "Точно? Нажми ещё") else L("Sell all", "Продать всё") .. " · " .. Core.fmt(total)
+		local st = state.stats or {}
+		statsLabel.Text = L("Rifts opened: ", "Открыто разломов: ") .. (st.opened or 0) .. "  ·  " .. L("Best drop: ", "Лучший дроп: ") .. Core.fmt(st.best or 0)
+		if #state.inv == 0 then
+			Ui.label(L("Inventory is empty — open a rift.", "Инвентарь пуст — открой разлом."), 16, C.muted, { Size = UDim2.fromOffset(400, 60), Parent = scroll })
+			return
+		end
+		local sorted = table.clone(state.inv)
+		table.sort(sorted, function(a, b)
+			return a.v > b.v
+		end)
+		for i, it in sorted do
+			if i > 200 then
+				break -- показываем 200 самых дорогих, чтобы не тормозило
+			end
+			local cell = new("Frame", { BackgroundTransparency = 1, LayoutOrder = i, Parent = scroll })
+			Core.auraCard(it.id, it.v, 150, 200).Parent = cell
+			local b = Ui.button(L("Sell", "Продать"), "gold", { Position = UDim2.fromOffset(0, 206), Size = UDim2.fromOffset(150, 40), TextSize = 14, Parent = cell })
+			b.Activated:Connect(function()
+				local res = Core.R.SellItems:InvokeServer({ it.u })
+				if res and res.ok then
+					Core.sound("coin", 0.3)
+				end
+			end)
+		end
+	end
+	return render
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="23">
+            <Properties>
+              <string name="Name">Rifts</string>
+              <string name="Source"><![CDATA[-- Разломы: сетка кейсов, открытие до 5 за раз, горизонтальная рулетка
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+return function(page: Frame, Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local Economy = require(game:GetService("ReplicatedStorage").Shared.Economy)
+	local state = Core.state
+	local openCount = 1
+
+	local countBar = new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 40), Parent = page })
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = countBar })
+	Ui.label(L("Open at once:", "Открыть сразу:"), 15, C.muted, { AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 36), TextWrapped = false, LayoutOrder = 0, Parent = countBar })
+	local countButtons: { [number]: TextButton } = {}
+	local render: () -> ()
+	for i, n in { 1, 2, 3, 5 } do
+		local b = new("TextButton", {
+			Text = "x" .. n,
+			TextSize = 15,
+			Font = Enum.Font.Code,
+			TextColor3 = C.text,
+			Size = UDim2.fromOffset(52, 36),
+			BackgroundColor3 = C.panel,
+			LayoutOrder = i,
+			Parent = countBar,
+		}, { Ui.corner(10), Ui.stroke(C.violet, 1.5, 0.5) })
+		countButtons[n] = b
+		b.Activated:Connect(function()
+			openCount = n
+			render()
+		end)
+	end
+
+	local scroll = new("ScrollingFrame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, 48),
+		Size = UDim2.new(1, 0, 1, -48),
+		ScrollBarThickness = 6,
+		ScrollBarImageColor3 = C.violet,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		Parent = page,
+	})
+	new("UIGridLayout", { CellSize = UDim2.fromOffset(180, 262), CellPadding = UDim2.fromOffset(12, 12), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+
+	local openButtons: { [string]: TextButton } = {}
+	local ticketButtons: { [string]: TextButton } = {}
+	local open: (rf: any, byTicket: boolean) -> ()
+
+	for i, rf in Config.RIFTS do
+		local card = new("Frame", { BackgroundColor3 = Color3.new(1, 1, 1), LayoutOrder = i, Parent = scroll }, {
+			Ui.corner(16),
+			Ui.stroke(rf.c1, 2, 0.4),
+			Ui.grad(rf.c2:Lerp(Color3.fromRGB(12, 10, 40), 0.55), Color3.fromRGB(12, 10, 40), 90),
+		})
+		local art = Core.riftArt(rf, 120)
+		art.AnchorPoint = Vector2.new(0.5, 0)
+		art.Position = UDim2.new(0.5, 0, 0, 10)
+		art.Parent = card
+		Ui.label(L(rf.en, rf.ru), 16, C.text, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(6, 136), Size = UDim2.new(1, -12, 0, 22), TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = card })
+		Ui.label(L(rf.ru, rf.en), 12, rf.c1, { Position = UDim2.fromOffset(6, 158), Size = UDim2.new(1, -12, 0, 16), TextWrapped = false, TextTruncate = Enum.TextTruncate.AtEnd, Parent = card })
+		local b = Ui.button("", rf.button, { Position = UDim2.new(0.5, 0, 1, -12), AnchorPoint = Vector2.new(0.5, 1), Size = UDim2.new(1, -24, 0, 50), Parent = card })
+		openButtons[rf.id] = b
+		b.Activated:Connect(function()
+			open(rf, false)
+		end)
+		local tb = Ui.button("", "purple", { Position = UDim2.new(0.5, 0, 0, 8), AnchorPoint = Vector2.new(0.5, 0), Size = UDim2.new(1, -24, 0, 28), TextSize = 13, Visible = false, Parent = card })
+		ticketButtons[rf.id] = tb
+		tb.Activated:Connect(function()
+			open(rf, true)
+		end)
+	end
+
+	render = function()
+		for n, b in countButtons do
+			b.BackgroundColor3 = if n == openCount then C.violet else C.panel
+		end
+		for _, rf in Config.RIFTS do
+			local cost = rf.price * openCount
+			local b = openButtons[rf.id]
+			b.Text = L("OPEN", "ОТКРЫТЬ") .. "\n" .. Core.fmt(cost)
+			b.TextTransparency = if state.balance >= cost then 0 else 0.45
+			local t = state.tickets[rf.id] or 0
+			ticketButtons[rf.id].Visible = t > 0
+			ticketButtons[rf.id].Text = "🎟 " .. L("Free open", "Бесплатно") .. " ×" .. t
+		end
+	end
+
+	-- ===== прокрутка =====
+	local CW, GAP, WIN_AT = 120, 8, 48
+	local function spinRow(p: Frame, riftId: string, item, y: number, rowH: number, stripW: number, dur: number, withTicks: boolean)
+		local strip = new("Frame", { Position = UDim2.fromOffset(20, y), Size = UDim2.fromOffset(stripW, rowH), BackgroundColor3 = Color3.fromRGB(11, 8, 38), ClipsDescendants = true, Parent = p }, {
+			Ui.corner(14),
+			Ui.stroke(C.line, 1.5, 0),
+		})
+		local track = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 8), Size = UDim2.fromOffset((CW + GAP) * (WIN_AT + 6), rowH - 16), Parent = strip })
+		new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, GAP), SortOrder = Enum.SortOrder.LayoutOrder, Parent = track })
+		local ids = Economy.strip(riftId, WIN_AT + 5, WIN_AT, item.id, function()
+			return math.random()
+		end)
+		local cards = {}
+		for i, id in ids do
+			local c = Core.auraCard(id, nil, CW, rowH - 16)
+			c.LayoutOrder = i
+			c.Parent = track
+			cards[i] = c
+		end
+		new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.new(0, 3, 1, 0), BorderSizePixel = 0, BackgroundColor3 = Color3.new(1, 1, 1), Parent = strip }, {
+			Ui.grad(C.cyan, C.pink, 90),
+		})
+		Core.lift(strip)
+		local cardStart = (WIN_AT - 1) * (CW + GAP)
+		local target = -(cardStart + 14 + math.random() * (CW - 28)) + stripW / 2
+		local centered = -(cardStart + CW / 2) + stripW / 2
+		TweenService:Create(track, TweenInfo.new(dur, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Position = UDim2.fromOffset(target, 8) }):Play()
+		if withTicks then -- щелчок на каждой карточке, пересёкшей центр
+			local last = -1
+			local conn
+			conn = RunService.RenderStepped:Connect(function()
+				local idx = math.floor((stripW / 2 - track.Position.X.Offset) / (CW + GAP))
+				if idx ~= last then
+					last = idx
+					Core.sound("tick", 0.25)
+				end
+			end)
+			task.delay(dur, function()
+				conn:Disconnect()
+			end)
+		end
+		task.delay(dur + 0.05, function()
+			TweenService:Create(track, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { Position = UDim2.fromOffset(centered, 8) }):Play()
+			local s = cards[WIN_AT]:FindFirstChildOfClass("UIStroke")
+			if s then
+				s.Thickness = 4
+				s.Transparency = 0
+			end
+		end)
+	end
+
+	local ERR = {
+		no_money = { "Not enough coins", "Не хватает монет" },
+		inv_full = { "Inventory is full — sell some auras", "Инвентарь полон — продай часть аур" },
+		loading = { "Loading your progress…", "Загружаем прогресс…" },
+		no_ticket = { "No tickets", "Нет билетов" },
+	}
+
+	open = function(rf, byTicket)
+		if Core.busy then
+			return
+		end
+		local n = if byTicket then 1 else openCount
+		if not byTicket and state.balance < rf.price * n then
+			Core.toast(L("Not enough coins", "Не хватает монет"))
+			return
+		end
+		Core.busy = true
+		local res = Core.R.OpenRift:InvokeServer(rf.id, n, byTicket)
+		if not res or not res.ok then
+			Core.busy = false
+			local e = res and ERR[res.err]
+			if e then
+				Core.toast(L(e[1], e[2]))
+			end
+			return
+		end
+		Core.sound("open")
+		local rowH = if n == 1 then 190 elseif n == 2 then 160 else 118
+		local p = Core.openPanel(900, 70 + n * (rowH + 10) + 10)
+		local stripW = p.Size.X.Offset - 40
+		Ui.label(L(rf.en, rf.ru), 22, rf.c1, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(0, 16), Size = UDim2.new(1, 0, 0, 30), ZIndex = 62, Parent = p })
+		local dur = 5.2
+		for i, item in res.items do
+			spinRow(p, rf.id, item, 60 + (i - 1) * (rowH + 10), rowH, stripW, dur + (i - 1) * 0.25, i == 1)
+		end
+		task.wait(dur + (n - 1) * 0.25 + 0.9)
+		local best = res.items[1]
+		for _, it in res.items do
+			if it.v > best.v then
+				best = it
+			end
+		end
+		local good = best.v >= rf.price
+		Core.sound(if Config.TIER_INDEX[Config.AURA_BY_ID[best.id].tier] >= 4 then "win_big" elseif good then "win" else "lose")
+		Core.showPrize(if n > 1 then L("Your drop", "Твой дроп") else L("You got", "Тебе выпало"), Core.tierOf(best.id).color, res.items)
+	end
+
+	return render
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="24">
+            <Properties>
+              <string name="Name">Upgrade</string>
+              <string name="Source"><![CDATA[-- Апгрейд: до 8 своих аур → одна дороже. Шанс = (сумма + буст) / цена цели, максимум 80%.
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+return function(page: Frame, Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local state = Core.state
+	local MAX = Config.UPGRADE_MAX_CHANCE
+
+	local sel: { [number]: boolean } = {}
+	local targetId: string? = nil
+	local boostPart = 0 -- 0, 0.25, 0.5, 1 — доля от максимального буста
+	local pick = { p = 0.5 } :: { p: number?, m: number? }
+
+	local function selected()
+		local list, v = {}, 0
+		for _, it in state.inv do
+			if sel[it.u] then
+				table.insert(list, it)
+				v += it.v
+			end
+		end
+		return list, v
+	end
+	local function maxBoost(v: number): number
+		if not targetId then
+			return 0
+		end
+		return math.max(0, math.min(state.balance, math.floor(MAX * Config.AURA_BY_ID[targetId].price - v)))
+	end
+	local function boostValue(v: number): number
+		return math.floor(maxBoost(v) * boostPart)
+	end
+	local function chanceFor(v: number, boost: number): number
+		if not targetId or v <= 0 then
+			return 0
+		end
+		return math.min(MAX, (v + boost) / Config.AURA_BY_ID[targetId].price)
+	end
+	local function targets(v: number)
+		local list = {}
+		for _, a in Config.AURAS do
+			if a.tier ~= "unique" and a.price > v then
+				table.insert(list, a)
+			end
+		end
+		table.sort(list, function(a, b)
+			return a.price < b.price
+		end)
+		return list
+	end
+	-- цель подбирается под выбранный шанс или икс
+	local function autoTarget()
+		local _, v = selected()
+		if v <= 0 then
+			targetId = nil
+			return
+		end
+		local list = targets(v)
+		if #list == 0 then
+			targetId = nil
+			Core.toast(L("Nothing pricier to upgrade into", "Дороже ничего нет"))
+			return
+		end
+		local best, bd = nil, math.huge
+		for _, a in list do
+			local d = if pick.p then math.abs(v / a.price - pick.p) else math.abs(math.log(a.price / (v * (pick.m :: number))))
+			if d < bd then
+				best, bd = a, d
+			end
+		end
+		targetId = best.id
+	end
+
+	-- ===== верх: ставка — круг — цель =====
+	local top = new("Frame", { BackgroundColor3 = Color3.fromRGB(16, 12, 52), Size = UDim2.new(1, 0, 0, 270), Parent = page }, {
+		Ui.corner(18),
+		Ui.stroke(C.violet, 2, 0.5),
+	})
+	local srcBox = new("Frame", { BackgroundTransparency = 1, Position = UDim2.new(0, 14, 0, 14), Size = UDim2.new(0.5, -150, 1, -28), Parent = top })
+	local dstBox = new("Frame", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -14, 0, 14), Size = UDim2.new(0.5, -150, 1, -28), Parent = top })
+
+	local DIAL = 240
+	local dial = new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(DIAL, DIAL), BackgroundColor3 = Color3.fromRGB(10, 8, 34), Parent = top }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.stroke(C.cyan, 3, 0.2),
+	})
+	local SEG = 60
+	local segs = {}
+	for i = 0, SEG - 1 do
+		local holder = new("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Rotation = (i + 0.5) * 360 / SEG, Parent = dial })
+		segs[i] = new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 10), Size = UDim2.fromOffset(9, 22), BorderSizePixel = 0, BackgroundColor3 = C.lose, Parent = holder }, { Ui.corner(3) })
+	end
+	local core = new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(DIAL - 90, DIAL - 90), BackgroundColor3 = Color3.new(1, 1, 1), Parent = dial }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(Color3.fromRGB(58, 42, 154), Color3.fromRGB(10, 8, 40), 90),
+	})
+	local chanceLabel = Ui.label("0%", 34, C.win, { Font = Enum.Font.GothamBlack, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.42), Size = UDim2.fromOffset(150, 40), Parent = core })
+	local multLabel = Ui.label("", 14, Color3.fromRGB(191, 233, 255), { Font = Enum.Font.Code, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.66), Size = UDim2.fromOffset(150, 20), Parent = core })
+	local needle = new("Frame", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromScale(1, 1), Parent = dial })
+	new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 2), Size = UDim2.fromOffset(14, 38), BackgroundColor3 = Color3.new(1, 1, 1), Parent = needle }, {
+		Ui.corner(7),
+		Ui.stroke(Color3.fromRGB(26, 15, 58), 2, 0),
+		Ui.grad(Color3.new(1, 1, 1), C.gold, 90),
+	})
+
+	-- ===== кнопки выбора цели и буста =====
+	local controls = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 280), Size = UDim2.new(1, 0, 0, 40), Parent = page })
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), VerticalAlignment = Enum.VerticalAlignment.Center, Parent = controls })
+	local pickButtons = {}
+	local renderAll: () -> ()
+	for i, opt in { { p = 0.75 }, { p = 0.5 }, { p = 0.25 }, { p = 0.1 }, { m = 2 }, { m = 5 }, { m = 10 } } do
+		local b = new("TextButton", {
+			Text = if opt.p then math.floor(opt.p * 100) .. "%" else "x" .. opt.m,
+			TextSize = 14,
+			Font = Enum.Font.Code,
+			TextColor3 = C.text,
+			Size = UDim2.fromOffset(56, 36),
+			BackgroundColor3 = C.panel,
+			LayoutOrder = i,
+			Parent = controls,
+		}, { Ui.corner(10), Ui.stroke(C.violet, 1.5, 0.5) })
+		table.insert(pickButtons, { b = b, opt = opt })
+		b.Activated:Connect(function()
+			if Core.busy then
+				return
+			end
+			if next(sel) == nil then
+				Core.toast(L("Pick your auras first", "Сначала выбери свои ауры"))
+				return
+			end
+			pick = opt
+			boostPart = 0
+			autoTarget()
+			renderAll()
+		end)
+	end
+	Ui.label("  ⚡ " .. L("Boost", "Буст"), 14, C.muted, { AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 36), TextWrapped = false, LayoutOrder = 20, Parent = controls })
+	local boostButtons = {}
+	for i, part in { 0, 0.25, 0.5, 1 } do
+		local b = new("TextButton", {
+			Text = if part == 0 then L("off", "нет") elseif part == 1 then "MAX" else "+" .. math.floor(part * 100) .. "%",
+			TextSize = 13,
+			Font = Enum.Font.Code,
+			TextColor3 = C.text,
+			Size = UDim2.fromOffset(52, 36),
+			BackgroundColor3 = C.panel,
+			LayoutOrder = 20 + i,
+			Parent = controls,
+		}, { Ui.corner(10), Ui.stroke(C.win, 1.5, 0.5) })
+		table.insert(boostButtons, { b = b, part = part })
+		b.Activated:Connect(function()
+			if Core.busy then
+				return
+			end
+			boostPart = part
+			renderAll()
+		end)
+	end
+	local go = Ui.button(L("Upgrade", "Апгрейд"), "green", { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 280), Size = UDim2.fromOffset(200, 42), Parent = page })
+
+	-- ===== нижние списки =====
+	local function column(x: number, titleText: string)
+		local f = new("Frame", { BackgroundTransparency = 1, Position = UDim2.new(x, if x > 0 then 6 else 0, 0, 330), Size = UDim2.new(0.5, -6, 1, -330), Parent = page })
+		local t = Ui.label(titleText, 15, C.text, { TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, 22), Parent = f })
+		local s = new("ScrollingFrame", {
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(0, 26),
+			Size = UDim2.new(1, 0, 1, -26),
+			ScrollBarThickness = 5,
+			ScrollBarImageColor3 = C.violet,
+			AutomaticCanvasSize = Enum.AutomaticSize.Y,
+			CanvasSize = UDim2.new(),
+			Parent = f,
+		})
+		new("UIGridLayout", { CellSize = UDim2.fromOffset(110, 120), CellPadding = UDim2.fromOffset(6, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = s })
+		return s, t
+	end
+	local invScroll, invTitle = column(0, L("Your auras (up to 8)", "Твои ауры (до 8)"))
+	local tgtScroll = column(0.5, L("What you want", "Что хочешь получить"))
+
+	local function renderTop()
+		local list, v = selected()
+		for _, c in srcBox:GetChildren() do
+			c:Destroy()
+		end
+		for _, c in dstBox:GetChildren() do
+			c:Destroy()
+		end
+		Ui.label(L("YOUR AURAS", "ТВОИ АУРЫ"), 11, C.muted, { Size = UDim2.new(1, 0, 0, 14), Parent = srcBox })
+		if #list == 0 then
+			Ui.label(L("Pick auras below", "Выбери ауры ниже"), 14, C.muted, { Position = UDim2.fromOffset(0, 20), Size = UDim2.new(1, 0, 1, -20), Parent = srcBox })
+		elseif #list == 1 then
+			local c = Core.auraCard(list[1].id, list[1].v, 150, 210)
+			c.AnchorPoint = Vector2.new(0.5, 0)
+			c.Position = UDim2.new(0.5, 0, 0, 20)
+			c.Parent = srcBox
+		else
+			local g = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 20), Size = UDim2.new(1, 0, 1, -50), Parent = srcBox })
+			new("UIGridLayout", { CellSize = UDim2.fromOffset(70, 80), CellPadding = UDim2.fromOffset(4, 4), HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = g })
+			for _, it in list do
+				Core.auraCard(it.id, it.v, 70, 80).Parent = g
+			end
+			Ui.label(#list .. L(" auras · ", " аур · ") .. Core.fmt(v), 14, C.win, { Font = Enum.Font.Code, AnchorPoint = Vector2.new(0, 1), Position = UDim2.fromScale(0, 1), Size = UDim2.new(1, 0, 0, 24), Parent = srcBox })
+		end
+		Ui.label(L("TARGET", "ЦЕЛЬ"), 11, C.muted, { Size = UDim2.new(1, 0, 0, 14), Parent = dstBox })
+		if targetId then
+			local c = Core.auraCard(targetId, nil, 150, 210)
+			c.AnchorPoint = Vector2.new(0.5, 0)
+			c.Position = UDim2.new(0.5, 0, 0, 20)
+			c.Parent = dstBox
+		else
+			Ui.label(L("Pick the aura you want", "Выбери ауру, которую хочешь"), 14, C.muted, { Position = UDim2.fromOffset(0, 20), Size = UDim2.new(1, 0, 1, -20), Parent = dstBox })
+		end
+		local boost = boostValue(v)
+		local ch = chanceFor(v, boost)
+		chanceLabel.Text = if ch > 0 and ch < 0.1 then string.format("%.2f%%", ch * 100) else string.format("%.1f%%", ch * 100):gsub("%.0%%", "%%")
+		multLabel.Text = if targetId and v > 0 then "x" .. string.format("%.2f", Config.AURA_BY_ID[targetId].price / v):gsub("%.?0+$", "") else ""
+		for i = 0, SEG - 1 do
+			segs[i].BackgroundColor3 = if (i + 0.5) / SEG < ch then C.win else Color3.fromRGB(120, 30, 55)
+		end
+		go.Text = if boost > 0 then L("Upgrade · boost ", "Апгрейд · буст ") .. Core.fmt(boost) else L("Upgrade", "Апгрейд")
+		go.TextTransparency = if ch > 0 then 0 else 0.5
+		for _, x in pickButtons do
+			local on = (x.opt.p ~= nil and x.opt.p == pick.p) or (x.opt.m ~= nil and x.opt.m == pick.m)
+			x.b.BackgroundColor3 = if on then C.violet else C.panel
+		end
+		for _, x in boostButtons do
+			x.b.BackgroundColor3 = if x.part == boostPart then Color3.fromRGB(31, 154, 58) else C.panel
+		end
+	end
+
+	local function renderLists()
+		local list, v = selected()
+		local inv = table.clone(state.inv)
+		table.sort(inv, function(a, b)
+			return a.v > b.v
+		end)
+		invTitle.Text = L("Your auras", "Твои ауры") .. " · " .. #list .. " / " .. Config.UPGRADE_MAX_ITEMS
+		Core.fillInvGrid(invScroll, inv, function(u)
+			return sel[u] == true
+		end, function(it)
+			if Core.busy then
+				return
+			end
+			if sel[it.u] then
+				sel[it.u] = nil
+			elseif #list >= Config.UPGRADE_MAX_ITEMS then
+				Core.toast(L("Up to 8 auras at once", "Не больше 8 аур за раз"))
+				return
+			else
+				sel[it.u] = true
+			end
+			boostPart = 0
+			autoTarget()
+			renderAll()
+		end)
+		for _, c in tgtScroll:GetChildren() do
+			if c:IsA("GuiObject") then
+				c:Destroy()
+			end
+		end
+		for i, a in targets(v) do
+			local card = Core.auraCard(a.id, nil, 110, 120, { button = true, selected = a.id == targetId })
+			card.LayoutOrder = i
+			if v > 0 then
+				Ui.label(math.floor(math.min(MAX, v / a.price) * 100 + 0.5) .. "%", 11, C.win, { Font = Enum.Font.Code, Position = UDim2.fromOffset(4, 4), Size = UDim2.fromOffset(40, 14), TextXAlignment = Enum.TextXAlignment.Left, Parent = card })
+			end
+			card.Parent = tgtScroll
+			;(card :: TextButton).Activated:Connect(function()
+				if Core.busy then
+					return
+				end
+				targetId = a.id
+				pick = {}
+				boostPart = 0
+				renderAll()
+			end)
+		end
+	end
+
+	renderAll = function()
+		-- убираем из выбора то, чего уже нет
+		local exists = {}
+		for _, it in state.inv do
+			exists[it.u] = true
+		end
+		for u in sel do
+			if not exists[u] then
+				sel[u] = nil
+			end
+		end
+		local _, v = selected()
+		if targetId and Config.AURA_BY_ID[targetId].price <= v then
+			targetId = nil
+		end
+		renderTop()
+		renderLists()
+	end
+
+	local angle = 0
+	go.Activated:Connect(function()
+		if Core.busy then
+			return
+		end
+		local list, v = selected()
+		if #list == 0 or not targetId then
+			Core.toast(L("Pick your auras and a target", "Выбери свои ауры и цель"))
+			return
+		end
+		local uids = {}
+		for _, it in list do
+			table.insert(uids, it.u)
+		end
+		Core.busy = true
+		local res = Core.R.Upgrade:InvokeServer(uids, targetId, boostValue(v))
+		if not res or not res.ok then
+			Core.busy = false
+			Core.toast(L("Something changed — try again", "Что-то изменилось — попробуй ещё раз"))
+			renderAll()
+			return
+		end
+		-- стрелка останавливается на r*360° — зелёный сектор это [0, шанс)
+		local target = angle - (angle % 360) + 360 * 6 + res.r * 360
+		angle = target
+		local last = math.floor(needle.Rotation / 18)
+		local conn = RunService.RenderStepped:Connect(function()
+			local k = math.floor(needle.Rotation / 18)
+			if k ~= last then
+				last = k
+				Core.sound("tick", 0.2)
+			end
+		end)
+		TweenService:Create(needle, TweenInfo.new(6.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Rotation = target }):Play()
+		task.wait(6.3)
+		conn:Disconnect()
+		table.clear(sel)
+		targetId = nil
+		boostPart = 0
+		if res.win then
+			Core.sound(if Config.TIER_INDEX[Config.AURA_BY_ID[res.item.id].tier] >= 4 then "win_big" else "win")
+			Core.showPrize(L("Upgrade successful!", "Апгрейд удался!"), C.win, { res.item })
+		else
+			Core.sound("lose")
+			Core.showPrize(L("Missed", "Мимо"), C.lose, {}, L("The auras burned. Chance was ", "Ауры сгорели. Шанс был ") .. string.format("%.1f%%", res.chance * 100))
+		end
+	end)
+
+	return function()
+		if not Core.busy then
+			renderAll()
+		end
+	end
+end
+]]></string>
+            </Properties>
+          </Item>
+          <Item class="ModuleScript" referent="25">
+            <Properties>
+              <string name="Name">Wheel</string>
+              <string name="Source"><![CDATA[-- Колесо Фортуны раз в сутки: круглое колесо из цветных секторов, указатель сверху
+local TweenService = game:GetService("TweenService")
+
+return function(Core)
+	local Config, Ui, L = Core.Config, Core.Ui, Core.L
+	local C, new = Ui.C, Ui.new
+	local N = #Config.WHEEL
+	local SEG = 360 / N
+
+	local function segText(s): string
+		if s.t == "coins" then
+			return Core.fmt(s.v)
+		end
+		return L(s.en, s.ru)
+	end
+	local function hms(sec: number): string
+		local h, m = math.floor(sec / 3600), math.floor(sec % 3600 / 60)
+		return if h > 0 then h .. L("h ", " ч ") .. m .. L("m", " мин") else m .. L(" min", " мин")
+	end
+
+	-- колесо рисуется «лучами»: много узких полосок от центра, каждая своего сектора
+	local function buildWheel(parent: Instance, D: number): Frame
+		local R = D / 2
+		local wheel = new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(D, D), BackgroundTransparency = 1, Parent = parent })
+		local step = 1.5
+		local w = math.ceil(R * math.rad(step)) + 2
+		for ang = 0, 360 - step, step do
+			local idx = math.floor((ang + step / 2) / SEG) % N + 1
+			local holder = new("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Rotation = ang, Parent = wheel })
+			new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.fromOffset(w, R), BorderSizePixel = 0, BackgroundColor3 = Config.WHEEL[idx].color, Parent = holder })
+		end
+		-- разделители и подписи секторов
+		for i, s in Config.WHEEL do
+			local line = new("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Rotation = (i - 1) * SEG, Parent = wheel })
+			new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.fromOffset(3, R), BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(7, 6, 26), Parent = line })
+			local lab = new("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Rotation = (i - 0.5) * SEG, Parent = wheel })
+			local t = Ui.label(segText(s), if #segText(s) > 6 then 12 else 16, Color3.new(1, 1, 1), {
+				Font = Enum.Font.GothamBlack,
+				AnchorPoint = Vector2.new(0.5, 0),
+				Position = UDim2.new(0.5, 0, 0, 16),
+				Size = UDim2.fromOffset(80, 22),
+				TextWrapped = false,
+				Parent = lab,
+			})
+			Ui.textStroke(Color3.new(0, 0, 0), 1.5, 0.35).Parent = t
+		end
+		-- обод и центр
+		new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(D + 8, D + 8), BackgroundTransparency = 1, Parent = parent }, {
+			Ui.corner(UDim.new(1, 0)),
+			Ui.stroke(C.gold, 5, 0),
+		})
+		new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(64, 64), BackgroundColor3 = Color3.fromRGB(21, 18, 58), Parent = parent }, {
+			Ui.corner(UDim.new(1, 0)),
+			Ui.stroke(Color3.new(1, 1, 1), 3, 0),
+			new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(22, 22), BackgroundColor3 = Color3.new(1, 1, 1) }, {
+				Ui.corner(UDim.new(1, 0)),
+				Ui.grad(C.pink, C.cyan, 45),
+			}),
+		})
+		-- указатель сверху
+		Ui.label("▼", 34, C.gold, { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 0.5, -R + 14), Size = UDim2.fromOffset(40, 40), Parent = parent })
+		return wheel
+	end
+
+	local angle = 0
+	return function()
+		if Core.busy then
+			return
+		end
+		local left = (Core.state.lastWheel or 0) + Config.WHEEL_COOLDOWN - Core.now()
+		local D = math.min(360, Core.H - 250)
+		local p = Core.openPanel(math.max(440, D + 80), D + 230)
+		Ui.label(L("Wheel of Fortune", "Колесо Фортуны"), 24, C.gold, { Font = Enum.Font.GothamBlack, Position = UDim2.fromOffset(0, 14), Size = UDim2.new(1, 0, 0, 30), Parent = p })
+		Ui.label(if left > 0 then L("Next spin in ", "Следующая прокрутка через ") .. hms(left) else L("One free spin every 24 hours", "Бесплатная прокрутка раз в 24 часа"), 14, C.muted, { Position = UDim2.fromOffset(0, 46), Size = UDim2.new(1, 0, 0, 18), Parent = p })
+		local area = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 72), Size = UDim2.new(1, 0, 0, D + 20), Parent = p })
+		local wheel = buildWheel(area, D)
+		wheel.Rotation = angle % 360
+		local spin = Ui.button(if left > 0 then L("Already spun today", "Уже крутил сегодня") else L("Spin!", "Крутить!"), "gold", { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -64), Size = UDim2.fromOffset(240, 50), Parent = p })
+		spin.TextTransparency = if left > 0 then 0.45 else 0
+		local close = Ui.button(L("Close", "Закрыть"), "purple", { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -12), Size = UDim2.fromOffset(160, 40), TextSize = 14, Parent = p })
+		Core.lift(p)
+		close.Activated:Connect(function()
+			if not Core.busy then
+				Core.closePanel()
+			end
+		end)
+		local done = false
+		spin.Activated:Connect(function()
+			if done or Core.busy or left > 0 then
+				return
+			end
+			Core.busy = true
+			local res = Core.R.SpinWheel:InvokeServer()
+			if not res or not res.ok then
+				Core.busy = false
+				Core.toast(L("Come back later", "Возвращайся позже"))
+				return
+			end
+			done = true
+			-- поворачиваем колесо так, чтобы центр выпавшего сектора встал под указатель
+			local jitter = (math.random() - 0.5) * SEG * 0.6
+			local target = angle - (angle % 360) + 360 * 6 - ((res.index - 0.5) * SEG) + jitter
+			angle = target
+			TweenService:Create(wheel, TweenInfo.new(5.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Rotation = target }):Play()
+			local last = math.floor(wheel.Rotation / SEG)
+			local t0 = os.clock()
+			while os.clock() - t0 < 5.6 do
+				task.wait()
+				local k = math.floor(wheel.Rotation / SEG)
+				if k ~= last then
+					last = k
+					Core.sound("tick", 0.3)
+				end
+			end
+			Core.busy = false
+			local s = Config.WHEEL[res.index]
+			Core.sound("win")
+			spin.Text = (segText(s):gsub("\n", " ")) .. "!"
+			Core.toast(L("You won: ", "Выигрыш: ") .. segText(s))
+			if res.item then
+				Core.showPrize(L("FORTUNE!", "ФОРТУНА!"), C.gold, { res.item })
+			end
+		end)
+	end
+end
+]]></string>
+            </Properties>
+          </Item>
+        </Item>
+        <Item class="ModuleScript" referent="26">
+          <Properties>
+            <string name="Name">Ui</string>
+            <string name="Source"><![CDATA[-- Маленькие помощники для построения интерфейса кодом
+local Ui = {}
+
+Ui.C = {
+	bg = Color3.fromRGB(7, 6, 26),
+	bg2 = Color3.fromRGB(15, 12, 46),
+	panel = Color3.fromRGB(21, 18, 58),
+	panel2 = Color3.fromRGB(30, 26, 77),
+	line = Color3.fromRGB(46, 40, 112),
+	text = Color3.fromRGB(241, 240, 255),
+	muted = Color3.fromRGB(155, 151, 207),
+	cyan = Color3.fromRGB(34, 230, 255),
+	violet = Color3.fromRGB(139, 92, 255),
+	pink = Color3.fromRGB(255, 61, 203),
+	gold = Color3.fromRGB(255, 197, 61),
+	win = Color3.fromRGB(62, 240, 143),
+	lose = Color3.fromRGB(255, 77, 109),
+}
+
+Ui.BUTTON = {
+	green = { Color3.fromRGB(95, 227, 107), Color3.fromRGB(31, 154, 58) },
+	blue = { Color3.fromRGB(74, 168, 255), Color3.fromRGB(29, 78, 216) },
+	purple = { Color3.fromRGB(192, 92, 255), Color3.fromRGB(109, 40, 217) },
+	gold = { Color3.fromRGB(255, 212, 107), Color3.fromRGB(201, 138, 0) },
+	red = { Color3.fromRGB(255, 120, 140), Color3.fromRGB(200, 40, 70) },
+}
+
+function Ui.new(className: string, props: { [string]: any }?, children: { Instance }?): any
+	local o = Instance.new(className)
+	local parent = nil
+	if props then
+		for k, v in props do
+			if k == "Parent" then
+				parent = v
+			else
+				(o :: any)[k] = v
+			end
+		end
+	end
+	if children then
+		for _, c in children do
+			c.Parent = o
+		end
+	end
+	if parent then
+		o.Parent = parent
+	end
+	return o
+end
+
+function Ui.corner(r: number | UDim?): UICorner
+	local c = Instance.new("UICorner")
+	if typeof(r) == "UDim" then
+		c.CornerRadius = r
+	else
+		c.CornerRadius = UDim.new(0, (r :: number?) or 12)
+	end
+	return c
+end
+
+function Ui.stroke(color: Color3, thickness: number?, transparency: number?): UIStroke
+	local s = Instance.new("UIStroke")
+	s.Color = color
+	s.Thickness = thickness or 1
+	s.Transparency = transparency or 0
+	s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	return s
+end
+
+function Ui.textStroke(color: Color3, thickness: number?, transparency: number?): UIStroke
+	local s = Instance.new("UIStroke")
+	s.Color = color
+	s.Thickness = thickness or 1.5
+	s.Transparency = transparency or 0.3
+	s.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	return s
+end
+
+function Ui.grad(c1: Color3, c2: Color3, rotation: number?): UIGradient
+	local g = Instance.new("UIGradient")
+	g.Color = ColorSequence.new(c1, c2)
+	g.Rotation = rotation or 90
+	return g
+end
+
+function Ui.pad(t: number, r: number?, b: number?, l: number?): UIPadding
+	local p = Instance.new("UIPadding")
+	p.PaddingTop = UDim.new(0, t)
+	p.PaddingRight = UDim.new(0, r or t)
+	p.PaddingBottom = UDim.new(0, b or t)
+	p.PaddingLeft = UDim.new(0, l or r or t)
+	return p
+end
+
+function Ui.label(text: string, size: number, color: Color3?, props: { [string]: any }?): TextLabel
+	local p = {
+		BackgroundTransparency = 1,
+		Text = text,
+		TextSize = size,
+		TextColor3 = color or Ui.C.text,
+		Font = Enum.Font.GothamBold,
+		TextWrapped = true,
+	}
+	if props then
+		for k, v in props do
+			p[k] = v
+		end
+	end
+	return Ui.new("TextLabel", p)
+end
+
+-- цветная кнопка с объёмом (градиент + обводка + тень снизу)
+function Ui.button(text: string, kind: string, props: { [string]: any }?): TextButton
+	local cols = Ui.BUTTON[kind] or Ui.BUTTON.green
+	local p = {
+		Text = text,
+		TextSize = 16,
+		Font = Enum.Font.GothamBlack,
+		TextColor3 = Color3.new(1, 1, 1),
+		BackgroundColor3 = cols[1]:Lerp(cols[2], 0.55),
+		AutoButtonColor = true,
+	}
+	if props then
+		for k, v in props do
+			p[k] = v
+		end
+	end
+	return Ui.new("TextButton", p, {
+		Ui.corner(10),
+		Ui.stroke(cols[1], 2, 0.2),
+	})
+end
+
+-- монетка (голубой шарик)
+function Ui.coin(size: number): Frame
+	return Ui.new("Frame", { Size = UDim2.fromOffset(size, size), BackgroundColor3 = Color3.new(1, 1, 1) }, {
+		Ui.corner(UDim.new(1, 0)),
+		Ui.grad(Color3.fromRGB(200, 250, 255), Color3.fromRGB(34, 150, 255), 45),
+		Ui.stroke(Color3.fromRGB(34, 230, 255), 1, 0.3),
+	})
+end
+
+return Ui
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="Workspace" referent="27">
+    <Properties>
+      <string name="Name">Workspace</string>
+      <bool name="NeedsPivotMigration">false</bool>
+    </Properties>
+    <Item class="Part" referent="28">
+      <Properties>
+        <string name="Name">Baseplate</string>
+        <bool name="Anchored">true</bool>
+        <Color3uint8 name="Color3uint8">1709120</Color3uint8>
+        <token name="Material">272</token>
+        <Vector3 name="Position">
+          <X>0</X>
+          <Y>-10</Y>
+          <Z>0</Z>
+        </Vector3>
+        <Vector3 name="size">
+          <X>512</X>
+          <Y>20</Y>
+          <Z>512</Z>
+        </Vector3>
+      </Properties>
+    </Item>
+    <Item class="SpawnLocation" referent="29">
+      <Properties>
+        <string name="Name">SpawnLocation</string>
+        <bool name="Anchored">true</bool>
+        <Vector3 name="Position">
+          <X>0</X>
+          <Y>0.5</Y>
+          <Z>0</Z>
+        </Vector3>
+        <Vector3 name="size">
+          <X>12</X>
+          <Y>1</Y>
+          <Z>12</Z>
+        </Vector3>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>
