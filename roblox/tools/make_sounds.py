@@ -75,6 +75,47 @@ def lowpass(sig: np.ndarray, cutoff: float) -> np.ndarray:
     return out
 
 
+def highpass(sig: np.ndarray, cutoff: float) -> np.ndarray:
+    return sig - lowpass(sig, cutoff)
+
+
+def sweep_filter(sig: np.ndarray, f0: float, f1: float) -> np.ndarray:
+    """Фильтр, который открывается от f0 до f1 — основа «вжуха»."""
+    cut = f0 * (f1 / f0) ** np.linspace(0, 1, len(sig))
+    a = np.exp(-2 * np.pi * cut / SR)
+    out = np.empty_like(sig)
+    y = 0.0
+    for i, v in enumerate(sig):
+        y = (1 - a[i]) * v + a[i] * y
+        out[i] = y
+    return out
+
+
+def click(dur: float, body: float, ping: float, snap: float = 0.6) -> np.ndarray:
+    """Сухой пластиковый щелчок: шумовой удар + короткий звон + «тело»."""
+    x = t(dur)
+    n = len(x)
+    burst = highpass(rng.standard_normal(n), 1800) * env(n, 0.0003, 0.0025) * snap
+    ring = np.sin(2 * np.pi * ping * x) * env(n, 0.0005, 0.007) * 0.8
+    thump = np.sin(2 * np.pi * body * x) * env(n, 0.0008, 0.011)
+    return burst + ring + thump
+
+
+def clink(freq: float, decay: float) -> np.ndarray:
+    """Звон монеты: негармоничные обертоны, быстро гаснут."""
+    x = t(decay * 6)
+    out = np.zeros_like(x)
+    for mult, amp in ((1.0, 1.0), (1.52, 0.7), (2.34, 0.45), (3.1, 0.3)):
+        out += amp * np.sin(2 * np.pi * freq * mult * x + rng.uniform(0, 6.28)) * env(len(x), 0.0004, decay / mult**0.5)
+    return out
+
+
+def whoosh(dur: float, f0: float, f1: float) -> np.ndarray:
+    x = t(dur)
+    shape = np.clip(x / dur, 0, 1) ** 1.6
+    return sweep_filter(rng.standard_normal(len(x)), f0, f1) * shape
+
+
 def finish(sig: np.ndarray, peak: float = 0.7) -> np.ndarray:
     fade = min(len(sig), int(0.03 * SR))
     sig = sig.copy()
@@ -94,38 +135,38 @@ def save(name: str, sig: np.ndarray) -> None:
     print(f"{path.name}: {len(sig) / SR:.2f} c")
 
 
-# тик прокрутки — короткий мягкий «тук», как маримба, без щелчка
-x = t(0.07)
-tick = (np.sin(2 * np.pi * 1050 * x) + 0.25 * np.sin(2 * np.pi * 2100 * x)) * env(len(x), 0.0015, 0.014)
-save("snd_tick", finish(lowpass(tick, 5000), 0.55))
+# тик ленты, как в рулетке кейсов: сухой пластиковый щелчок на каждом предмете
+save("snd_tick", finish(lowpass(click(0.045, 720, 2600), 9000), 0.6))
 
-# монеты — два светлых колокольчика вверх
-coin = mix(0.6, [(0.0, bell(note("B5"), 0.5, 0.12), 0.8), (0.075, bell(note("E6"), 0.5, 0.2), 1.0)])
-save("snd_coin", finish(reverb(lowpass(coin, 7000), 0.18), 0.6))
+# продажа — звон нескольких монет
+coin = mix(0.55, [(k * 0.045 + rng.uniform(0, 0.02), clink(rng.uniform(2300, 3400), rng.uniform(0.05, 0.09)), rng.uniform(0.5, 1.0)) for k in range(6)])
+save("snd_coin", finish(reverb(lowpass(coin, 9000), 0.15), 0.6))
 
 # выигрыш — мажорное арпеджио до-ми-соль-до
 win = mix(1.4, [(i * 0.075, bell(note(n), 1.2, 0.45), g) for i, (n, g) in enumerate((("C5", 0.8), ("E5", 0.8), ("G5", 0.85), ("C6", 1.0)))])
 save("snd_win", finish(reverb(lowpass(win, 6500)), 0.7))
 
-# большой выигрыш — арпеджио на две октавы + мерцающий аккорд + искорки
-arp = [(i * 0.06, bell(note(n), 1.6, 0.5), 0.75) for i, n in enumerate(("C5", "E5", "G5", "C6", "E6", "G6", "C7"))]
-x = t(1.7)
-pad = sum(np.sin(2 * np.pi * note(n) * x * (1 + 0.003 * np.sin(2 * np.pi * 5 * x))) for n in ("C4", "E4", "G4", "C5"))
-pad *= np.clip(x / 0.25, 0, 1) * np.exp(-x / 0.7)
-sparkles = [(0.45 + 0.09 * k + rng.uniform(0, 0.04), bell(rng.choice([note("C7"), note("E7"), note("G7")]), 0.4, 0.1, 0.3), 0.25) for k in range(10)]
-big = mix(2.3, arp + [(0.4, pad, 0.22)] + sparkles)
-save("snd_win_big", finish(reverb(lowpass(big, 7500), 0.28), 0.72))
+# редкий дроп: нарастающий «вжух» → удар → яркий аккорд с блёстками
+x = t(0.5)
+boom = np.sin(2 * np.pi * (55 + 40 * np.exp(-x / 0.05)) * x) * env(len(x), 0.002, 0.18)
+hit = lowpass(rng.standard_normal(len(x)), 3000) * env(len(x), 0.001, 0.03)
+chord = [(0.32, bell(note(n), 1.6, 0.6, 1.4), 0.55) for n in ("C6", "E6", "G6", "C7")]
+sparkles = [(0.36 + 0.07 * k + rng.uniform(0, 0.03), bell(rng.choice([note("E7"), note("G7"), note("C8")]), 0.3, 0.07, 0.3), 0.2) for k in range(12)]
+big = mix(2.0, [(0.0, whoosh(0.34, 400, 6000), 0.35), (0.32, boom, 0.9), (0.32, hit, 0.5)] + chord + sparkles)
+save("snd_win_big", finish(reverb(big, 0.28), 0.75))
 
-# проигрыш — два тёплых тона вниз, тихо и без «грустного тромбона»
-lose = mix(1.0, [(0.0, soft(note("E4"), 0.6, 0.22), 0.9), (0.16, soft(note("C4"), 0.8, 0.32), 1.0)])
-save("snd_lose", finish(reverb(lowpass(lose, 2200), 0.15), 0.5))
+# дешёвый дроп: короткий глухой «тук» и тихий блип вниз
+x = t(0.3)
+thud = np.sin(2 * np.pi * (110 + 70 * np.exp(-x / 0.03)) * x) * env(len(x), 0.001, 0.07)
+blip = soft(note("A4"), 0.25, 0.06) * np.exp(-t(0.25) / 0.2)
+blip2 = soft(note("E4"), 0.35, 0.09)
+lose = mix(0.6, [(0.0, thud, 1.0), (0.0, lowpass(rng.standard_normal(len(x)), 1500) * env(len(x), 0.001, 0.012), 0.4), (0.07, blip, 0.35), (0.15, blip2, 0.4)])
+save("snd_lose", finish(reverb(lowpass(lose, 3000), 0.12), 0.55))
 
-# открытие разлома — мягкий восходящий шелест с мерцанием
-x = t(0.9)
-freq = 300 * (4 ** (x / 0.9))
-phase = 2 * np.pi * np.cumsum(freq) / SR
-shape = np.sin(np.pi * np.clip(x / 0.9, 0, 1)) ** 1.5
-sweep = (np.sin(phase) + 0.3 * np.sin(2 * phase)) * shape * (0.8 + 0.2 * np.sin(2 * np.pi * 14 * x))
-noise = lowpass(lowpass(rng.standard_normal(len(x)), 1100), 1100) * shape
-opening = mix(1.1, [(0.0, sweep, 0.5), (0.0, noise / np.max(np.abs(noise)), 0.35), (0.78, bell(note("G6"), 0.3, 0.1, 0.4), 0.25)])
-save("snd_open", finish(reverb(lowpass(lowpass(opening, 4000), 4000), 0.2), 0.5))
+# открытие кейса: щелчок-щелчок замка → нарастающий «вжух» в раскрутку
+latch1 = click(0.06, 380, 1500, 0.8)
+latch2 = click(0.08, 300, 1200, 0.9)
+x = t(0.55)
+riser = np.sin(2 * np.pi * np.cumsum(200 * 3 ** (x / 0.55)) / SR) * np.clip(x / 0.55, 0, 1) ** 2 * 0.25
+opening = mix(0.8, [(0.0, latch1, 0.9), (0.08, latch2, 1.0), (0.12, whoosh(0.55, 300, 4500), 0.45), (0.12, riser, 1.0)])
+save("snd_open", finish(reverb(lowpass(opening, 9000), 0.12), 0.6))
